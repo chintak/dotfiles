@@ -1,0 +1,14 @@
+#!/bin/bash
+# See
+# https://our.internmc.facebook.com/intern/wiki/Development_Environment/Vim/#language-support-for-c-p
+
+fbsource_dir="/data/users/$USER/fbsource"
+fbcode_dir="$fbsource_dir/fbcode"
+
+if [ ! -d "$fbcode_dir" ];then
+  echo "Did not find fbcode checkout in $fbcode_dir!"
+  exit 1
+fi
+
+cd "$fbcode_dir"
+exec /usr/bin/cquery-language-server

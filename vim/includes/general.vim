@@ -150,6 +150,10 @@ else
   au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>130v.\+', -1)
 endif
 
+"Split below and right
+set splitbelow
+set splitright
+
 "" http://vimbits.com/bits/144
 "" ****************** SCROLLING *********************
 

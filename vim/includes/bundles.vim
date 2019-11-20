@@ -14,7 +14,7 @@ Plug 'scrooloose/nerdcommenter'
 if has('nvim')
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 else
-  Plug 'Shougo/deoplete.nvim', { 'do': 'pip3 install neovim' }
+  Plug 'Shougo/deoplete.nvim', { 'do': 'pip3 install pynvim' }
   Plug 'roxma/nvim-yarp'
   Plug 'roxma/vim-hug-neovim-rpc'
 endif

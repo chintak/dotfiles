@@ -24,6 +24,7 @@ if has('macunix')
 else
   set clipboard=unnamedplus
 endif
+set clipboard=unnamedplus
 
 "Allow usage of comma as well as ;
 let mapleader = ","

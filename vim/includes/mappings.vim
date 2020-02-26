@@ -62,6 +62,8 @@ map <silent><F12> :cclose<cr>
 
 " delete all buffers
 map <Leader>b :bufdo bd<CR>
+nnoremap <up> :bprevious<CR>
+nnoremap <down> :bnext<CR>
 
 set nofoldenable    " disable folding
 

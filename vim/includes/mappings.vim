@@ -52,6 +52,9 @@ nnoremap <silent> # #zz
 nnoremap <silent> g* g*zz
 nnoremap <silent> g# g#zz
 
+nnoremap <silent> ]] ]]zz
+nnoremap <silent> [[ [[zz
+
 " close quick tips
 map <silent><F12> :cclose<cr>
 

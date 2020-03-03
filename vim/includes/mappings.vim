@@ -2,6 +2,9 @@
 nnoremap / /\v
 vnoremap / /\v
 
+" Escape to Normal mode using jj
+inoremap jj <ESC>
+
 " remove search highlight
 nnoremap <leader><space> :noh<cr>
 

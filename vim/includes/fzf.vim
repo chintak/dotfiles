@@ -60,6 +60,7 @@ command! -bang -nargs=? -complete=dir Files
 " nmap <Leader>c :Tags<CR>
 nmap <Leader>; :Buffers<CR>
 nmap <Leader>t :Files<CR>
+nmap <Leader>y :FZF %:h<CR>
 nmap <Leader>r :Rg<CR>
 nmap <Leader>g "zyaw:exe "Bgs ".@z.""<CR>
 nmap <Leader>bf :Bgf

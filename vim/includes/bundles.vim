@@ -10,6 +10,7 @@ Plug 'junegunn/fzf.vim'
 " Syntax Highlight and IDE-Like features
 Plug 'w0rp/ale'
 Plug 'scrooloose/nerdcommenter'
+Plug 'octol/vim-cpp-enhanced-highlight'
 
 if has('nvim')
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
@@ -22,6 +23,7 @@ endif
 " Multiple cursors / Motion
 Plug 'mg979/vim-visual-multi'
 Plug 'easymotion/vim-easymotion'
+Plug 'terryma/vim-expand-region'
 
 " Light and configurable status line
 Plug 'itchyny/lightline.vim'

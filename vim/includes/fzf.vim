@@ -44,7 +44,7 @@ command! -bang -nargs=* Bgs
 
 command! -bang -nargs=* Bgf
   \ call fzf#vim#grep(
-  \   repo_initial . 'bgf --color=on -s -l '.shellescape(<q-args>), 1,
+  \   repo_initial . 'bgf --color=on -s '.shellescape(<q-args>), 1,
   \   <bang>0 ? fzf#vim#with_preview('up:60%')
   \           : fzf#vim#with_preview('up:40%:hidden', '?'),
   \   <bang>0)

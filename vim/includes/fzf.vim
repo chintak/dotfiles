@@ -64,5 +64,5 @@ nmap <Leader>y :FZF %:h<CR>
 nmap <Leader>p :Files %:h
 nmap <Leader>r :Rg<CR>
 nmap <Leader>g "zyaw:exe "Bgs ".@z.""<CR>
-nmap <Leader>bf "zyaw:exe "Bgf ".@z.""<CR>
+nmap <Leader>bf "zyiw:exe "Bgf ".@z.""<CR>
 

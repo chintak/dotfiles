@@ -53,14 +53,14 @@ command! -bang -nargs=* Bgf
 command! -bang -nargs=? -complete=dir Files
   \ call fzf#vim#files(
   \   <q-args>,
-  \   <bang>0 ? fzf#vim#with_preview('up:60%')
+  \   <bang>0 ? fzf#vim#with_preview({'options': ['--multi'], 'up': '60%'})
   \           : fzf#vim#with_preview('right:40%:hidden', '?'),
   \   <bang>0)
 
 " nmap <Leader>c :Tags<CR>
 nmap <Leader>; :Buffers<CR>
-nmap <Leader>t :Files<CR>
-nmap <Leader>y :FZF %:h<CR>
+nmap <Leader>t :Files
+nmap <Leader>y :Files %:h<CR>
 nmap <Leader>p :Files %:h
 nmap <Leader>r :Rg<CR>
 nmap <Leader>g "zyaw:exe "Bgs ".@z.""<CR>

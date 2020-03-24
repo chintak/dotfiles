@@ -38,6 +38,9 @@ Plug 'skywind3000/asyncrun.vim'
 " Language pack
 Plug 'sheerun/vim-polyglot'
 
+" Folding
+Plug 'tmhedberg/simpylfold'
+
 if filereadable("$HOME/.bundles.vim") == 1
   source "$HOME/.bundles.vim"
 endif

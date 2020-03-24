@@ -15,6 +15,12 @@ set softtabstop=4
 "Display line numbers
 set number
 
+" Enable folding with the spacebar
+" set foldmethod=indent
+let g:SimpylFold_fold_import = 1
+set foldlevel=99
+nnoremap <space> za
+
 "To insert space characters whenever the tab key is pressed, set the 'expandtab' option
 set expandtab
 

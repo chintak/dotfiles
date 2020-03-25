@@ -53,7 +53,8 @@ set omnifunc=ale#completion#OmniFunc
 let g:ale_linters = {
   \   'go': ['gofmt', 'gometalinter'],
   \   'hack': ['hack', 'hhast'],
-  \   'python': ['flake8'],
+  \   'python': ['flake8', 'pyls'],
+  \   'cpp': ['cquery_buck'],
   \   'javascript': ['eslint'],
   \   'javascript.jsx': ['eslint'],
   \   'typescript': ['tslint', 'typecheck', 'tsserver'],
@@ -68,6 +69,8 @@ let g:ale_fixers = {
 \       'black',
 \       'isort'
 \   ],
+\   'c': ['clang-format'],
+\   'cpp': ['clang-format'],
 \   'hack': ['hackfmt'],
 \   'javascript': ['prettier'],
 \   'javascript.jsx': ['prettier'],

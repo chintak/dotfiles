@@ -42,6 +42,8 @@ nnoremap ; :
 " linux CTRL+T
 map <F1> :tabnew<CR>
 map tt :tabnew<CR>
+map tc :tabclose<CR>
+map td :bdelete<CR>
 
 " show and hide errors
 "nmap <silent> q :lnext<CR>
@@ -70,8 +72,6 @@ map <silent><F12> :cclose<cr>
 map <Leader>b :bufdo bd<CR>
 nnoremap <up> :bprevious<CR>
 nnoremap <down> :bnext<CR>
-
-set nofoldenable    " disable folding
 
 " Multiple cursors
 nmap <silent> <C-n> <Plug>(VM-Find-Under)

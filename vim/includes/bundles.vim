@@ -7,6 +7,9 @@ Plug 'morhetz/gruvbox'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
 
+" NERDTree
+Plug 'preservim/nerdtree'
+
 " Syntax Highlight and IDE-Like features
 Plug 'w0rp/ale'
 Plug 'scrooloose/nerdcommenter'

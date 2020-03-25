@@ -16,7 +16,7 @@ set softtabstop=4
 set number
 
 " Enable folding with the spacebar
-" set foldmethod=indent
+set foldmethod=syntax
 let g:SimpylFold_fold_import = 1
 set foldlevel=99
 nnoremap <space> za
@@ -220,3 +220,10 @@ au InsertLeave * set nopaste
 "Auto close helper windows on save
 :autocmd BufWritePre * :pclose
 :autocmd BufWritePre * :cclose
+
+" enable mouse interaction when using within tmux
+set ttymouse=xterm2
+set mouse=a
+
+" jump to open tab instead of loading buf in current tab
+set switchbuf=usetab,newtab

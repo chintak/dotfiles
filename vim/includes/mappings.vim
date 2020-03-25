@@ -80,3 +80,14 @@ xmap <silent> <C-n> <Plug>(VM-Find-Subword-Under)
 " Motion
 nmap f <Plug>(easymotion-bd-f)
 nmap F <Plug>(easymotion-overwin-f)
+
+" vim-signify
+nnoremap <Leader>c :SignifyDiff<CR>
+"   hunk jumping
+" nmap gc <Plug>(signify-next-hunk)
+" nmap gp <Plug>(signify-prev-hunk)
+"   hunk text object
+omap ic <Plug>(signify-motion-inner-pending)
+xmap ic <Plug>(signify-motion-inner-visual)
+omap ac <Plug>(signify-motion-outer-pending)
+xmap ac <Plug>(signify-motion-outer-visual)

@@ -227,3 +227,6 @@ set mouse=a
 
 " jump to open tab instead of loading buf in current tab
 set switchbuf=usetab,newtab
+
+" vim-signify
+set updatetime=100

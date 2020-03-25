@@ -44,6 +44,9 @@ Plug 'sheerun/vim-polyglot'
 " Folding
 Plug 'tmhedberg/simpylfold'
 
+" mercurial diff support
+Plug 'mhinz/vim-signify'
+
 if filereadable("$HOME/.bundles.vim") == 1
   source "$HOME/.bundles.vim"
 endif

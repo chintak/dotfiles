@@ -69,7 +69,7 @@ map <silent><F12> :cclose<cr>
 ":nnoremap <silent> <Leader>m :StripWhitespace
 
 " delete all buffers
-map <Leader>b :bufdo bd<CR>
+nnoremap <Leader>Q :bufdo bd<CR>
 nnoremap <up> :bprevious<CR>
 nnoremap <down> :bnext<CR>
 
@@ -82,7 +82,8 @@ nmap f <Plug>(easymotion-bd-f)
 nmap F <Plug>(easymotion-overwin-f)
 
 " vim-signify
-nnoremap <Leader>c :SignifyDiff<CR>
+nnoremap <Leader>hd :SignifyDiff<CR>
+nnoremap <Leader>hu :SignifyHunkUndo<CR>
 "   hunk jumping
 " nmap gc <Plug>(signify-next-hunk)
 " nmap gp <Plug>(signify-prev-hunk)

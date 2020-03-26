@@ -61,9 +61,10 @@ command! -bang -nargs=? -complete=dir Files
 nmap <Leader>; :Buffers<CR>
 nmap <Leader>t :Files
 nmap <Leader>y :Files %:h<CR>
+vmap <Leader>y y:Files <C-r>"<CR>
 nmap <Leader>p :Files %:h
 nmap <Leader>r :Rg<CR>
 nmap <Leader>g "zyiw:exe "Bgs ".@z.""<CR>
 vmap <Leader>g y:exe "Bgs ".@".""<CR>
-nmap <Leader>bf "zyiw:exe "Bgf ".@z.""<CR>
-vmap <Leader>bf y:exe "Bgf ".@".""<CR>
+nmap <Leader>b "zyiw:exe "Bgf ".@z.""<CR>
+vmap <Leader>b y:exe "Bgf ".@".""<CR>

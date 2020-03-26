@@ -3,6 +3,7 @@ map <Leader>/ :NERDTreeToggle<CR>
 
 let g:NERDTreeDirArrowExpandable = '+'
 let g:NERDTreeDirArrowCollapsible = '-'
+let g:NERDTreeChDirMode=0
 
 " NERDTress File highlighting
 function! NERDTreeHighlightFile(extension, fg, bg, guifg, guibg)
@@ -10,14 +11,14 @@ function! NERDTreeHighlightFile(extension, fg, bg, guifg, guibg)
     exec 'autocmd filetype nerdtree syn match ' . a:extension .' #^\s\+.*'. a:extension .'$#'
 endfunction
 
+call NERDTreeHighlightFile('md', 'gray', 'none', 'gray', '#151515')
+call NERDTreeHighlightFile('txt', 'gray', 'none', 'gray', '#151515')
 call NERDTreeHighlightFile('ini', 'gray', 'none', 'gray', '#151515')
 call NERDTreeHighlightFile('yml', 'gray', 'none', 'gray', '#151515')
 call NERDTreeHighlightFile('config', 'gray', 'none', 'gray', '#151515')
 call NERDTreeHighlightFile('conf', 'gray', 'none', 'gray', '#151515')
 call NERDTreeHighlightFile('json', 'gray', 'none', 'gray', '#151515')
 call NERDTreeHighlightFile('html', 'gray', 'none', 'gray', '#151515')
-call NERDTreeHighlightFile('styl', 'cyan', 'none', 'cyan', '#151515')
-call NERDTreeHighlightFile('css', 'cyan', 'none', 'cyan', '#151515')
 
 call NERDTreeHighlightFile('cpp', 'red', 'none', 'red', '#151515')
 call NERDTreeHighlightFile('cc', 'red', 'none', '#ffa500', '#151515')

@@ -31,7 +31,7 @@ if repo_path =~# 'configerator'
     let repo_initial = 'c'
 elseif repo_path =~# 'www'
     let repo_initial = 't'
-elseif repo_path =~# 'fbcode'
+elseif repo_path =~# 'fbsource'
     let repo_initial = 'f'
 endif
 
@@ -63,6 +63,7 @@ nmap <Leader>t :Files
 nmap <Leader>y :Files %:h<CR>
 nmap <Leader>p :Files %:h
 nmap <Leader>r :Rg<CR>
-nmap <Leader>g "zyaw:exe "Bgs ".@z.""<CR>
+nmap <Leader>g "zyiw:exe "Bgs ".@z.""<CR>
+vmap <Leader>g y:exe "Bgs ".@".""<CR>
 nmap <Leader>bf "zyiw:exe "Bgf ".@z.""<CR>
-
+vmap <Leader>bf y:exe "Bgf ".@".""<CR>

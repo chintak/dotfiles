@@ -8,15 +8,19 @@ map <Leader> <Plug>(easymotion-prefix)
 "nmap <Leader><Leader> f(easymotion-overwin-f)
 
 " s{char}{char} to move to {char}{char}
-"nmap s <Plug>(easymotion-overwin-f2)
+nmap s <Plug>(easymotion-overwin-f2)
 
 " Move to line
-map <Leader>l <Plug>(easymotion-bd-jk)
-nmap <Leader>l <Plug>(easymotion-overwin-line)
+map \ <Plug>(easymotion-bd-jk)
+nmap \ <Plug>(easymotion-overwin-line)
 
 " Move to word
 map  <Leader>w <Plug>(easymotion-bd-w)
 nmap <Leader>w <Plug>(easymotion-overwin-w)
+
+" JK motions: Line motions
+map ] <Plug>(easymotion-j)
+map [ <Plug>(easymotion-k)
 
 let g:EasyMotion_startofline = 0 " keep cursor column when JK motion
 let g:EasyMotion_smartcase = 1

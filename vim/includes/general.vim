@@ -257,6 +257,8 @@ function! SaveSession() abort
     if empty(g:hg_bookmark_parse) == 0
         silent! execute "mksession! " . s:fullpath
         echom "Session saved: " . s:fullpath
+    els
+        echom "Session not saved: empty branch name."
     endif
 endfunction
 function! LoadSession() abort

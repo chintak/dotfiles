@@ -2,7 +2,7 @@
 let g:lightline = {
 \ 'colorscheme': 'wombat',
 \ 'active': {
-\   'left': [['mode', 'paste'], ['hgbranchinfo', 'absolutepath', 'modified']],
+\   'left': [['mode', 'paste'], ['hgbranchinfo', 'relativepath', 'modified']],
 \   'right': [['lineinfo'], ['percent'], ['filetype', 'readonly', 'linter_warnings', 'linter_errors', 'linter_ok']]
 \ },
 \ 'component_expand': {

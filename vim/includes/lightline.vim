@@ -2,22 +2,23 @@
 let g:lightline = {
 \ 'colorscheme': 'wombat',
 \ 'active': {
-\   'left': [['mode', 'paste'], ['absolutepath', 'modified']],
-\   'right': [['lineinfo'], ['percent'], ['readonly', 'linter_warnings', 'linter_errors', 'linter_ok'], ['hack'], ['flow']]
+\   'left': [['mode', 'paste'], ['hgbranchinfo', 'absolutepath', 'modified']],
+\   'right': [['lineinfo'], ['percent'], ['filetype', 'readonly', 'linter_warnings', 'linter_errors', 'linter_ok']]
 \ },
 \ 'component_expand': {
 \   'linter_warnings': 'LightlineLinterWarnings',
 \   'linter_errors': 'LightlineLinterErrors',
-\   'linter_ok': 'LightlineLinterOK'
+\   'linter_ok': 'LightlineLinterOK',
 \ },
 \ 'component_type': {
 \   'readonly': 'error',
 \   'linter_warnings': 'warning',
-\   'linter_errors': 'error'
+\   'linter_errors': 'error',
 \ },
 \ 'component_function': {
 \   'hack': 'LightlineHackStatus',
 \   'flow': 'LightlineFlowStatus',
+\   'hgbranchinfo': 'LightLineHgParseBookmark'
 \ },
 \ }
 function! LightlineLinterWarnings() abort
@@ -37,6 +38,14 @@ function! LightlineLinterOK() abort
   let l:all_errors = l:counts.error + l:counts.style_error
   let l:all_non_errors = l:counts.total - l:all_errors
   return l:counts.total == 0 ? '✓ ' : ''
+endfunction
+
+function! LightLineHgParseBookmark() abort
+    return '[' . g:hg_bookmark_parse . ']'
+endfunction
+
+function! LightLineFiletype() abort
+  return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
 endfunction
 
 " Update and show lightline but only if it's visible (e.g., not in Goyo)

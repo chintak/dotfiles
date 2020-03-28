@@ -39,14 +39,14 @@ command! -bang -nargs=* Bgs
   \ call fzf#vim#grep(
   \   repo_initial . 'bgs --color=on -s '.shellescape(<q-args>), 1,
   \   <bang>0 ? fzf#vim#with_preview('up:60%')
-  \           : fzf#vim#with_preview('up:40%'),
+  \           : fzf#vim#with_preview('right:40%'),
   \   <bang>0)
 
 command! -bang -nargs=* Bgf
   \ call fzf#vim#grep(
   \   repo_initial . 'bgf --color=on -s '.shellescape(<q-args>), 1,
   \   <bang>0 ? fzf#vim#with_preview('up:60%')
-  \           : fzf#vim#with_preview('up:40%:hidden', '?'),
+  \           : fzf#vim#with_preview('right:40%'),
   \   <bang>0)
 
 " Likewise, Files command with preview window

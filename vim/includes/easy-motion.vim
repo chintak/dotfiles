@@ -22,5 +22,9 @@ nmap <Leader>w <Plug>(easymotion-overwin-w)
 map ] <Plug>(easymotion-j)
 map [ <Plug>(easymotion-k)
 
+" Motion
+nmap f <Plug>(easymotion-bd-f)
+nmap F <Plug>(easymotion-overwin-f)
+
 let g:EasyMotion_startofline = 0 " keep cursor column when JK motion
 let g:EasyMotion_smartcase = 1

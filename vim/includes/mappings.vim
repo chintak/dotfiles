@@ -53,6 +53,7 @@ map td :bdelete<CR>
 nnoremap <silent> n nzz
 nnoremap <silent> N Nzz
 nnoremap <silent> * *zz
+vnoremap <silent> * y/<C-r>"<CR>
 nnoremap <silent> # #zz
 nnoremap <silent> g* g*zz
 nnoremap <silent> g# g#zz
@@ -77,9 +78,9 @@ nnoremap <down> :bnext<CR>
 nmap <silent> <C-n> <Plug>(VM-Find-Under)
 xmap <silent> <C-n> <Plug>(VM-Find-Subword-Under)
 
-" Motion
-nmap f <Plug>(easymotion-bd-f)
-nmap F <Plug>(easymotion-overwin-f)
+" Scroll in other window
+nmap <C-k> <C-w>w<C-y><C-w>w
+nmap <C-j> <C-w>w<C-e><C-w>w
 
 " vim-signify
 nnoremap <Leader>hd :SignifyDiff<CR>

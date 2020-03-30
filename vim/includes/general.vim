@@ -255,9 +255,12 @@ call mkdir(s:session_dir, "p")
 function! SaveSession() abort
     let s:fullpath = simplify(s:session_dir .'/'. g:hg_bookmark_parse .'.vim')
     if empty(g:hg_bookmark_parse) == 0
+        if filereadable(s:fullpath) && tolower(input("Save Session? [y/n]: ")) != "y"
+            return
+        endif
         silent! execute "mksession! " . s:fullpath
         echom "Session saved: " . s:fullpath
-    els
+    else
         echom "Session not saved: empty branch name."
     endif
 endfunction

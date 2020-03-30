@@ -270,5 +270,5 @@ function! LoadSession() abort
     endif
 endfunction
 
-nnoremap <Leader>) :call SaveSession()<CR>
+nnoremap <Leader>! :call SaveSession()<CR>
 nnoremap <Leader>( :call LoadSession()<CR>

@@ -61,7 +61,7 @@ command! -bang -nargs=? -complete=dir Files
 nmap <Leader>; :Buffers<CR>
 nmap <Leader>t :Files
 nmap <Leader>y :Files %:h<CR>
-vmap <Leader>y y:Files <C-r>"<CR>
+vmap <Leader>y y:exe "Files ".fnamemodify('<C-r>"',':p:h').""<CR>
 nmap <Leader>p :Files %:h
 nmap <Leader>r :Rg<CR>
 nmap <Leader>g "zyiw:exe "Bgs ".@z.""<CR>

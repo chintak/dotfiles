@@ -23,7 +23,7 @@ source $HOME/.vim/includes/fzf.vim
 source $HOME/.vim/includes/lightline.vim
 source $HOME/.vim/includes/deoplete.vim
 source $HOME/.vim/includes/easy-motion.vim
-source $HOME/.vim/includes/nerdtree.vim
+" source $HOME/.vim/includes/nerdtree.vim
 
 " Language specific
 source $HOME/.vim/includes/hack.vim

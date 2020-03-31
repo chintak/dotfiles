@@ -8,7 +8,7 @@ Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
 
 " NERDTree
-Plug 'preservim/nerdtree'
+" Plug 'preservim/nerdtree'
 
 " Syntax Highlight and IDE-Like features
 Plug 'w0rp/ale'

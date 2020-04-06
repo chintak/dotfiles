@@ -19,8 +19,8 @@ map  <Leader>w <Plug>(easymotion-bd-w)
 nmap <Leader>w <Plug>(easymotion-overwin-w)
 
 " JK motions: Line motions
-map ] <Plug>(easymotion-j)
-map [ <Plug>(easymotion-k)
+" map ] <Plug>(easymotion-j)
+" map [ <Plug>(easymotion-k)
 
 " Motion
 nmap f <Plug>(easymotion-bd-f)

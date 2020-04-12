@@ -1,9 +1,12 @@
 " Lightline
 let g:lightline = {
-\ 'colorscheme': 'wombat',
+\ 'colorscheme': 'PaperColor',
 \ 'active': {
 \   'left': [['mode', 'paste'], ['hgbranchinfo', 'relativepath', 'modified']],
 \   'right': [['lineinfo'], ['percent'], ['filetype', 'readonly', 'linter_warnings', 'linter_errors', 'linter_ok']]
+\ },
+\ 'inactive': {
+\   'left': [['relativepath', 'modified']]
 \ },
 \ 'component_expand': {
 \   'linter_warnings': 'LightlineLinterWarnings',

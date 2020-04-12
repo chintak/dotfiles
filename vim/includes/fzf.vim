@@ -59,6 +59,8 @@ command! -bang -nargs=? -complete=dir Files
 
 " nmap <Leader>c :Tags<CR>
 nmap <Leader>; :Buffers<CR>
+nmap <Leader>' :Windows<CR>
+nmap <Leader>m :Marks<CR>
 nmap <Leader>t :Files
 nmap <Leader>y :Files %:h<CR>
 vmap <Leader>y y:exe "Files ".fnamemodify('<C-r>"',':p:h').""<CR>

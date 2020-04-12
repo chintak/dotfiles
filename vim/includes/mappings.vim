@@ -20,6 +20,10 @@ nnoremap <right> :tabn<CR>
 nnoremap j gjzz
 nnoremap k gkzz
 
+" buffer window movement map
+nnoremap <bslash> <C-w>
+nnoremap <bslash>w <C-w><C-w>
+
 " tabs
 " nnoremap { :tabp<CR>
 " nnoremap } :tabn<CR>
@@ -70,9 +74,28 @@ map <silent><F12> :cclose<cr>
 ":nnoremap <silent> <Leader>m :StripWhitespace
 
 " delete all buffers
-nnoremap <Leader>Q :bufdo bd<CR>
+function! s:bdelnum(action, args)
+    for arg in split(a:args)
+        let bounds = split(arg, ',')
+        if len(bounds) == 2
+            for idx in range(str2nr(bounds[0]), str2nr(bounds[1]))
+                execute a:action . " " . bufname(idx)
+            endfor
+        else
+            execute a:action . " " . bufname(str2nr(arg))
+        endif
+    endfor
+endfunction
+command! -complete=buffer -nargs=? BWipeout
+            \ :call s:bdelnum("Bwipeout", <f-args>)
+command! -complete=buffer -nargs=? BDelete
+            \ :call s:bdelnum("Bdelete", <f-args>)
+
+nnoremap <Leader>Q :bufdo Bwipeout<CR>
 nnoremap <up> :bprevious<CR>
 nnoremap <down> :bnext<CR>
+nnoremap <Leader>q :Bwipeout<CR>
+nnoremap <Leader>d :ls<CR>:BWipeout<Space>
 
 " Multiple cursors
 nmap <silent> <C-n> <Plug>(VM-Find-Under)

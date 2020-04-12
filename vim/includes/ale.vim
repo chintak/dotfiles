@@ -21,7 +21,7 @@ function! FixOnSaveBufferToggle()
     endif
 endfunction
 
-nnoremap <silent> <leader>m :call FixOnSaveBufferToggle()<CR>
+nnoremap <silent> <leader>a :call FixOnSaveBufferToggle()<CR>
 
 highlight link ALEWarningSign String
 highlight link ALEErrorSign Title
@@ -72,6 +72,7 @@ let g:ale_fixers = {
 \   'c': ['clang-format'],
 \   'cpp': ['clang-format'],
 \   'hack': ['hackfmt'],
+\   'thrift': ['remove_trailing_lines', 'trim_whitespace'],
 \   'javascript': ['prettier'],
 \   'javascript.jsx': ['prettier'],
 \   'typescript': ['prettier'],

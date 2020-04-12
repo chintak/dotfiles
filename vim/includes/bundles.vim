@@ -47,6 +47,9 @@ Plug 'tmhedberg/simpylfold'
 " mercurial diff support
 Plug 'mhinz/vim-signify'
 
+" delete buffer without closing window
+Plug 'moll/vim-bbye'
+
 if filereadable("$HOME/.bundles.vim") == 1
   source "$HOME/.bundles.vim"
 endif

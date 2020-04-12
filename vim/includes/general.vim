@@ -79,6 +79,8 @@ hi clear CursorLineNR
 augroup CLClear
     autocmd! ColorScheme * hi clear CursorLineNR
 augroup END
+au WinEnter * set cursorline
+au WinLeave * set nocursorline
 
 "Indicates a fast terminal connection.  More characters will be sent to
 "the screen for redrawing, instead of using insert/delete line

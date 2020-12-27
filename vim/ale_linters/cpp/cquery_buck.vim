@@ -4,7 +4,7 @@
 " the linter automatically.
 
 call ale#Set('cpp_cquery_buck_executable',
-    \ expand('/home/$USER/.vim/fbcode_cquery_wrapper'))
+    \ expand('/data/users/$USER/fbsource/fbcode/experimental/gwicke/vim/fbcode_cquery_wrapper'))
 call ale#Set('cpp_cquery_buck_cache_directory', expand('/tmp/cquery_cache'))
 
 function! ale_linters#cpp#cquery_buck#GetProjectRoot(buffer) abort

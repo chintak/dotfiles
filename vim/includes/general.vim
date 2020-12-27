@@ -15,6 +15,12 @@ set softtabstop=4
 "Display line numbers
 set number
 
+" Enable folding with the spacebar
+set foldmethod=syntax
+let g:SimpylFold_fold_import = 1
+set foldlevel=99
+nnoremap <space> za
+
 "To insert space characters whenever the tab key is pressed, set the 'expandtab' option
 set expandtab
 
@@ -73,6 +79,8 @@ hi clear CursorLineNR
 augroup CLClear
     autocmd! ColorScheme * hi clear CursorLineNR
 augroup END
+au WinEnter * set cursorline
+au WinLeave * set nocursorline
 
 "Indicates a fast terminal connection.  More characters will be sent to
 "the screen for redrawing, instead of using insert/delete line
@@ -99,7 +107,7 @@ set noswapfile
 set history=1000         " remember more commands and search history
 set undolevels=1000      " use many muchos levels of undo
 
-set wildignore=*.swp,*.bak,*.pyc,*/.git/*
+set wildignore=*.swp,*.bak,*.pyc,*/.git/*,*/.hg/*
 set wildignore+=*/tmp/*,*.so,*.zip   " Linux/MacOSX
 
 set title                " change the terminal's title
@@ -113,7 +121,6 @@ endif
 "ignore case for commands
 set ignorecase
 set smartcase
-
 
 "When on, the ":substitute" flag 'g' is default on.  This means that
 "all matches in a line are substituted instead of one.  When a 'g' flag
@@ -152,7 +159,7 @@ set background=dark
 
 "Red color column after 130 characters
 if exists('+colorcolumn')
-  set colorcolumn=+1
+  set colorcolumn=80
   " Set up a very dark grey ruler
   highlight ColorColumn ctermbg=232 guibg=DarkGrey
 else
@@ -183,8 +190,10 @@ autocmd Filetype html setlocal ts=2 sw=2 sts=0 expandtab
 autocmd Filetype htmldjango setlocal ts=2 sw=2 sts=0 expandtab
 autocmd Filetype make setlocal ts=4 sw=4 sts=0 noexpandtab autoindent
 
-:let g:session_autosave = 'yes'
+" let g:session_autosave = 'yes'
 set sessionoptions-=help
+set sessionoptions-=options    " do not store global and local values in a session
+set sessionoptions-=folds      " do not store folds
 
 set guicursor=
 let $NVIM_TUI_ENABLE_CURSOR_SHAPE = 0
@@ -212,5 +221,59 @@ au InsertEnter *
 au InsertLeave * set nopaste
 
 "Auto close helper windows on save
-:autocmd BufWritePre * :pclose
-:autocmd BufWritePre * :cclose
+autocmd BufWritePre * :pclose
+autocmd BufWritePre * :cclose
+
+" enable mouse interaction when using within tmux
+set ttymouse=xterm2
+set mouse=a
+
+" jump to open tab instead of loading buf in current tab
+set switchbuf=usetab,newtab
+
+" vim-signify
+set updatetime=100
+
+" hg bookmark name or git branch
+let g:hg_bookmark_parse=''
+function! Trim(s) abort
+    return substitute(a:s, "[^a-zA-Z0-9-_/]", "", "g")
+endfunction
+function! HgBookmarkUpdate() abort
+    let g:hg_bookmark_parse =
+        \ Trim(
+        \     system(
+        \         "hg log -l1 -T '{activebookmark}' 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null"
+        \     )
+        \ )
+    " let g:hg_bookmark_parse = system("hg log -l1 -T '{if(activebookmark,activebookmark,node|shortest)}' 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null")
+endfunction
+
+autocmd VimEnter,BufWritePost,FileChangedShellPost,ShellCmdPost *
+            \ :silent! call HgBookmarkUpdate()
+
+let s:session_dir = expand("~/.vimsession/")
+call mkdir(s:session_dir, "p")
+function! SaveSession() abort
+    let s:fullpath = simplify(s:session_dir .'/'. g:hg_bookmark_parse .'.vim')
+    if empty(g:hg_bookmark_parse) == 0
+        if filereadable(s:fullpath) && tolower(input("Save Session? [y/n]: ")) != "y"
+            return
+        endif
+        silent! execute "mksession! " . s:fullpath
+        echom "Session saved: " . s:fullpath
+    else
+        echom "Session not saved: empty branch name."
+    endif
+endfunction
+function! LoadSession() abort
+    call HgBookmarkUpdate()
+    let s:fullpath = simplify(s:session_dir .'/'. g:hg_bookmark_parse .'.vim')
+    if filereadable(s:fullpath)
+        silent! execute "source " . s:fullpath
+        echom "Session loaded: " . s:fullpath
+    endif
+endfunction
+
+nnoremap <Leader>! :call SaveSession()<CR>
+nnoremap <Leader>( :call LoadSession()<CR>

@@ -31,7 +31,7 @@ if repo_path =~# 'configerator'
     let repo_initial = 'c'
 elseif repo_path =~# 'www'
     let repo_initial = 't'
-elseif repo_path =~# 'fbcode'
+elseif repo_path =~# 'fbsource'
     let repo_initial = 'f'
 endif
 
@@ -39,28 +39,34 @@ command! -bang -nargs=* Bgs
   \ call fzf#vim#grep(
   \   repo_initial . 'bgs --color=on -s '.shellescape(<q-args>), 1,
   \   <bang>0 ? fzf#vim#with_preview('up:60%')
-  \           : fzf#vim#with_preview('up:40%'),
+  \           : fzf#vim#with_preview('right:40%'),
   \   <bang>0)
 
 command! -bang -nargs=* Bgf
   \ call fzf#vim#grep(
-  \   repo_initial . 'bgf --color=on -s -l '.shellescape(<q-args>), 1,
+  \   repo_initial . 'bgf --color=on -s '.shellescape(<q-args>), 1,
   \   <bang>0 ? fzf#vim#with_preview('up:60%')
-  \           : fzf#vim#with_preview('up:40%:hidden', '?'),
+  \           : fzf#vim#with_preview('right:40%'),
   \   <bang>0)
 
 " Likewise, Files command with preview window
 command! -bang -nargs=? -complete=dir Files
   \ call fzf#vim#files(
   \   <q-args>,
-  \   <bang>0 ? fzf#vim#with_preview('up:60%')
+  \   <bang>0 ? fzf#vim#with_preview({'options': ['--multi'], 'up': '60%'})
   \           : fzf#vim#with_preview('right:40%:hidden', '?'),
   \   <bang>0)
 
 " nmap <Leader>c :Tags<CR>
 nmap <Leader>; :Buffers<CR>
-nmap <Leader>t :Files<CR>
+nmap <Leader>' :Windows<CR>
+nmap <Leader>m :Marks<CR>
+nmap <Leader>t :Files
+nmap <Leader>y :Files %:h<CR>
+vmap <Leader>y y:exe "Files ".fnamemodify('<C-r>"',':p:h').""<CR>
+nmap <Leader>p :Files %:h
 nmap <Leader>r :Rg<CR>
-nmap <Leader>g "zyaw:exe "Bgs ".@z.""<CR>
-nmap <Leader>bf :Bgf
-
+nmap <Leader>g "zyiw:exe "Bgs ".@z.""<CR>
+vmap <Leader>g y:exe "Bgs ".@".""<CR>
+nmap <Leader>b "zyiw:exe "Bgf ".@z.""<CR>
+vmap <Leader>b y:exe "Bgf ".@".""<CR>

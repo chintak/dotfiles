@@ -1,12 +1,11 @@
 " ALE
 
-let g:ale_lint_on_text_changed = 'never'
-let g:ale_lint_on_enter = 0
+let g:ale_lint_on_enter = 1
 let g:ale_lint_on_insert_leave = 1
 let g:ale_sign_warning = '>'
 let g:ale_sign_error = '>>'
-let g:ale_fix_on_save = 0
-let b:ale_fix_on_save = 0
+let g:ale_fix_on_save = 1
+" let b:ale_fix_on_save = 1
 
 function! FixOnSaveBufferToggle()
     if !exists("b:ale_fix_on_save")
@@ -22,7 +21,7 @@ function! FixOnSaveBufferToggle()
     endif
 endfunction
 
-nnoremap <silent> <leader>m :call FixOnSaveBufferToggle()<CR>
+nnoremap <silent> <leader>a :call FixOnSaveBufferToggle()<CR>
 
 highlight link ALEWarningSign String
 highlight link ALEErrorSign Title
@@ -54,7 +53,8 @@ set omnifunc=ale#completion#OmniFunc
 let g:ale_linters = {
   \   'go': ['gofmt', 'gometalinter'],
   \   'hack': ['hack', 'hhast'],
-  \   'python': ['flake8'],
+  \   'python': ['flake8', 'pyls'],
+  \   'cpp': ['cquery_buck'],
   \   'javascript': ['eslint'],
   \   'javascript.jsx': ['eslint'],
   \   'typescript': ['tslint', 'typecheck', 'tsserver'],
@@ -63,37 +63,18 @@ let g:ale_linters = {
 \}
 
 let g:ale_fixers = {
+\   '*': ['remove_trailing_lines', 'trim_whitespace'],
 \   'python': [
+\       'autopep8',
 \       'black',
-\       'isort',
-\       'remove_trailing_lines',
-\       'trim_whitespace'
+\       'isort'
 \   ],
-\   'hack': [
-\       'hackfmt',
-\       'remove_trailing_lines',
-\       'trim_whitespace'
-\   ],
-\   'javascript': [
-\       'prettier',
-\       'remove_trailing_lines',
-\       'trim_whitespace'
-\   ],
-\   'javascript.jsx': [
-\       'prettier',
-\       'remove_trailing_lines',
-\       'trim_whitespace'
-\   ],
-\   'typescript': [
-\	    'prettier',
-\       'remove_trailing_lines',
-\       'trim_whitespace'
-\   ],
-\   'typescript.tsx': [
-\	    'prettier',
-\       'remove_trailing_lines',
-\       'trim_whitespace'
-\   ]
+\   'c': ['clang-format'],
+\   'cpp': ['clang-format'],
+\   'hack': ['hackfmt'],
+\   'thrift': ['remove_trailing_lines', 'trim_whitespace'],
+\   'javascript': ['prettier'],
+\   'javascript.jsx': ['prettier'],
+\   'typescript': ['prettier'],
+\   'typescript.tsx': ['prettier']
 \}
-
-

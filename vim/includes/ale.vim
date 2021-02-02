@@ -1,10 +1,12 @@
 " ALE
 
+" Automatic completion
+let g:ale_completion_enabled = 1
 let g:ale_lint_on_enter = 1
-let g:ale_lint_on_insert_leave = 1
+let g:ale_lint_on_insert_leave = 0
 let g:ale_sign_warning = '>'
 let g:ale_sign_error = '>>'
-let g:ale_fix_on_save = 1
+let g:ale_fix_on_save = 0
 " let b:ale_fix_on_save = 1
 
 function! FixOnSaveBufferToggle()
@@ -21,18 +23,19 @@ function! FixOnSaveBufferToggle()
     endif
 endfunction
 
-nnoremap <silent> <leader>a :call FixOnSaveBufferToggle()<CR>
-
 highlight link ALEWarningSign String
 highlight link ALEErrorSign Title
 
 nmap <silent> Q <Plug>(ale_previous_wrap)
 nmap <silent> q <Plug>(ale_next_wrap)
 
-" Automatic completion
-let g:ale_completion_enabled = 1
 " Include the linter name (e.g. 'hack' or 'hhast'), code, and message in errors
 let g:ale_echo_msg_format = '[%linter%]% [code]% %s'
+
+nnoremap <Leader>at :call FixOnSaveBufferToggle()<CR>
+nnoremap <Leader>af :ALEFix<CR>:w<CR>
+nnoremap <Leader>al :ALELint<CR>
+autocmd BufWritePost * :ALELint
 
 " Press `K` to view the type in the gutter
 nnoremap <silent> K :ALEHover<CR>

@@ -47,7 +47,7 @@ nnoremap ; :
 map <F1> :tabnew<CR>
 map tt :tabnew<CR>
 map tc :tabclose<CR>
-map td :bdelete<CR>
+map td :Bwipeout<CR>
 
 " show and hide errors
 "nmap <silent> q :lnext<CR>

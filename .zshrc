@@ -8,6 +8,16 @@ fi
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
+local_env_dir="${XDG_CONFIG_HOME:-$HOME/.config}/envs"
+if [[ -d "$local_env_dir" ]]; then
+  # Load tool-specific environment variables (local only).
+  for env_file in "$local_env_dir"/*.env; do
+    [[ -f "$env_file" ]] || continue
+    source "$env_file"
+  done
+fi
+unset local_env_dir env_file
+
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000

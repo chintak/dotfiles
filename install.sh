@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # Exit immediately if any command exits with a non-zero status, and print each command before executing it (for easier debugging)
+if [ -z "${BASH_VERSION:-}" ]; then
+    exec /usr/bin/env bash "$0" "$@"
+fi
+
 set -e -x
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

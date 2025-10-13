@@ -46,9 +46,7 @@ prompt_context(){}
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-alias proxyemr='autossh -M0 -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -N -D 18080 tick'
-
-alias nebula-console=/Users/csheth/Documents/nebula-console-darwin-arm64-v3.8.0
 export NEBULA_GRAPH_ADDRESS=alpha-nebula-graphd-thrift.service.ash1.consul
 export NEBULA_GRAPH_PORT=9669
+# nebula-console binary expected in $PATH
 alias nebula-console-login="nebula-console -addr $NEBULA_GRAPH_ADDRESS -port $NEBULA_GRAPH_PORT -u root -p nebula"

@@ -166,4 +166,5 @@ source "$OSH"/oh-my-bash.sh
 
 export NEBULA_GRAPH_ADDRESS=alpha-nebula-graphd-thrift.service.ash1.consul
 export NEBULA_GRAPH_PORT=9669
+# nebula-console binary expected in $PATH
 alias nebula-console-login="nebula-console -addr $NEBULA_GRAPH_ADDRESS -port $NEBULA_GRAPH_PORT -u root -p nebula"

@@ -1,3 +1,7 @@
+# This file should be symlinked to ~/.zshrc.custom
+# Append `source ~/.zshrc.custom` to your ~/.zshrc file
+# echo 'source ~/.zshrc.custom' >> ~/.zshrc
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -45,6 +49,6 @@ prompt_context(){}
 alias proxyemr='autossh -M0 -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -N -D 18080 tick'
 
 alias nebula-console=/Users/csheth/Documents/nebula-console-darwin-arm64-v3.8.0
-export NEBULA_GRAPH_ADDRESS=beta-nebula-graphd-thrift.service.ash1.consul
+export NEBULA_GRAPH_ADDRESS=alpha-nebula-graphd-thrift.service.ash1.consul
 export NEBULA_GRAPH_PORT=9669
-# alias nebula-console-login=nebula-console -addr $NEBULA_GRAPH_ADDRESS -port $NEBULA_GRAPH_PORT -u root -p nebula
+alias nebula-console-login="nebula-console -addr $NEBULA_GRAPH_ADDRESS -port $NEBULA_GRAPH_PORT -u root -p nebula"

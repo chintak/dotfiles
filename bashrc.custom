@@ -164,6 +164,37 @@ source "$OSH"/oh-my-bash.sh
 # alias bashconfig="mate ~/.bashrc"
 # alias ohmybash="mate ~/.oh-my-bash"
 
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+HISTFILE=~/.bash_history
+HISTSIZE=10000
+HISTFILESIZE=10000
+shopt -s histappend        # Append to the history file, don't overwrite it
+export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"  # Immediately append new history lines (if not already present)
+export HISTCONTROL=ignoreboth # Ignore duplicate lines and lines starting with space
+export HISTIGNORE="&:ls:bg:fg:history:cd" # Don't record some simple commands
+export HISTTIMEFORMAT="%F %T "  # Prepend timestamp to each command
+
+
+local_env_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tools"
+if [[ -d "$local_env_dir" ]]; then
+  # Local environment variables for personal tools
+  # This structure allows you to securely manage secrets and API keys for your personal tools.
+  # Each file matching "$local_env_dir"/*.local can define variables like:
+  #
+  #   export MY_TOOL_API_KEY="sk-xxxxxxx"
+  #   export ANOTHER_SECRET="foobar"
+  #
+  # These files should NOT be committed to version control.
+  # They will be sourced automatically if present, letting you safely store API keys, tokens,
+  # or other sensitive settings per tool without exposing them in the main config.
+  for env_file in "$local_env_dir"/*.local; do
+    [[ -f "$env_file" ]] || continue
+    source "$env_file"
+  done
+fi
+unset local_env_dir env_file
+
 export NEBULA_GRAPH_ADDRESS=alpha-nebula-graphd-thrift.service.ash1.consul
 export NEBULA_GRAPH_PORT=9669
 # nebula-console binary expected in $PATH

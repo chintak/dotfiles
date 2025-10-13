@@ -12,10 +12,19 @@ fi
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
-local_env_dir="${XDG_CONFIG_HOME:-$HOME/.config}/envs"
+local_env_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tools"
 if [[ -d "$local_env_dir" ]]; then
-  # Load tool-specific environment variables (local only).
-  for env_file in "$local_env_dir"/*.env; do
+  # Local environment variables for personal tools
+  # This structure allows you to securely manage secrets and API keys for your personal tools.
+  # Each file matching "$local_env_dir"/*.local can define variables like:
+  #
+  #   export MY_TOOL_API_KEY="sk-xxxxxxx"
+  #   export ANOTHER_SECRET="foobar"
+  #
+  # These files should NOT be committed to version control.
+  # They will be sourced automatically if present, letting you safely store API keys, tokens,
+  # or other sensitive settings per tool without exposing them in the main config.
+  for env_file in "$local_env_dir"/*.local; do
     [[ -f "$env_file" ]] || continue
     source "$env_file"
   done

@@ -176,7 +176,7 @@ export HISTIGNORE="&:ls:bg:fg:history:cd" # Don't record some simple commands
 export HISTTIMEFORMAT="%F %T "  # Prepend timestamp to each command
 
 
-local_env_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tools"
+local_env_dir="${XDG_CONFIG_HOME:-$HOME/.config}/localenvs"
 if [[ -d "$local_env_dir" ]]; then
   # Local environment variables for personal tools
   # This structure allows you to securely manage secrets and API keys for your personal tools.

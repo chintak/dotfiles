@@ -5,8 +5,8 @@ Environment configuration for interactive shells and Cursor tooling.
 ## What's Included
 
 - `install.sh` – detects your active shell, installs Powerlevel10k for zsh, and links the managed configs into `$HOME`.
-- `zshrc.custom` – Oh My Zsh setup with Powerlevel10k, Homebrew environment, and Nebula console helpers.
-- `bashrc.custom` – Oh My Bash theme selection, plugin/alias list, and Nebula console helpers.
+- `zshrc.custom` – Oh My Zsh setup with Powerlevel10k, Homebrew environment, Nebula console helpers, and local secret loading.
+- `bashrc.custom` – Oh My Bash theme selection, plugin/alias list, extended history settings, and local secret loading.
 - `p10k.zsh` – Powerlevel10k prompt profile referenced by `zshrc.custom`.
 - `.cursor/mcp.json` – tailored MCP server list for Cursor.
 
@@ -19,5 +19,6 @@ Environment configuration for interactive shells and Cursor tooling.
 ## Notes
 
 - `install.sh` safely appends sourcing lines to existing rc files without duplicating entries.
+- Shell configs source any `~/.config/tools/*.local` files, letting you keep API keys and machine-specific settings out of the repo.
+- `bashrc.custom` enables timestamped, append-only history so commands persist immediately across sessions.
 - Cursor settings live under `.cursor/`; add new MCP configs there and extend the script loop if more files need linking.
-- Keep personal machine-specific adjustments outside the repo (for example under `~/.config/envs`).

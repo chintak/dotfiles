@@ -12,7 +12,7 @@ fi
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
-local_env_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tools"
+local_env_dir="${XDG_CONFIG_HOME:-$HOME/.config}/localenvs"
 if [[ -d "$local_env_dir" ]]; then
   # Local environment variables for personal tools
   # This structure allows you to securely manage secrets and API keys for your personal tools.

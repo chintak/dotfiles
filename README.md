@@ -17,8 +17,12 @@ Environment configuration for interactive shells and Cursor tooling.
 
 ## Notes
 
+- Recent changes:
+  - Added optional Homebrew bootstrap on macOS before shell setup.
+  - Auto-installs Oh My Zsh/Oh My Bash if missing when running `install.sh`.
+  - Expanded shell history and local env loading so secrets can live in `~/.config/localenvs`.
 - Ensures [Oh My Zsh](https://ohmyz.sh) (for zsh) or [Oh My Bash](https://github.com/ohmybash/oh-my-bash) is installed as needed.
 - `install.sh` safely appends sourcing lines to existing rc files without duplicating entries.
-- Shell configs source any `~/.config/tools/*.local` files, letting you keep API keys and machine-specific settings out of the repo.
+- Shell configs source any `~/.config/localenvs/*.local` files, letting you keep API keys and machine-specific settings out of the repo.
 - `bashrc.custom` enables timestamped, append-only history so commands persist immediately across sessions.
 - Cursor settings live under `.cursor/`; add new MCP configs there and extend the script loop if more files need linking.

@@ -4,6 +4,19 @@ set -e -x
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Optionally install Homebrew if on macOS and it's missing
+if [[ "$(uname)" == "Darwin" ]]; then
+    if ! command -v brew >/dev/null 2>&1; then
+        echo "Homebrew not found. Installing Homebrew..."
+        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "${HOME}/.bash_profile"
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    else
+        echo "Homebrew already installed."
+    fi
+fi
+
+
 current_shell="$(basename "${SHELL}")"
 if [[ "${current_shell}" == "zsh" ]]; then
     echo "Detected shell: zsh"

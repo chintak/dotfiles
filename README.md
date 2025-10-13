@@ -12,12 +12,12 @@ Environment configuration for interactive shells and Cursor tooling.
 
 ## Usage
 
-1. Ensure [Oh My Zsh](https://ohmyz.sh) (for zsh) or [Oh My Bash](https://github.com/ohmybash/oh-my-bash) is installed as needed.
-2. Run `./install.sh` from the repo root to create or refresh the symlinks.
-3. Restart your terminal, or source the relevant rc file (`source ~/.zshrc` or `source ~/.bashrc`) to pick up the managed configuration.
+1. Run `./install.sh` from the repo root to create or refresh the symlinks.
+2. Restart your terminal, or source the relevant rc file (`source ~/.zshrc` or `source ~/.bashrc`) to pick up the managed configuration.
 
 ## Notes
 
+- Ensures [Oh My Zsh](https://ohmyz.sh) (for zsh) or [Oh My Bash](https://github.com/ohmybash/oh-my-bash) is installed as needed.
 - `install.sh` safely appends sourcing lines to existing rc files without duplicating entries.
 - Shell configs source any `~/.config/tools/*.local` files, letting you keep API keys and machine-specific settings out of the repo.
 - `bashrc.custom` enables timestamped, append-only history so commands persist immediately across sessions.

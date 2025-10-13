@@ -18,18 +18,6 @@
       "headers": {
         "CONTEXT7_API_KEY": "$CONTEXT7_API_KEY"
       }
-    },
-    "Hugging Face": {
-      "url": "https://hf.co/mcp",
-      "headers": {}
-    },
-    "AWS Documentation": {
-      "command": "uvx awslabs.aws-documentation-mcp-server@latest",
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_DOCUMENTATION_PARTITION": "aws"
-      },
-      "args": []
     }
   }
 }

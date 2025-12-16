@@ -21,38 +21,41 @@ if [[ "$(uname)" == "Darwin" ]]; then
 fi
 
 
+# Install Starship prompt
+echo "Installing Starship prompt..."
+if ! command -v starship >/dev/null 2>&1; then
+    if command -v brew >/dev/null 2>&1; then
+        echo "Installing Starship via Homebrew..."
+        brew install starship
+    else
+        echo "Homebrew not found. Installing Starship via official installer..."
+        sh -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes
+    fi
+else
+    echo "Starship already installed."
+fi
+
+# Link Starship configuration
+echo "Linking Starship configuration..."
+mkdir -p "${HOME}/.config"
+if [ -f "${repo_dir}/starship.toml" ]; then
+    ln -sf "${repo_dir}/starship.toml" "${HOME}/.config/starship.toml"
+    echo "Starship config linked."
+else
+    echo "Warning: starship.toml not found in repo."
+fi
+
 current_shell="$(basename "${SHELL}")"
 if [[ "${current_shell}" == "zsh" ]]; then
     echo "Detected shell: zsh"
-    if [ ! -d "${ZSH:-$HOME/.oh-my-zsh}" ]; then
-        echo "Oh My Zsh not found, installing..."
-        RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-    else
-        echo "Oh My Zsh already installed at ${ZSH:-$HOME/.oh-my-zsh}."
-    fi
-    # Install Powerlevel10k if not already present
-    P10K_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
-    if [ ! -d "$P10K_DIR" ]; then
-        echo "Installing Powerlevel10k (p10k) theme..."
-        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${P10K_DIR}"
-    else
-        echo "Powerlevel10k already installed at ${P10K_DIR}."
-    fi
     echo "Symlinking .zshrc.custom and sourcing from .zshrc..."
     ln -sf "${repo_dir}/zshrc.custom" "${HOME}/.zshrc.custom"
     if ! grep -q 'source ~/.zshrc.custom' "${HOME}/.zshrc" 2>/dev/null; then
         echo 'source ~/.zshrc.custom' >> "${HOME}/.zshrc"
     fi
-    ln -sf "${repo_dir}/p10k.zsh" "${HOME}/.p10k.zsh"
 
 elif [[ "${current_shell}" == "bash" ]]; then
     echo "Detected shell: bash"
-    if [ ! -d "${OSH:-$HOME/.oh-my-bash}" ]; then
-        echo "Oh My Bash not found, installing..."
-        bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"
-    else
-        echo "Oh My Bash already installed at ${OSH:-$HOME/.oh-my-bash}."
-    fi
     echo "Symlinking .bashrc.custom and sourcing from .bashrc..."
     ln -sf "${repo_dir}/bashrc.custom" "${HOME}/.bashrc.custom"
     if ! grep -q 'source ~/.bashrc.custom' "${HOME}/.bashrc" 2>/dev/null; then

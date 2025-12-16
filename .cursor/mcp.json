@@ -1,17 +1,15 @@
 {
   "mcpServers": {
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
     "git": {
       "command": "uvx",
       "args": [
         "mcp-server-git"
       ]
+    },
+    "Sequential Thinking": {
+      "type": "http",
+      "url": "https://server.smithery.ai/@smithery-ai/server-sequential-thinking/mcp",
+      "headers": {}
     },
     "Context7": {
       "url": "https://mcp.context7.com/mcp",

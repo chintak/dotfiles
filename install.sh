@@ -13,7 +13,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
     if ! command -v brew >/dev/null 2>&1; then
         echo "Homebrew not found. Installing Homebrew..."
         NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "${HOME}/.bash_profile"
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "${HOME}/.zprofile"
         eval "$(/opt/homebrew/bin/brew shellenv)"
     else
         echo "Homebrew already installed."
@@ -45,34 +45,88 @@ else
     echo "Warning: starship.toml not found in repo."
 fi
 
-current_shell="$(basename "${SHELL}")"
-if [[ "${current_shell}" == "zsh" ]]; then
-    echo "Detected shell: zsh"
-    echo "Symlinking .zshrc.custom and sourcing from .zshrc..."
-    ln -sf "${repo_dir}/zshrc.custom" "${HOME}/.zshrc.custom"
-    if ! grep -q 'source ~/.zshrc.custom' "${HOME}/.zshrc" 2>/dev/null; then
-        echo 'source ~/.zshrc.custom' >> "${HOME}/.zshrc"
-    fi
+# Setup zsh configuration
+echo "Setting up zsh configuration..."
+if [[ "$(basename "${SHELL}")" != "zsh" ]]; then
+    echo "Warning: Current shell is not zsh. This installer is designed for zsh."
+    echo "Please switch to zsh and run this installer again, or manually configure zsh."
+fi
 
-elif [[ "${current_shell}" == "bash" ]]; then
-    echo "Detected shell: bash"
-    echo "Symlinking .bashrc.custom and sourcing from .bashrc..."
-    ln -sf "${repo_dir}/bashrc.custom" "${HOME}/.bashrc.custom"
-    if ! grep -q 'source ~/.bashrc.custom' "${HOME}/.bashrc" 2>/dev/null; then
-        echo 'source ~/.bashrc.custom' >> "${HOME}/.bashrc"
-    fi
-
+echo "Symlinking .zshrc.custom and sourcing from .zshrc..."
+ln -sf "${repo_dir}/zshrc.custom" "${HOME}/.zshrc.custom"
+if ! grep -q 'source ~/.zshrc.custom' "${HOME}/.zshrc" 2>/dev/null; then
+    echo 'source ~/.zshrc.custom' >> "${HOME}/.zshrc"
+    echo "Added source line to ~/.zshrc"
 else
-    echo "Detected shell: ${current_shell}"
-    echo "Symlinking .custom configuration for unsupported shell. Please adjust manually if needed."
+    echo "Source line already present in ~/.zshrc"
 fi
 
 echo "Linking Cursor configuration..."
+# Ensure ~/.cursor exists as a directory (not a symlink)
+if [ -e "${HOME}/.cursor" ]; then
+    if [ -L "${HOME}/.cursor" ]; then
+        # It's a symlink, remove it to create a real directory
+        rm "${HOME}/.cursor"
+    fi
+fi
 mkdir -p "${HOME}/.cursor"
-# To link more configs in future, add them to the array below and loop over them.
-configs_to_link=("mcp.json")
-for config in "${configs_to_link[@]}"; do
-    [ -f "${repo_dir}/.cursor/${config}" ] && ln -sf "${repo_dir}/.cursor/${config}" "${HOME}/.cursor/${config}"
-done
+
+# Merge commands directory
+if [ -d "${repo_dir}/.cursor/commands" ]; then
+    if [ -e "${HOME}/.cursor/commands" ]; then
+        if [ -L "${HOME}/.cursor/commands" ]; then
+            # Remove existing symlink
+            rm "${HOME}/.cursor/commands"
+            ln -sf "${repo_dir}/.cursor/commands" "${HOME}/.cursor/commands"
+        elif [ -d "${HOME}/.cursor/commands" ]; then
+            # Existing directory: copy repo files that don't exist
+            echo "Merging commands directory..."
+            for cmd_file in "${repo_dir}/.cursor/commands"/*; do
+                [ -f "$cmd_file" ] || continue
+                cmd_name=$(basename "$cmd_file")
+                if [ ! -e "${HOME}/.cursor/commands/${cmd_name}" ]; then
+                    ln -sf "$cmd_file" "${HOME}/.cursor/commands/${cmd_name}"
+                fi
+            done
+        fi
+    else
+        # Doesn't exist, create symlink
+        ln -sf "${repo_dir}/.cursor/commands" "${HOME}/.cursor/commands"
+    fi
+    echo "Cursor commands merged."
+fi
+
+# Merge rules directory
+if [ -d "${repo_dir}/.cursor/rules" ]; then
+    if [ -e "${HOME}/.cursor/rules" ]; then
+        if [ -L "${HOME}/.cursor/rules" ]; then
+            # Remove existing symlink
+            rm "${HOME}/.cursor/rules"
+            ln -sf "${repo_dir}/.cursor/rules" "${HOME}/.cursor/rules"
+        elif [ -d "${HOME}/.cursor/rules" ]; then
+            # Existing directory: copy repo files that don't exist
+            echo "Merging rules directory..."
+            for rule_file in "${repo_dir}/.cursor/rules"/*; do
+                [ -f "$rule_file" ] || continue
+                rule_name=$(basename "$rule_file")
+                if [ ! -e "${HOME}/.cursor/rules/${rule_name}" ]; then
+                    ln -sf "$rule_file" "${HOME}/.cursor/rules/${rule_name}"
+                fi
+            done
+        fi
+    else
+        # Doesn't exist, create symlink
+        ln -sf "${repo_dir}/.cursor/rules" "${HOME}/.cursor/rules"
+    fi
+    echo "Cursor rules merged."
+fi
+
+# Link mcp.json if it exists in repo
+if [ -f "${repo_dir}/.cursor/mcp.json" ]; then
+    ln -sf "${repo_dir}/.cursor/mcp.json" "${HOME}/.cursor/mcp.json"
+    echo "Cursor mcp.json linked."
+fi
+
+echo "Cursor configuration merged."
 
 echo "Done."

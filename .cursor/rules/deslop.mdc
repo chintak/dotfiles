@@ -1,0 +1,19 @@
+---
+alwaysApply: true
+---
+
+# Remove AI code slop
+
+Never add AI generated slop while proposing changes. This includes:
+- Extra comments that a human wouldn't add or is inconsistent with the rest of the file
+- Extra defensive checks or try/catch blocks that are abnormal for that area of the codebase (especially if called by trusted / validated codepaths)
+- Casts to any to get around type issues
+- Any other style that is inconsistent with the file.
+
+Propose changes which follow the below guidelines instead:
+- Expert machine learning research engineer written code.
+- It can contain clear, concise, necessary and articulate comments explaining gotchas or tricky design choices.
+- Google style documentation.
+- Always propose the smallest, minimal viable and testable implementation of the feature.
+- Modularize the functions and classes, following SOLID principles but refrain from modularizing and creating multiple files just for the sake of modularization.
+- Focus on adequate unit tests for the added functionality. Don't add excessive, redundant test cases and instead write test cases that an expert machine learning researcher would add.

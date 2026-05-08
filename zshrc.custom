@@ -35,7 +35,7 @@ setopt HIST_IGNORE_SPACE # No history when starting command with space
 setopt HIST_SAVE_NO_DUPS # When writing out the history file, older commands that duplicate newer ones are omitted
 
 # If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH=$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
 

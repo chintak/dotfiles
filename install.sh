@@ -7,9 +7,10 @@ fi
 set -e -x
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+os="$(uname -s)"
 
 # Optionally install Homebrew if on macOS and it's missing
-if [[ "$(uname)" == "Darwin" ]]; then
+if [[ "$os" == "Darwin" ]]; then
     if ! command -v brew >/dev/null 2>&1; then
         echo "Homebrew not found. Installing Homebrew..."
         NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -20,17 +21,11 @@ if [[ "$(uname)" == "Darwin" ]]; then
     fi
 fi
 
-
-# Install Starship prompt
+# Install Starship prompt to ~/.local/bin to avoid sudo
 echo "Installing Starship prompt..."
 if ! command -v starship >/dev/null 2>&1; then
-    if command -v brew >/dev/null 2>&1; then
-        echo "Installing Starship via Homebrew..."
-        brew install starship
-    else
-        echo "Homebrew not found. Installing Starship via official installer..."
-        sh -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes
-    fi
+    mkdir -p "${HOME}/.local/bin"
+    curl -fsSL https://starship.rs/install.sh | sh -s -- --yes --bin-dir "${HOME}/.local/bin"
 else
     echo "Starship already installed."
 fi
@@ -61,72 +56,62 @@ else
     echo "Source line already present in ~/.zshrc"
 fi
 
-echo "Linking Cursor configuration..."
-# Ensure ~/.cursor exists as a directory (not a symlink)
-if [ -e "${HOME}/.cursor" ]; then
-    if [ -L "${HOME}/.cursor" ]; then
-        # It's a symlink, remove it to create a real directory
-        rm "${HOME}/.cursor"
-    fi
+# Install Ghostty configuration (macOS only)
+if [[ "$os" == "Darwin" ]]; then
+    echo "Installing Ghostty configuration..."
+    ghostty_dest="${HOME}/Library/Application Support/com.mitchellh.ghostty"
+    mkdir -p "${ghostty_dest}"
+    cp "${repo_dir}/ghostty/config" "${ghostty_dest}/config"
+    echo "Ghostty config copied to ${ghostty_dest}/config"
 fi
-mkdir -p "${HOME}/.cursor"
 
-# Merge commands directory
-if [ -d "${repo_dir}/.cursor/commands" ]; then
-    if [ -e "${HOME}/.cursor/commands" ]; then
-        if [ -L "${HOME}/.cursor/commands" ]; then
-            # Remove existing symlink
-            rm "${HOME}/.cursor/commands"
-            ln -sf "${repo_dir}/.cursor/commands" "${HOME}/.cursor/commands"
-        elif [ -d "${HOME}/.cursor/commands" ]; then
-            # Existing directory: copy repo files that don't exist
-            echo "Merging commands directory..."
-            for cmd_file in "${repo_dir}/.cursor/commands"/*; do
-                [ -f "$cmd_file" ] || continue
-                cmd_name=$(basename "$cmd_file")
-                if [ ! -e "${HOME}/.cursor/commands/${cmd_name}" ]; then
-                    ln -sf "$cmd_file" "${HOME}/.cursor/commands/${cmd_name}"
-                fi
-            done
+# Install GitHub CLI
+echo "Installing GitHub CLI..."
+if ! command -v gh >/dev/null 2>&1; then
+    if [[ "$os" == "Darwin" ]]; then
+        # macOS: no official curl installer, use Homebrew
+        if command -v brew >/dev/null 2>&1; then
+            brew install gh
+        else
+            echo "Warning: Install gh manually: https://cli.github.com"
         fi
     else
-        # Doesn't exist, create symlink
-        ln -sf "${repo_dir}/.cursor/commands" "${HOME}/.cursor/commands"
+        # Linux: official install script
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+            | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+        sudo apt-get update && sudo apt-get install -y gh
     fi
-    echo "Cursor commands merged."
+else
+    echo "GitHub CLI already installed."
 fi
 
-# Merge rules directory
-if [ -d "${repo_dir}/.cursor/rules" ]; then
-    if [ -e "${HOME}/.cursor/rules" ]; then
-        if [ -L "${HOME}/.cursor/rules" ]; then
-            # Remove existing symlink
-            rm "${HOME}/.cursor/rules"
-            ln -sf "${repo_dir}/.cursor/rules" "${HOME}/.cursor/rules"
-        elif [ -d "${HOME}/.cursor/rules" ]; then
-            # Existing directory: copy repo files that don't exist
-            echo "Merging rules directory..."
-            for rule_file in "${repo_dir}/.cursor/rules"/*; do
-                [ -f "$rule_file" ] || continue
-                rule_name=$(basename "$rule_file")
-                if [ ! -e "${HOME}/.cursor/rules/${rule_name}" ]; then
-                    ln -sf "$rule_file" "${HOME}/.cursor/rules/${rule_name}"
-                fi
-            done
-        fi
-    else
-        # Doesn't exist, create symlink
-        ln -sf "${repo_dir}/.cursor/rules" "${HOME}/.cursor/rules"
-    fi
-    echo "Cursor rules merged."
+# Install Zellij
+echo "Installing Zellij..."
+if ! command -v zellij >/dev/null 2>&1; then
+    # Official installer supports macOS and Linux
+    bash <(curl -fsSL https://zellij.dev/launch)
+else
+    echo "Zellij already installed."
 fi
 
-# Link mcp.json if it exists in repo
-if [ -f "${repo_dir}/.cursor/mcp.json" ]; then
-    ln -sf "${repo_dir}/.cursor/mcp.json" "${HOME}/.cursor/mcp.json"
-    echo "Cursor mcp.json linked."
-fi
+# Install Zellij configuration
+echo "Installing Zellij configuration..."
+zellij_dest="${XDG_CONFIG_HOME:-$HOME/.config}/zellij"
+mkdir -p "${zellij_dest}/layouts"
+cp "${repo_dir}/zellij/config.kdl" "${zellij_dest}/config.kdl"
+cp "${repo_dir}/zellij/layouts/dev.kdl" "${zellij_dest}/layouts/dev.kdl"
+cp "${repo_dir}/zellij/layouts/agents.kdl" "${zellij_dest}/layouts/agents.kdl"
+echo "Zellij config and layouts copied to ${zellij_dest}/"
 
-echo "Cursor configuration merged."
+# Install skills-cli
+echo "Installing skills-cli..."
+mkdir -p "${HOME}/.local/bin"
+ln -sf "${repo_dir}/bin/skills-cli" "${HOME}/.local/bin/skills-cli"
+echo "skills-cli linked to ~/.local/bin/skills-cli"
 
 echo "Done."
+echo ""
+echo "Use 'skills-cli' to manage coding agent configs (rules, commands, skills, agents)."
+echo "Run 'skills-cli help' for usage."

@@ -1,0 +1,81 @@
+// Zellij Configuration
+// Optimized for agentic coding and development workflows
+//
+// SOURCE OF TRUTH: ~/Documents/dotfiles/zellij/config.kdl
+// This file is copied to ~/.config/zellij/config.kdl by install.sh.
+// Make changes here, then re-run install.sh to apply.
+
+// Use 24-bit color
+simplified_ui true
+
+// Scrollback
+scroll_buffer_size 50000
+
+// Copy behavior
+copy_on_select true
+copy_command "pbcopy"
+
+// Mouse support
+mouse_mode true
+
+// Pane frames for visual clarity when running multiple agents
+pane_frames true
+styled_underlines true
+
+// Session management - auto-attach to existing sessions
+session_serialization true
+serialize_pane_viewport true
+
+// Mirror terminal selection for copy/paste
+scrollback_editor "/usr/bin/vim"
+
+// Default shell
+default_shell "zsh"
+
+// Layout dir
+default_layout "dev"
+
+// Theme that complements GruvboxDarkHard in Ghostty
+theme "gruvbox-dark"
+
+// Keybindings optimized for development workflow
+keybinds clear-defaults=false {
+    // Shared bindings across all modes
+    shared_except "locked" {
+        // Quick session management
+        bind "Alt h" { MoveFocusOrTab "Left"; }
+        bind "Alt l" { MoveFocusOrTab "Right"; }
+        bind "Alt j" { MoveFocus "Down"; }
+        bind "Alt k" { MoveFocus "Up"; }
+
+        // Quick pane resizing
+        bind "Alt =" { Resize "Increase"; }
+        bind "Alt -" { Resize "Decrease"; }
+    }
+
+    // Normal mode - primary working mode
+    normal {
+        // Quick access to common actions
+        bind "Alt n" { NewPane; }
+        bind "Alt d" { NewPane "Down"; }
+        bind "Alt r" { NewPane "Right"; }
+        bind "Alt w" { CloseFocus; }
+        bind "Alt f" { ToggleFocusFullscreen; }
+        bind "Alt t" { NewTab; }
+        bind "Alt 1" { GoToTab 1; }
+        bind "Alt 2" { GoToTab 2; }
+        bind "Alt 3" { GoToTab 3; }
+        bind "Alt 4" { GoToTab 4; }
+        bind "Alt 5" { GoToTab 5; }
+        bind "Alt [" { GoToPreviousTab; }
+        bind "Alt ]" { GoToNextTab; }
+        bind "Alt z" { TogglePaneFrames; }
+    }
+}
+
+// Plugin configuration
+plugins {
+    tab-bar location="zellij:tab-bar"
+    status-bar location="zellij:status-bar"
+    compact-bar location="zellij:compact-bar"
+}

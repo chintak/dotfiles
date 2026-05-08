@@ -43,6 +43,12 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # Starship config with Gruvbox Rainbow preset is in ~/.config/starship.toml
 eval "$(starship init zsh)"
 
+# Zellij: attach to directory-named session or create one
+zj() {
+  local session="${1:-$(basename "$PWD")}"
+  zellij attach "$session" 2>/dev/null || zellij --session "$session"
+}
+
 export NEBULA_GRAPH_ADDRESS=alpha-nebula-graphd-thrift.service.ash1.consul
 export NEBULA_GRAPH_PORT=9669
 # nebula-console binary expected in $PATH

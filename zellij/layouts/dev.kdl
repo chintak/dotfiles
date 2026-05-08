@@ -1,0 +1,28 @@
+// Development layout for agentic coding
+// Main editor pane with a bottom terminal strip
+// Usage: zellij --layout dev
+//
+// SOURCE OF TRUTH: ~/Documents/dotfiles/zellij/layouts/dev.kdl
+
+layout {
+    // Top: main working area
+    pane split_direction="vertical" {
+        // Primary editor/agent pane (70% width)
+        pane size="70%" {
+            name "editor"
+            focus true
+        }
+        // Side pane for file watching, logs, or secondary agent
+        pane size="30%" {
+            name "aux"
+        }
+    }
+    // Bottom: terminal strip for quick commands
+    pane size=6 {
+        name "terminal"
+    }
+    // UI bars
+    pane size=1 borderless=true {
+        plugin location="compact-bar"
+    }
+}

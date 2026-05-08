@@ -63,6 +63,11 @@ venv.bak/
 *.swo
 *~
 
+# AI assistant configs
+.cursor/
+.claude/
+.codex/
+
 # Jupyter Notebook
 .ipynb_checkpoints
 

@@ -1,0 +1,105 @@
+# herdr — agent multiplexer.
+# Docs: https://herdr.dev/docs/configuration/   Reload: herdr server reload-config
+
+onboarding = false
+
+[theme]
+name = "dracula"
+
+# Soften the chrome (Dracula palette).
+[theme.custom]
+sidebar_bg    = "#21222c"
+active_row_bg = "#343746"
+selection_bg  = "#44475a"
+text          = "#f8f8f2"
+subtext0      = "#b6bdca"
+accent        = "#bd93f9"
+
+# ── keys ───────────────────────────────────────────────────────────────
+# Prefix-free OS/browser-style chords, with prefix+… fallbacks. Ghostty
+# passes cmd/alt through (see ghostty/config).
+[keys]
+prefix = "ctrl+b"
+
+# tabs
+previous_tab = ["alt+[", "cmd+shift+[", "prefix+p"]
+next_tab     = ["alt+]", "cmd+shift+]", "prefix+n"]
+new_tab      = ["alt+n", "cmd+t", "prefix+c"]
+rename_tab   = ["alt+r", "prefix+shift+t"]
+close_tab    = ["alt+w", "cmd+w", "prefix+shift+x"]
+move_tab_previous = "alt+shift+["
+move_tab_next     = "alt+shift+]"
+switch_tab   = ["alt+1..9", "prefix+1..9"]
+
+# panes
+focus_pane_left  = ["shift+alt+left", "cmd+alt+left", "prefix+h"]
+focus_pane_right = ["shift+alt+right", "cmd+alt+right", "prefix+l"]
+focus_pane_up    = ["shift+alt+k", "cmd+alt+up", "prefix+k"]
+focus_pane_down  = ["shift+alt+j", "cmd+alt+down", "prefix+j"]
+resize_pane_left  = ["ctrl+shift+alt+h", "cmd+ctrl+left"]
+resize_pane_right = ["ctrl+shift+alt+l", "cmd+ctrl+right"]
+resize_pane_up    = ["ctrl+shift+alt+k", "cmd+ctrl+up"]
+resize_pane_down  = ["ctrl+shift+alt+j", "cmd+ctrl+down"]
+split_vertical   = ["prefix+v", "alt+d"]
+split_horizontal = ["prefix+minus", "alt+shift+d"]
+cycle_pane_next     = ["prefix+tab", "alt+u"]
+cycle_pane_previous = ["prefix+shift+tab", "alt+i"]
+zoom = ["prefix+z", "alt+shift+enter"]
+
+# workspaces
+new_workspace      = ["shift+alt+n", "cmd+n", "prefix+shift+n"]
+previous_workspace = ["shift+alt+up", "prefix+left"]
+next_workspace     = ["shift+alt+down", "prefix+right"]
+rename_workspace   = ["shift+alt+r", "prefix+shift+w"]
+close_workspace    = ["shift+alt+w", "cmd+shift+w", "prefix+shift+d"]
+switch_workspace   = "cmd+1..9"
+
+# agents (alt+tab cycles like an OS app switcher)
+next_agent     = ["alt+tab", "prefix+d"]
+previous_agent = ["shift+alt+tab", "prefix+a"]
+focus_agent    = ["shift+alt+1..9", "prefix+shift+1..9"]
+
+goto      = ["prefix+g", "cmd+p"]
+last_pane = "prefix+space"
+
+# ── panes / shells ─────────────────────────────────────────────────────
+[terminal]
+shell_mode = "auto"      # login shell on macOS → brew PATH in every pane
+new_cwd = "follow"
+kitty_graphics = true
+
+[server]
+headless_cols = 160      # layout used while no client is attached
+headless_rows = 50
+
+[worktrees]
+directory = "~/.herdr/worktrees"   # one branch per agent, no clobbering
+
+# ── ui ─────────────────────────────────────────────────────────────────
+[ui]
+sidebar_start_collapsed = true
+agent_panel_sort = "spaces"        # keep rows stable for the jump keys
+status_indicators = "symbols"      # needs a Nerd Font
+show_agent_labels_on_pane_borders = true
+pane_outer_borders = false
+pane_gaps = false
+pane_scrollbars = false
+mouse_capture = true
+copy_on_select = true
+mouse_scroll_lines = 5
+accent = "#bd93f9"
+hide_tab_bar_when_single_tab = true
+prompt_new_tab_name = false
+
+[ui.toast]
+delivery = "system"      # notify even with no client attached
+delay_seconds = 1
+
+[ui.sound]
+enabled = true
+
+[session]
+resume_agents_on_restore = true
+
+[advanced]
+scrollback_limit_bytes = 100000000

@@ -1,7 +1,7 @@
 // Zellij Configuration
 // Optimized for agentic coding and development workflows
 //
-// SOURCE OF TRUTH: ~/Documents/dotfiles/zellij/config.kdl
+// SOURCE OF TRUTH: ~/git/dotfiles/zellij/config.kdl
 // This file is copied to ~/.config/zellij/config.kdl by install.sh.
 // Make changes here, then re-run install.sh to apply.
 

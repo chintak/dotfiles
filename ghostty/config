@@ -1,69 +1,74 @@
-# Ghostty Configuration
-# Optimized for agentic coding and development workflows
-#
-# SOURCE OF TRUTH: ~/Documents/dotfiles/ghostty/config
-# This file is copied to ~/Library/Application Support/com.mitchellh.ghostty/config
-# by install.sh. Make changes here, then re-run install.sh to apply.
+# Ghostty — herdr is the multiplexer; Ghostty is the renderer.
+# Docs: https://ghostty.org/docs/config
 
-# --- Font ---
-font-family = Fira Code
+# ── look ───────────────────────────────────────────────────────────────
+font-family = JetBrainsMono Nerd Font
 font-size = 14
-font-thicken = true
-adjust-cell-height = 15%
-
-# --- Theme & Appearance ---
-theme = Gruvbox Dark Hard
-background-opacity = 0.92
-background-blur-radius = 20
-minimum-contrast = 1.1
-cursor-style = block
-cursor-style-blink = false
-mouse-hide-while-typing = true
-
-# --- Window ---
+theme = Dracula
 window-padding-x = 8
-window-padding-y = 4
+window-padding-y = 8
 window-padding-balance = true
-window-padding-color = extend
-window-decoration = auto
 macos-titlebar-style = tabs
+macos-option-as-alt = true          # let alt chords reach herdr
 window-save-state = always
-confirm-close-surface = false
-quit-after-last-window-closed = false
-macos-option-as-alt = true
 
-# --- Scrollback ---
-scrollback-limit = 100000
+# ── quick terminal: cmd+shift+` from anywhere ──────────────────────────
+keybind = global:cmd+shift+grave_accent=toggle_quick_terminal
+quick-terminal-position = top
+quick-terminal-screen = main
+quick-terminal-animation-duration = 0.15
 
-# --- Clipboard ---
+# ── hand Ghostty's chords to herdr ─────────────────────────────────────
+# Ghostty's own split/tab chords are freed so herdr receives them. In
+# 1.3.x its native Split menu can win over `unbind`, so the split chords
+# are emitted as explicit Kitty CSI-u sequences instead.
+keybind = performable:super+d=text:\\x1b[100;9u
+keybind = performable:super+shift+d=text:\\x1b[100;10u
+keybind = performable:super+[=text:\\x1b[91;9u
+keybind = performable:super+]=text:\\x1b[93;9u
+keybind = performable:super+shift+enter=text:\\x1b[13;10u
+keybind = cmd+alt+arrow_up=unbind
+keybind = cmd+alt+arrow_down=unbind
+keybind = cmd+alt+arrow_left=unbind
+keybind = cmd+alt+arrow_right=unbind
+keybind = cmd+ctrl+arrow_up=unbind
+keybind = cmd+ctrl+arrow_down=unbind
+keybind = cmd+ctrl+arrow_left=unbind
+keybind = cmd+ctrl+arrow_right=unbind
+keybind = cmd+t=unbind
+keybind = cmd+w=unbind
+keybind = cmd+shift+[=unbind
+keybind = cmd+shift+]=unbind
+keybind = cmd+n=unbind
+keybind = cmd+shift+w=unbind
+# cmd+1..9 — free both the character and the physical-key trigger
+keybind = cmd+1=unbind
+keybind = cmd+digit_1=unbind
+keybind = cmd+2=unbind
+keybind = cmd+digit_2=unbind
+keybind = cmd+3=unbind
+keybind = cmd+digit_3=unbind
+keybind = cmd+4=unbind
+keybind = cmd+digit_4=unbind
+keybind = cmd+5=unbind
+keybind = cmd+digit_5=unbind
+keybind = cmd+6=unbind
+keybind = cmd+digit_6=unbind
+keybind = cmd+7=unbind
+keybind = cmd+digit_7=unbind
+keybind = cmd+8=unbind
+keybind = cmd+digit_8=unbind
+keybind = cmd+9=unbind
+keybind = cmd+digit_9=unbind
+
+# ── clipboard ──────────────────────────────────────────────────────────
 clipboard-read = allow
 clipboard-write = allow
-copy-on-select = clipboard
-clipboard-trim-trailing-spaces = true
-clipboard-paste-bracketed-safe = true
+copy-on-select = false              # broken on macOS 26 in Ghostty 1.3.x
+selection-clear-on-copy = true
 
-# --- Performance ---
-bold-is-bright = false
-link-url = true
-
-# --- Shell Integration ---
+# ── behavior ───────────────────────────────────────────────────────────
+scrollback-limit = 100000000        # agents emit a lot of output
+confirm-close-surface = false       # herdr keeps processes alive anyway
 shell-integration = detect
-shell-integration-features = no-cursor,sudo,title
-
-# --- Keybindings for agentic workflow ---
-# Quick font size adjustments during pair/screen sharing
-keybind = super+equal=increase_font_size:1
-keybind = super+minus=decrease_font_size:1
-keybind = super+zero=reset_font_size
-
-# Split management (when not using zellij)
-keybind = super+d=new_split:right
-keybind = super+shift+d=new_split:down
-keybind = super+w=close_surface
-keybind = super+shift+enter=toggle_split_zoom
-
-# Quick navigation
-keybind = super+shift+left=goto_split:left
-keybind = super+shift+right=goto_split:right
-keybind = super+shift+up=goto_split:top
-keybind = super+shift+down=goto_split:bottom
+shell-integration-features = cursor,sudo,title

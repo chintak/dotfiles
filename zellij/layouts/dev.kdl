@@ -2,7 +2,7 @@
 // Main editor pane with a bottom terminal strip
 // Usage: zellij --layout dev
 //
-// SOURCE OF TRUTH: ~/Documents/dotfiles/zellij/layouts/dev.kdl
+// SOURCE OF TRUTH: ~/git/dotfiles/zellij/layouts/dev.kdl
 
 layout {
     // Top: main working area

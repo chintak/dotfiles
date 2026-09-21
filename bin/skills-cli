@@ -1,0 +1,635 @@
+#!/usr/bin/env python3
+"""skills-cli — manage coding agent configs (rules, commands, skills, agents)
+from the dotfiles repo into project-level or user-level editor config directories.
+
+Usage:
+  skills-cli rules list
+  skills-cli rules install deslop
+  skills-cli commands install --all
+  skills-cli skills push my-skill
+  skills-cli agents remove my-agent
+  skills-cli skills install my-skill --config-path ~/.hermes
+"""
+
+from __future__ import annotations
+
+import argparse
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+from typing import Optional
+
+DOTFILES_DIR = Path(__file__).resolve().parent.parent
+CATEGORIES = ("rules", "commands", "skills", "agents")
+
+# Categories that use the Agent Skills directory format (<name>/SKILL.md)
+DIR_BASED_CATEGORIES = {"skills", "agents"}
+
+EDITOR_PATHS = {
+    "cursor": "{base}/.cursor/{category}",
+    "claude": "{base}/.claude/{category}",
+    "codex": "{base}/.codex/{category}",
+}
+
+EDITOR_MARKERS = {
+    "cursor": ".cursor",
+    "claude": ".claude",
+    "codex": ".codex",
+}
+
+
+def detect_editors(base: Path) -> list[str]:
+    """Detect which editors have config directories under base."""
+    editors = [name for name, marker in EDITOR_MARKERS.items() if (base / marker).is_dir()]
+    if "cursor" not in editors and shutil.which("cursor"):
+        editors.append("cursor")
+    return editors
+
+
+def get_dest_dir(editor: str, category: str, base: Path) -> Path:
+    return Path(EDITOR_PATHS[editor].format(base=base, category=category))
+
+
+def _is_dir_based(category: str) -> bool:
+    """Check if a category uses directory-based Agent Skills format."""
+    return category in DIR_BASED_CATEGORIES
+
+
+def resolve_dest_dirs(category: str, config_path: Optional[Path]) -> list[tuple[str, Path]]:
+    """Resolve install destinations as (label, dest_dir) pairs.
+
+    With --config-path: a single direct target {config_path}/{category}.
+    Otherwise: auto-detect editor configs (.cursor/.claude/.codex) in $PWD.
+    """
+    if config_path is not None:
+        return [(str(config_path), config_path / category)]
+    base = Path.cwd()
+    editors = detect_editors(base)
+    if not editors:
+        print(
+            "Error: no editor config directories found (.cursor, .claude, .codex) in "
+            f"{base}.\nRun from a project with an editor config, or pass "
+            "--config-path PATH to target a specific directory (e.g. ~/.hermes).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return [(editor, get_dest_dir(editor, category, base)) for editor in editors]
+
+
+def find_source(category: str, name: str) -> Optional[Path]:
+    """Find a source config by name in the dotfiles category dir.
+
+    For dir-based categories (skills, agents): returns the skill directory path
+    if it contains a SKILL.md. For flat categories: returns the file path.
+    """
+    src_dir = DOTFILES_DIR / category
+    if not src_dir.is_dir():
+        return None
+    if _is_dir_based(category):
+        skill_dir = src_dir / name
+        if skill_dir.is_dir() and (skill_dir / "SKILL.md").is_file():
+            return skill_dir
+        return None
+    # Flat file lookup
+    matches = list(src_dir.glob(f"{name}.*"))
+    if matches:
+        return matches[0]
+    exact = src_dir / name
+    if exact.is_file():
+        return exact
+    return None
+
+
+def _find_in_cat_dir(cat_dir: Path, name: str, category: str) -> Optional[Path]:
+    """Look up an installed config inside a single category directory."""
+    if not cat_dir.is_dir():
+        return None
+    if _is_dir_based(category):
+        skill_dir = cat_dir / name
+        if skill_dir.is_dir() and (skill_dir / "SKILL.md").is_file():
+            return skill_dir
+        return None
+    matches = list(cat_dir.glob(f"{name}.*"))
+    if matches:
+        return matches[0]
+    exact = cat_dir / name
+    if exact.is_file():
+        return exact
+    return None
+
+
+def find_installed_source(
+    category: str, name: str, config_path: Optional[Path]
+) -> Optional[Path]:
+    """Find a config by name in the configured install destinations.
+
+    With --config-path: looks only inside {config_path}/{category}.
+    Otherwise: walks all editor dirs in $PWD.
+    """
+    if config_path is not None:
+        return _find_in_cat_dir(config_path / category, name, category)
+    base = Path.cwd()
+    for editor in EDITOR_PATHS:
+        result = _find_in_cat_dir(get_dest_dir(editor, category, base), name, category)
+        if result is not None:
+            return result
+    return None
+
+
+def list_installed(category: str, config_path: Optional[Path]) -> list[str]:
+    """List config names installed across the configured destinations."""
+    found: set[str] = set()
+    cat_dirs: list[Path] = []
+    if config_path is not None:
+        cat_dirs.append(config_path / category)
+    else:
+        base = Path.cwd()
+        cat_dirs.extend(get_dest_dir(editor, category, base) for editor in EDITOR_PATHS)
+    for cat_dir in cat_dirs:
+        if not cat_dir.is_dir():
+            continue
+        if _is_dir_based(category):
+            found.update(
+                d.name
+                for d in cat_dir.iterdir()
+                if d.is_dir() and (d / "SKILL.md").is_file()
+            )
+        else:
+            found.update(f.stem for f in cat_dir.iterdir() if f.is_file())
+    return sorted(found)
+
+
+def list_category(category: str) -> list[str]:
+    """List available config names in a category."""
+    src_dir = DOTFILES_DIR / category
+    if not src_dir.is_dir():
+        return []
+    if _is_dir_based(category):
+        return sorted(
+            d.name
+            for d in src_dir.iterdir()
+            if d.is_dir() and (d / "SKILL.md").is_file()
+        )
+    return sorted(f.stem for f in src_dir.iterdir() if f.is_file())
+
+
+def git_default_branch() -> str:
+    """Detect the default branch (main/master) of the dotfiles repo."""
+    try:
+        result = subprocess.run(
+            ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+            cwd=DOTFILES_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        # refs/remotes/origin/main -> main
+        return result.stdout.strip().split("/")[-1]
+    except subprocess.CalledProcessError:
+        # Fallback: check if main or master exists
+        for branch in ("main", "master"):
+            ret = subprocess.run(
+                ["git", "rev-parse", "--verify", f"refs/heads/{branch}"],
+                cwd=DOTFILES_DIR,
+                capture_output=True,
+            )
+            if ret.returncode == 0:
+                return branch
+        return "main"
+
+
+def git_current_branch() -> str:
+    """Get the current branch name."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        cwd=DOTFILES_DIR,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def git_ensure_default_branch() -> None:
+    """Switch to the default branch if not already on it."""
+    default = git_default_branch()
+    current = git_current_branch()
+    if current != default:
+        print(f"Switching from '{current}' to '{default}'...")
+        subprocess.run(
+            ["git", "checkout", default, "--quiet"],
+            cwd=DOTFILES_DIR,
+            check=True,
+            capture_output=True,
+        )
+
+
+def git_fetch_and_pull() -> None:
+    """Ensure we're on the default branch, then fetch and pull latest changes."""
+    git_ensure_default_branch()
+    print("Fetching latest from upstream...")
+    try:
+        subprocess.run(
+            ["git", "fetch", "--quiet"],
+            cwd=DOTFILES_DIR,
+            check=True,
+            capture_output=True,
+        )
+        result = subprocess.run(
+            ["git", "pull", "--ff-only", "--quiet"],
+            cwd=DOTFILES_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if "Already up to date" in (result.stdout or ""):
+            print("Already up to date.")
+        else:
+            print("Updated dotfiles repo.")
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.strip() if e.stderr else ""
+        print(f"Warning: could not pull latest changes: {stderr}", file=sys.stderr)
+        print("Continuing with local version.", file=sys.stderr)
+
+
+def spawn_claude_pr(category: str, name: str, filename: str) -> None:
+    """Spawn a background Claude Code process to commit and open a PR."""
+    claude_bin = shutil.which("claude")
+    if not claude_bin:
+        print("Note: 'claude' not found in PATH, skipping auto-PR.", file=sys.stderr)
+        return
+
+    prompt = (
+        f"In the dotfiles repo at {DOTFILES_DIR}, a new {category[:-1]} '{name}' "
+        f"was just added at {category}/{filename}. "
+        f"Create a new branch, commit the new file with a conventional commit message "
+        f"(feat({category}): add {name}), push the branch, and open a PR. "
+        f"The PR title should be 'feat({category}): add {name}' and the body should "
+        f"briefly describe what the config does based on its contents."
+    )
+
+    print(f"Spawning Claude to commit and open PR for {category}/{name}...")
+    try:
+        subprocess.Popen(
+            [claude_bin, "--dangerously-skip-permissions", "-p", prompt],
+            cwd=str(DOTFILES_DIR),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except OSError as e:
+        print(f"Warning: failed to spawn claude: {e}", file=sys.stderr)
+
+
+# --- Actions ---
+
+
+def action_list(category: str, **_kwargs: object) -> None:
+    names = list_category(category)
+    if not names:
+        print("(none)")
+    else:
+        for name in names:
+            print(f"  {name}")
+
+
+def _install_source(src: Path, dest_parent: Path, category: str) -> None:
+    """Copy a source (file or skill directory) into a destination parent directory."""
+    if _is_dir_based(category):
+        dest = dest_parent / src.name
+        if dest.exists():
+            shutil.rmtree(dest)
+        shutil.copytree(src, dest)
+        print(f"Installed {category}/{src.name}/ -> {dest}/")
+    else:
+        dest_parent.mkdir(parents=True, exist_ok=True)
+        dest = dest_parent / src.name
+        shutil.copy2(src, dest)
+        print(f"Installed {category}/{src.name} -> {dest}")
+
+
+def action_install(
+    category: str,
+    name: Optional[str],
+    config_path: Optional[Path],
+    install_all: bool,
+    **_kwargs: object,
+) -> None:
+    targets = resolve_dest_dirs(category, config_path)
+
+    if install_all:
+        names = list_category(category)
+        if not names:
+            print(f"No entries in {category}/")
+            return
+    elif name:
+        names = [name]
+    else:
+        print("Error: provide a config name or use --all", file=sys.stderr)
+        sys.exit(1)
+
+    for n in names:
+        src = find_source(category, n)
+        if src is None:
+            print(f"Error: '{n}' not found in {category}/", file=sys.stderr)
+            print("Available:")
+            action_list(category)
+            sys.exit(1)
+
+        for _label, dest_dir in targets:
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            _install_source(src, dest_dir, category)
+
+
+def action_upgrade(
+    category: str,
+    name: Optional[str],
+    config_path: Optional[Path],
+    **_kwargs: object,
+) -> None:
+    git_fetch_and_pull()
+    action_install(
+        category=category, name=name, config_path=config_path, install_all=False
+    )
+
+
+def action_remove(
+    category: str, name: str, config_path: Optional[Path], **_kwargs: object
+) -> None:
+    targets = resolve_dest_dirs(category, config_path)
+
+    src = find_source(category, name)
+    src_filename = src.name if src is not None else name
+
+    for _label, dest_dir in targets:
+        if _is_dir_based(category):
+            dest = dest_dir / name
+            if dest.is_dir():
+                shutil.rmtree(dest)
+                print(f"Removed {dest}/")
+            else:
+                print(f"Not found: {dest}/")
+        else:
+            dest = dest_dir / src_filename
+            if dest.is_file():
+                dest.unlink()
+                print(f"Removed {dest}")
+            else:
+                print(f"Not found: {dest}")
+
+
+def action_push(
+    category: str,
+    name: str,
+    config_path: Optional[Path],
+    force: bool = False,
+    **_kwargs: object,
+) -> None:
+    src = find_installed_source(category, name, config_path)
+
+    if src is None:
+        location = (
+            f"{config_path}/{category}/"
+            if config_path is not None
+            else f"any editor's {category}/ dir in {Path.cwd()}"
+        )
+        print(f"Error: '{name}' not found in {location}.", file=sys.stderr)
+        found = list_installed(category, config_path)
+        if found:
+            print("Available:")
+            for n in found:
+                print(f"  {n}")
+        sys.exit(1)
+
+    dest_dir = DOTFILES_DIR / category
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    if _is_dir_based(category):
+        dest = dest_dir / name
+        display_name = f"{name}/"
+    else:
+        dest = dest_dir / src.name
+        display_name = src.name
+
+    if dest.exists() and not force:
+        print(f"'{display_name}' already exists in dotfiles {category}/.", file=sys.stderr)
+        print("Use --force to overwrite.", file=sys.stderr)
+        sys.exit(1)
+
+    # Ensure we're on the default branch before writing to the repo
+    git_ensure_default_branch()
+
+    already_exists = dest.exists()
+    if _is_dir_based(category):
+        if dest.exists():
+            shutil.rmtree(dest)
+        shutil.copytree(src, dest)
+    else:
+        shutil.copy2(src, dest)
+    label = "Updated" if already_exists else "Pushed"
+    print(f"{label} {src} -> {dest}")
+
+    spawn_claude_pr(category, name, display_name)
+
+
+# --- CLI ---
+
+
+def add_action_subparsers(category_parser: argparse.ArgumentParser, category: str) -> None:
+    """Add list/install/upgrade/remove/push actions under a category subcommand."""
+    actions = category_parser.add_subparsers(dest="action", required=True)
+
+    # list
+    p_list = actions.add_parser(
+        "list",
+        aliases=["ls"],
+        help=f"List available {category} in the dotfiles repo",
+        description=f"Show all {category} available for installation from the dotfiles repo.",
+    )
+    p_list.set_defaults(action_fn=action_list)
+
+    # install
+    p_install = actions.add_parser(
+        "install",
+        aliases=["add"],
+        help=f"Copy {category} from dotfiles into project editor configs",
+        description=f"Install {category} by copying from the dotfiles repo into detected "
+        "editor config directories (.cursor, .claude, .codex) in the current project, "
+        "or directly into a path provided via --config-path. "
+        "Use --all to install everything in this category.",
+    )
+    p_install.add_argument(
+        "name", nargs="?", default=None, help=f"Name of the {category[:-1]} to install"
+    )
+    p_install.add_argument(
+        "--all",
+        dest="install_all",
+        action="store_true",
+        help=f"Install all {category} in this category",
+    )
+    p_install.set_defaults(action_fn=action_install)
+
+    # upgrade
+    p_upgrade = actions.add_parser(
+        "upgrade",
+        help=f"Pull latest dotfiles and re-install a {category[:-1]}",
+        description=f"Fetch the latest dotfiles from upstream, then re-copy a {category[:-1]} "
+        "into the project. Equivalent to 'skills-cli update && skills-cli "
+        f"{category} install <name>'.",
+    )
+    p_upgrade.add_argument(
+        "name", help=f"Name of the {category[:-1]} to upgrade"
+    )
+    p_upgrade.set_defaults(action_fn=action_upgrade)
+
+    # remove
+    p_remove = actions.add_parser(
+        "remove",
+        aliases=["rm"],
+        help=f"Remove installed {category} from project editor configs",
+        description=f"Delete a previously installed {category[:-1]} from all detected "
+        "editor config directories in the current project, or from the path "
+        "provided via --config-path.",
+    )
+    p_remove.add_argument(
+        "name", help=f"Name of the {category[:-1]} to remove"
+    )
+    p_remove.set_defaults(action_fn=action_remove)
+
+    # push
+    p_push = actions.add_parser(
+        "push",
+        help=f"Contribute a {category[:-1]} from the project back to the dotfiles repo",
+        description=f"Copy a {category[:-1]} from the project's editor config directories "
+        "(or from --config-path) into the dotfiles repo, making it available for "
+        "future installs. Refuses to overwrite by default; use --force to update an "
+        "existing entry.",
+    )
+    p_push.add_argument(
+        "name", help=f"Name of the {category[:-1]} to push upstream"
+    )
+    p_push.add_argument(
+        "--force", action="store_true", help="Overwrite if it already exists in dotfiles"
+    )
+    p_push.set_defaults(action_fn=action_push)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="skills-cli",
+        description=(
+            "Manage coding agent configs (rules, commands, skills, agents) from your "
+            "dotfiles repo. By default, installs into editor config directories "
+            "(.cursor, .claude, .codex) detected in the current project; or pass "
+            "--config-path to target an arbitrary directory (e.g. ~/.hermes)."
+        ),
+        epilog=(
+            "global flags:\n"
+            "  --config-path PATH      Install/remove/push against PATH/<category>/ directly,\n"
+            "                          bypassing editor detection. Use for tools that own a\n"
+            "                          single config root, e.g. --config-path ~/.hermes.\n"
+            "                          Can be placed anywhere in the command.\n"
+            "\n"
+            "examples:\n"
+            "  skills-cli update                                    # pull latest dotfiles\n"
+            "  skills-cli rules list                                # see available rules\n"
+            "  skills-cli rules install deslop                      # install to current project\n"
+            "  skills-cli rules upgrade deslop                      # pull + install (shorthand)\n"
+            "  skills-cli commands install --all                    # install all commands\n"
+            "  skills-cli skills push my-skill                      # contribute a skill to dotfiles\n"
+            "  skills-cli agents remove my-agent                    # remove from project\n"
+            "  skills-cli skills install my-skill --config-path ~/.hermes  # install to Hermes Agent\n"
+            "  skills-cli skills push my-skill --config-path ~/.hermes     # push from Hermes Agent\n"
+            "\n"
+            "editor detection (default mode):\n"
+            "  Automatically detects .cursor/, .claude/, .codex/ in the current\n"
+            "  working directory and installs to all that are present.\n"
+            "\n"
+            "config source:\n"
+            "  Configs are stored in the dotfiles repo under rules/, commands/,\n"
+            "  skills/, and agents/ directories."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    category_descriptions = {
+        "rules": "AI assistant behavior rules (e.g. coding style, anti-slop guidelines)",
+        "commands": "Reusable prompt commands (e.g. commit conventions, docstring generation)",
+        "skills": "Agent skills and capabilities definitions",
+        "agents": "Agent configuration and persona definitions",
+    }
+
+    sub = parser.add_subparsers(
+        dest="category",
+        required=True,
+        title="commands",
+    )
+
+    # Top-level update command
+    p_update = sub.add_parser(
+        "update",
+        help="Fetch and pull latest changes from the upstream dotfiles repo",
+        description="Fetch and fast-forward pull the dotfiles repo from its upstream remote. "
+        "Run this before 'install' to ensure you have the latest configs, or use "
+        "'<category> upgrade <name>' which calls update automatically.",
+    )
+    p_update.set_defaults(action_fn=lambda **_: git_fetch_and_pull())
+
+    for category in CATEGORIES:
+        cat_parser = sub.add_parser(
+            category,
+            help=category_descriptions[category],
+            description=f"Manage {category}: {category_descriptions[category]}.",
+            epilog=(
+                f"examples:\n"
+                f"  skills-cli {category} list\n"
+                f"  skills-cli {category} install <name>\n"
+                f"  skills-cli {category} install --all\n"
+                f"  skills-cli {category} upgrade <name>\n"
+                f"  skills-cli {category} remove <name>\n"
+                f"  skills-cli {category} push <name>\n"
+                f"  skills-cli {category} install <name> --config-path ~/.hermes"
+            ),
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+        )
+        add_action_subparsers(cat_parser, category)
+
+    # Pre-extract --config-path from argv so it works in any position
+    argv = sys.argv[1:]
+    config_path: Optional[Path] = None
+    filtered: list[str] = []
+    i = 0
+    while i < len(argv):
+        if argv[i].startswith("--config-path="):
+            config_path = Path(argv[i].split("=", 1)[1]).expanduser().resolve()
+            i += 1
+        elif argv[i] == "--config-path" and i + 1 < len(argv):
+            config_path = Path(argv[i + 1]).expanduser().resolve()
+            i += 2
+        elif argv[i] == "--level" or argv[i].startswith("--level="):
+            print(
+                "Error: --level was removed. Use --config-path PATH instead "
+                "(e.g. --config-path ~/.hermes). Without --config-path, the CLI "
+                "auto-detects editor configs in the current project.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        else:
+            filtered.append(argv[i])
+            i += 1
+
+    args = parser.parse_args(filtered)
+    args.config_path = config_path
+    kwargs = vars(args)
+    action_fn = kwargs.pop("action_fn", None)
+    if action_fn is None:
+        parser.print_help()
+        sys.exit(1)
+    kwargs.pop("action", None)
+    kwargs.pop("command", None)
+    action_fn(**kwargs)
+
+
+if __name__ == "__main__":
+    main()

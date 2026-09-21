@@ -1,7 +1,7 @@
 // Multi-agent layout for running parallel coding agents
 // Usage: zellij --layout agents
 //
-// SOURCE OF TRUTH: ~/Documents/dotfiles/zellij/layouts/agents.kdl
+// SOURCE OF TRUTH: ~/git/dotfiles/zellij/layouts/agents.kdl
 
 layout {
     tab name="agents" {

@@ -246,7 +246,8 @@ cmd_list() {
       items="$(printf '%s' "$items" | jq \
         --arg n "$n" --arg v "$(mget "$mf" version)" --arg d "$(mget "$mf" description)" \
         --arg c "$(mget "$mf" category)" --arg s "$st" \
-        '. + [{name:$n,version:$v,description:$d,category:$c,state:$s}]')"
+        --arg i "$(lock_get "$n" | jq -r '.version // ""' 2>/dev/null)" \
+        '. + [{name:$n,installed:$i,available:$v,description:$d,category:$c,state:$s}]')"
     done
     printf '%s\n' "$items" | jq .
     return
@@ -324,7 +325,8 @@ cmd_status() {
     for n in $(all_configs); do
       local mf; mf="$(config_dir "$n")/manifest"; st="$(config_state "$n")"
       items="$(printf '%s' "$items" | jq --arg n "$n" --arg v "$(mget "$mf" version)" --arg s "$st" \
-        '. + [{name:$n,version:$v,state:$s}]')"
+        --arg i "$(lock_get "$n" | jq -r '.version // ""' 2>/dev/null)" \
+        '. + [{name:$n,installed:$i,available:$v,state:$s}]')"
     done
     printf '%s\n' "$items" | jq .
   else

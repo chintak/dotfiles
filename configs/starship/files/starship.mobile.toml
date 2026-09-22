@@ -9,7 +9,7 @@
 add_newline = false
 command_timeout = 1000
 palette = 'dracula'
-format = "$directory$git_branch$git_status$python$nodejs$rust$character"
+format = "$directory$git_branch$git_status$git_state$python$nodejs$rust$status$cmd_duration$jobs$character"
 
 [palettes.dracula]
 color_fg0    = '#f8f8f2'
@@ -34,9 +34,11 @@ format = "[$symbol$branch]($style) "
 truncation_length = 28
 truncation_symbol = "…"
 
+# Trailing space lives inside the ( … ) group: a clean tree renders
+# nothing at all instead of a stray gap.
 [git_status]
 style = "fg:color_yellow"
-format = "[$all_status$ahead_behind]($style) "
+format = "[($all_status$ahead_behind )]($style)"
 conflicted = "="
 ahead = ">"
 behind = "<"
@@ -46,6 +48,13 @@ modified = "!"
 staged = "+"
 renamed = "R"
 deleted = "x"
+
+# Mid-operation state; no conditional — $state is a meta-variable (a
+# ( … ) group around it always hides) and the module self-suppresses
+# when no git operation is running.
+[git_state]
+style = "bold fg:color_red"
+format = "[ $state ]($style)"
 
 [python]
 symbol = "py "
@@ -61,6 +70,29 @@ format = "[$symbol$version ]($style)"
 symbol = "rs "
 style = "fg:color_red"
 format = "[$symbol$version ]($style)"
+
+# Line-1 tail — same transient set as the desktop twin, ASCII/emoji only.
+# status is disabled by default in starship — opt in explicitly.
+[status]
+disabled = false
+symbol = "✗ "
+success_symbol = ""
+not_executable_symbol = "✗ "
+not_found_symbol = "✗ "
+sigint_symbol = "✗ "
+signal_symbol = "⚡ "
+style = "bold fg:color_red"
+format = "[$symbol$status ]($style)"
+
+[cmd_duration]
+min_time = 2000
+show_milliseconds = false
+style = "fg:color_yellow"
+format = "[took $duration]($style) "
+
+[jobs]
+style = "bold fg:color_fg0"
+format = "[$symbol$number]($style) "
 
 [character]
 success_symbol = '[❯](bold fg:color_green)'

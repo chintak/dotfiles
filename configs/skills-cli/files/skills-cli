@@ -20,7 +20,21 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-DOTFILES_DIR = Path(__file__).resolve().parent.parent
+def _find_dotfiles_dir() -> Path:
+    """Locate the dotfiles repo. Under `dot` the binary lives in a store, so
+    resolving __file__ no longer points at the repo — check DOT_REPO, the
+    default clone, and a config file first."""
+    import os
+    cands = [os.environ.get("DOT_REPO"),
+             Path.home() / ".local/share/dot/repo",
+             Path.home() / ".config/dot/repo"]
+    for c in cands:
+        if c and (Path(c) / "configs").is_dir():
+            return Path(c)
+    return Path(__file__).resolve().parent.parent
+
+
+DOTFILES_DIR = _find_dotfiles_dir()
 CATEGORIES = ("rules", "commands", "skills", "agents")
 
 # Categories that use the Agent Skills directory format (<name>/SKILL.md)

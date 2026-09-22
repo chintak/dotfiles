@@ -2,8 +2,9 @@
 
 One repo for the whole terminal development environment — shell, prompt,
 terminal, multiplexer, and agent tooling — on macOS, iOS-over-SSH, and
-remote GPU boxes (Hetzner / RunPod). Everything is **symlinked** into
-place, so a fix committed here is a fix on every machine.
+remote GPU boxes (Hetzner / RunPod). Each config is a small, **versioned
+package**; the `dot` CLI installs the ones a machine needs and links them
+into place from an immutable store.
 
 This README assumes you don't already know these tools. Each one gets a
 short **what / why / how** and a link to learn more. Read the
@@ -14,8 +15,13 @@ sections, then use [The toolbox](#the-toolbox) as a reference.
 
 - [Philosophy](#philosophy)
 - [Bootstrap a new machine](#bootstrap-a-new-machine)
+- [Profiles](#profiles)
 - [Repo layout](#repo-layout)
-- [How the installer works](#how-the-installer-works)
+- [The store, symlinks & the lockfile](#the-store-symlinks--the-lockfile)
+- [Config package format](#config-package-format)
+- [Ephemeral / VM mode](#ephemeral--vm-mode)
+- [The config lifecycle](#the-config-lifecycle)
+- [The CLI](#the-cli)
 - [How the layers fit together](#how-the-layers-fit-together)
 - [The toolbox](#the-toolbox)
 - [Toolchain by project](#toolchain-by-project)
@@ -36,9 +42,9 @@ Three rules hold the whole thing together:
    panes + tmux; pick one. The exception is an unsupervised multi-day job,
    which runs in tmux *underneath* a herdr pane.
 
-2. **Symlinks, never copies.** `install.sh` links files into `~/.config`
-   rather than copying them. Edit the repo → every machine sees it on the
-   next `git pull`.
+2. **Store + symlink, never hand-copies.** `dot` stages each config into
+   an immutable, versioned store and symlinks the target at that copy.
+   Edit the repo → commit → `dot update`, and every machine re-links.
 
 3. **One theme.** [Dracula](https://draculatheme.com/) across Ghostty,
    Starship, and herdr, so the terminal looks coherent.
@@ -51,65 +57,285 @@ flaky cellular link.
 
 ## Bootstrap a new machine
 
+One command installs the `dot` CLI and sets up a machine. It needs only
+`bash`, `curl`, `git`, and `jq`:
+
 ```bash
-git clone https://github.com/chintak/dotfiles ~/git/dotfiles
-~/git/dotfiles/install.sh
-exec zsh
+# whole machine in one shot (macOS profile)
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/chintak/dotfiles/master/bootstrap.sh)" \
+  -- init --profile mac
+
+# minimal headless server
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/chintak/dotfiles/master/bootstrap.sh)" \
+  -- init --profile server
+
+# install the CLI only, then poke around
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/chintak/dotfiles/master/bootstrap.sh)" -- --help
 ```
 
-- `SKIP_BREW=1 ~/git/dotfiles/install.sh` links configs but installs no
-  packages (good for a server you don't want a full toolchain on).
-- Re-running is always safe: it backs up anything it replaces as
-  `*.bak.<timestamp>`.
-- Update an existing machine: `git -C ~/git/dotfiles pull && ~/git/dotfiles/install.sh`.
+`bootstrap.sh` downloads `dot` into `~/.local/bin`, warns if that directory
+isn't on `PATH`, then `exec`s `dot` with whatever arguments you passed.
+Re-running is always safe: `dot` backs up any file it replaces as
+`<target>.bak.<timestamp>`, and every step is idempotent.
 
-`install.sh` links configs *and* installs the tools described in
-[The toolbox](#the-toolbox) (via `brew bundle` on macOS and `uv tool` for
-Python CLIs).
+Environment overrides:
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `DOT_REPO_URL` | `https://github.com/chintak/dotfiles` | Where to fetch `dot` from |
+| `DOT_REF` | `master` | Branch, tag, or SHA to pin to |
+| `DOT_BIN_DIR` | `~/.local/bin` | Where `dot` is installed |
+| `DOT_REPO` | `~/.local/share/dot/repo` | Repo clone location |
+| `DOT_STORE` | `~/.local/share/dot/store` | Versioned store location |
+| `DOT_STATE` | `~/.local/state/dot` | Lockfile location |
+
+Pin for reproducibility with `--ref v1.0.0` or `--ref <sha>`. Once installed,
+`dot` manages itself: `dot update` pulls the repo and re-applies newer
+configs, and `dot purge` removes the repo, store, lockfile, and the CLI.
+
+---
+
+## Profiles
+
+A profile is a plain list of config names in `profiles/<name>.conf`. It is
+the answer to "don't install everything everywhere":
+
+```
+# profiles/mac.conf          # profiles/server.conf
+zsh                          zsh
+starship                     starship
+ghostty                      herdr
+herdr                        tmux
+zellij                       git
+tmux                         helix
+git                          yazi
+helix                        glow
+yazi                         uv-tools
+glow                         skills-cli
+brewfile
+uv-tools
+skills-cli
+```
+
+`dot init --profile mac` installs them in order, expanding each config's
+`requires` first and skipping any whose `platform` doesn't match this host
+(so `brewfile` — macOS casks — never lands on a headless box).
+
+There is deliberately **no `ios` profile**: the phone (Termius) doesn't run
+`dot`; it SSHes into a host that already has a profile. The glyph-free
+mobile prompt is selected at runtime by `zshrc` from `$SSH_CONNECTION`.
 
 ---
 
 ## Repo layout
 
-| Path | Symlinked to | What it is |
-|------|--------------|------------|
-| `zshrc` | `~/.zshrc` | The shell: PATH, history, fzf, prompt switch, helpers |
-| `starship.toml` | `~/.config/starship.toml` | Desktop prompt (powerline) |
-| `starship.mobile.toml` | `~/.config/starship.mobile.toml` | Glyph-free prompt for SSH / iOS |
-| `ghostty/config` | `~/.config/ghostty/config` | macOS terminal (hands chords to herdr) |
-| `herdr/config.toml` | `~/.config/herdr/config.toml` | Agent multiplexer |
-| `zellij/config.kdl` + `zellij/layouts/*.kdl` | `~/.config/zellij/` | Alternative multiplexer + layouts |
-| `skills/` | — | Agent skills, installed by `skills-cli` |
-| `bin/skills-cli` | `~/.local/bin/skills-cli` | Skill installer |
-| `Brewfile` | — | macOS package manifest |
-| `install.sh` | — | The installer |
+```
+dotfiles/
+├── dot                  # the CLI (bash)
+├── bootstrap.sh         # curl entrypoint
+├── README.md
+├── specs/dot-cli.md     # the full design
+├── profiles/            # mac.conf, server.conf, …
+└── configs/<tool>/      # one folder per config: README.md, manifest, files/
+```
 
-> The repo lives at `~/git/dotfiles` (not `~/Documents/…`) because code
-> and dotfiles belong outside iCloud Drive — see [Gotchas](#gotchas).
+Each `configs/<tool>/` is a package:
+
+| File | What it is |
+|------|------------|
+| `manifest` | version, description, category, platform, `file` mappings, optional `requires` / `post_apply` |
+| `files/` | what gets installed, paths relative to here |
+| `README.md` | why this tool is configured the way it is |
+
+> The repo lives under `~/.local/share/dot/repo` when `dot` clones it (not
+> `~/Documents/…`) because code and dotfiles belong outside iCloud Drive —
+> see [Gotchas](#gotchas). A dev checkout in `~/git/dotfiles` is also
+> detected and used directly.
 
 ---
 
-## How the installer works
+## The store, symlinks & the lockfile
 
-`install.sh` is ~85 lines of bash. The core is one function:
+`dot` never edits a config in place and never copies one blindly. Applying
+a config means:
 
-```bash
-# link <source> <target> — backs up any existing non-symlink target once.
-link() {
-  local src="$1" dst="$2"
-  mkdir -p "$(dirname "$dst")"
-  if [[ -L "$dst" ]]; then rm -f "$dst"                 # replace old symlink
-  elif [[ -e "$dst" ]]; then mv "$dst" "$dst.bak.$STAMP" # back up a real file
-  fi
-  ln -s "$src" "$dst"
+1. Stage the config's `files/` into an immutable, versioned store:
+   `~/.local/share/dot/store/<config>/<version>/`.
+2. Symlink each target at the store copy, backing up anything already
+   there.
+3. Record what happened in a JSON lockfile at
+   `~/.local/state/dot/installed.json`.
+
+```
+target  ~/.config/ghostty/config ──▶ store/ghostty/1.0.0/config
+```
+
+Because the target is a symlink into a real, versioned file, old versions
+stay around: `dot rollback ghostty 0.9.0` just re-points the symlink, and
+`dot status` can tell you exactly what drifted. Every installed version is
+retained in v1 (garbage collection is deferred).
+
+The lockfile is the record of what this machine has — which is what makes
+`status`, `update`, `rollback`, and `doctor` possible:
+
+```json
+{
+  "lockfileVersion": 1,
+  "configs": {
+    "ghostty": {
+      "version": "1.0.0",
+      "mode": "symlink",
+      "category": "terminal",
+      "hash": "sha256:a1b2c3…",
+      "store": "~/.local/share/dot/store/ghostty/1.0.0",
+      "targets": ["~/.config/ghostty/config"],
+      "installedAt": "2026-09-21T13:52:00Z"
+    }
+  }
 }
 ```
 
-It then links every config in [the layout table](#repo-layout), removes
-the legacy `~/.zshrc.custom`, moves a stale Ghostty config aside, installs
-Starship into `~/.local/bin` if missing, runs `brew bundle`
-([docs](https://docs.brew.sh/Brewfile)), and installs the Python CLIs with
-[`uv tool install`](https://docs.astral.sh/uv/guides/tools/).
+**Drift detection, not prevention.** There is no `chmod 444` in v1 — a tool
+that rewrites its own config isn't broken, it's just drifted. `dot status`
+compares target content and the repo version against the lockfile and
+reports `ok` / `stale` / `modified` / `drifted` / `broken` / `unmet` /
+`inapplicable`; `--exit-code` makes it usable in a prompt. `dot doctor`
+checks the machinery (git/jq/curl present, repo healthy, store writable,
+manifests valid) and `--fix` repairs what it safely can.
+
+---
+
+## Config package format
+
+`configs/ghostty/manifest` is plain `key = value`, one per line — no parser:
+
+```
+version     = 1.0.0
+description = Ghostty — fast renderer; hands its chords to herdr
+category    = terminal
+platform    = mac
+requires    = zsh
+file        = config|~/.config/ghostty/config
+# post_apply = brew bundle --file ~/.config/dot/Brewfile
+```
+
+| Key | Required | Meaning |
+|-----|----------|---------|
+| `version` | yes | semver of this config |
+| `description` | yes | one line, shown by `dot list` / `dot info` |
+| `category` | yes | grouping tag (`shell`, `prompt`, `terminal`, `multiplexer`, `vcs`, `editor`, `agents`, `packages`) |
+| `file` | yes (≥1, unless `post_apply`) | `src-rel-path\|target` — repeatable; `src` is relative to `files/` |
+| `requires` | no | comma-separated config names applied first |
+| `platform` | no | `mac` / `linux` / `any` (default `any`) |
+| `post_apply` | no | one command run after the config is (re)installed |
+
+Targets support `~` and `${VAR}` expansion. `post_apply` is deliberately the
+only hook: it exists so configs whose job is an *action* rather than a file
+(package installation) fit the model. It runs whenever the config's
+`applyHash` — version + file contents + the `post_apply` string — changes,
+so adding a tool to `uv-tools.txt` re-runs it while re-applying an
+unchanged config does not.
+
+**Why flat.** `configs/<tool>/` *is* the config; the atomic unit of `dot` is
+a config, so the directory mirrors that. A `configs/shell/starship/`
+hierarchy would imply nesting the install model doesn't have. Categories are
+a tag, not a location — `dot list` groups by them, and ambiguous cases (Is
+Starship a shell thing or a prompt thing?) stop being structural questions.
+
+Adding a config:
+
+```bash
+mkdir -p configs/<name>/files
+# write configs/<name>/manifest, README.md, and files/…
+dot list                       # it should appear
+dot apply <name> --dry-run
+dot apply <name>
+dot bump <name> minor
+```
+
+---
+
+## Ephemeral / VM mode
+
+For VM images, CI runners, and one-shot containers where updates are not a
+concern, `--ephemeral` installs real files and then deletes all the tooling:
+
+```bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/chintak/dotfiles/master/bootstrap.sh)" \
+  -- init --profile server --ephemeral
+```
+
+It shallow-clones the repo, applies configs in **copy** mode (plain files at
+the targets — no store, no symlinks), optionally writes a reference
+lockfile, then purges the clone, the store, `~/.local/bin/dot`, and the
+state directory. The result is a lean image with working config files and
+zero tooling — and deliberately no future update path. The purge is refused
+unless `--ephemeral` was passed *and* every install succeeded.
+
+---
+
+## The config lifecycle
+
+The store is versioned, so there is a real edit loop:
+
+```bash
+dot edit ghostty          # opens the repo file in $EDITOR
+# …make changes…
+dot bump ghostty minor    # bump semver, commit with a conventional message
+dot update                # git pull --rebase --autostash, then re-apply
+```
+
+`dot bump <config> major|minor|patch` follows a convention so versions mean
+something:
+
+| Bump | When |
+|------|------|
+| **major** | Breaking: target path moves, an option is renamed/removed, a newer tool version is required |
+| **minor** | Backward-compatible: new option, new binding, new file in the package |
+| **patch** | Comments, formatting, typo |
+
+`dot update` pulls with `git pull --rebase --autostash` (opt out with
+`--no-pull`) and re-links configs whose repo version is newer. To adopt an
+existing hand-edited file, `dot add <path>` copies it into the repo, creates
+or patches a manifest, and replaces the target with a symlink into the
+store.
+
+---
+
+## The CLI
+
+Verbs follow `chezmoi` where an equivalent exists, plus the versioning layer
+chezmoi lacks.
+
+| Command | Does |
+|---------|------|
+| `dot init [--profile P] [--repo URL] [--ref R] [--ephemeral]` | Clone repo, then apply |
+| `dot apply [<config>…] [--profile P] [--dry-run] [--lock]` | Install / reinstall |
+| `dot forget <config>…` | Remove symlinks + lockfile entries (store kept) |
+| `dot update [<config>…] [--no-pull] [--dry-run]` | Pull, then apply newer versions |
+| `dot rollback <config> [version]` | Re-point symlinks at an older store version |
+| `dot purge [--yes]` | Delete repo, store, lockfile, and the CLI |
+| `dot add <path>` | Adopt a file: copy into repo, replace target with a link |
+| `dot edit <config>` | Open the repo file in `$EDITOR` |
+| `dot diff <config>` | Repo vs installed |
+| `dot status [--exit-code] [--json]` | What `apply` would change (content drift) |
+| `dot doctor [--fix]` | Environment + tooling health; `--fix` repairs what it can |
+| `dot cd` | Shell into the repo clone |
+| `dot list [--installed\|--available] [--category C] [--json]` | Discover configs |
+| `dot info <config>` | Files, targets, requires, version, state |
+| `dot profiles` | List profiles and their configs |
+| `dot bump <config> major\|minor\|patch` | Bump version, commit |
+
+```
+$ dot status
+config     category      installed  available  state
+ghostty    terminal      1.0.0      1.0.0      ok
+zsh        shell         1.4.1      1.5.0      stale
+starship   prompt        1.0.0      1.0.0      modified
+herdr      multiplexer   —          0.9.0      not installed
+```
+
+The full design lives in [`specs/dot-cli.md`](specs/dot-cli.md).
 
 ---
 
@@ -361,7 +587,7 @@ missing.
 
 **`chezmoi`** — a template-based dotfile manager
 ([docs](https://www.chezmoi.io/)). The grown-up alternative to this
-hand-rolled `install.sh` if you ever want per-host templating and secrets
+hand-rolled `dot` if you ever want per-host templating and secrets
 management.
 
 **`uv tool`** — how Python CLIs are installed here
@@ -533,8 +759,8 @@ echo 'export HF_TOKEN="hf_xxx"' > ~/.config/localenvs/huggingface.local
 
 - **Ghostty reads two config paths on macOS.** A file at
   `~/Library/Application Support/com.mitchellh.ghostty/config` silently
-  overrides `~/.config/ghostty/config`. `install.sh` moves it aside; if
-  fonts/theme look wrong, run
+  overrides `~/.config/ghostty/config`. If fonts/theme look wrong, move
+  that file aside and run
   `ghostty +show-config | grep -E 'font-family|theme'`.
 - **Ghostty keybinds use a literal `\\x1b`** (two backslashes) in
   `ghostty/config`. Preserved verbatim from the working setup — verify

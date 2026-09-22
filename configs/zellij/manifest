@@ -1,0 +1,7 @@
+version     = 1.0.0
+description = Zellij — alternative multiplexer with dev/agents layouts
+category    = multiplexer
+platform    = mac
+file        = config.kdl|~/.config/zellij/config.kdl
+file        = layouts/agents.kdl|~/.config/zellij/layouts/agents.kdl
+file        = layouts/dev.kdl|~/.config/zellij/layouts/dev.kdl

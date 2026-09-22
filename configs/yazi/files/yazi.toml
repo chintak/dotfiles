@@ -1,0 +1,17 @@
+# yazi — file manager with inline image/PDF previews.
+# PDF previews need `poppler` (pdftoppm); chafa is the fallback for
+# terminals without a graphics protocol.
+
+[opener]
+edit     = [{ run = 'hx "$@"',   block = true }]
+text     = [{ run = 'hx "$@"',   block = true }]
+markdown = [{ run = 'glow "$@"', block = true }]
+pdf      = [{ run = 'open "$@"', orphan = true }]
+image    = [{ run = 'open "$@"', orphan = true }]
+
+[preview]
+max_width = 1000
+max_height = 1000
+
+[manager]
+ratio = [1, 3, 4]

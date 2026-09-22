@@ -1,0 +1,703 @@
+#!/usr/bin/env bash
+# dot — versioned, selective dotfiles CLI.
+# Spec: specs/dot-cli.md   Runtime verbs: specs/agentic-dev-mvp.md
+#
+# Config verbs manage the machine (store + lockfile + ~/.config).
+# Runtime verbs drive herdr (see §3.2 of the MVP spec).
+#
+# Deps: bash, git, jq, coreutils. No bash 4+ features (macOS ships 3.2).
+
+set -uo pipefail
+DOT_VERSION="1.0.0"
+
+# ── output ─────────────────────────────────────────────────────────────
+if [[ -t 1 ]]; then
+  R=$'\033[0m'; B=$'\033[1;34m'; Y=$'\033[1;33m'; E=$'\033[1;31m'; G=$'\033[1;32m'
+else
+  R=; B=; Y=; E=; G=
+fi
+log()  { printf '%s==>%s %s\n' "$B" "$R" "$*"; }
+warn() { printf '%swarn%s %s\n' "$Y" "$R" "$*" >&2; }
+die()  { printf '%serr%s %s\n' "$E" "$R" "$*" >&2; exit 1; }
+
+# ── paths ──────────────────────────────────────────────────────────────
+DEFAULT_REPO_URL="${DOT_REPO_URL:-https://github.com/chintak/dotfiles.git}"
+DOT_REF="${DOT_REF:-master}"
+DOT_BIN_DIR="${DOT_BIN_DIR:-$HOME/.local/bin}"
+DOT_STORE="${DOT_STORE:-$HOME/.local/share/dot/store}"
+DOT_STATE="${DOT_STATE:-$HOME/.local/state/dot}"
+LOCKFILE="$DOT_STATE/installed.json"
+
+self_path() {
+  local src="${BASH_SOURCE[0]}" dir
+  while [[ -L "$src" ]]; do
+    dir="$(cd -P "$(dirname "$src")" && pwd)"
+    src="$(readlink "$src")"
+    [[ "$src" != /* ]] && src="$dir/$src"
+  done
+  cd -P "$(dirname "$src")" && pwd
+}
+default_repo() {
+  local self; self="$(self_path)"
+  if [[ -n "$self" && -d "$self/configs" ]]; then printf '%s' "$self"; return; fi
+  printf '%s' "$HOME/.local/share/dot/repo"
+}
+REPO="${DOT_REPO:-$(default_repo)}"
+CONFIGS_DIR="$REPO/configs"
+PROFILES_DIR="$REPO/profiles"
+
+# ── small helpers ──────────────────────────────────────────────────────
+sha256() { if command -v shasum >/dev/null 2>&1; then shasum -a 256 | awk '{print $1}'; else sha256sum | awk '{print $1}'; fi; }
+expand() { local p="$1"; p="${p/#\~/$HOME}"; p="${p//\$\{HOME\}/$HOME}"; p="${p//\$HOME/$HOME}"; printf '%s' "$p"; }
+host_platform() { case "$(uname -s)" in Darwin) echo mac ;; Linux) echo linux ;; *) echo unknown ;; esac; }
+ver_gt() { [[ "$1" != "$2" ]] && [[ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" == "$1" ]]; }
+semver_ok() { printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; }
+
+mget()     { sed -n "s/^[[:space:]]*$2[[:space:]]*=[[:space:]]*//p" "$1" | head -1; }
+mget_all() { sed -n "s/^[[:space:]]*$2[[:space:]]*=[[:space:]]*//p" "$1"; }
+
+config_dir()    { printf '%s/%s' "$CONFIGS_DIR" "$1"; }
+all_configs()   { ( cd "$CONFIGS_DIR" 2>/dev/null && for d in */; do [[ -f "$d/manifest" ]] && printf '%s\n' "${d%/}"; done ) | sort; }
+profile_configs() {
+  local f="$PROFILES_DIR/$1.conf"
+  [[ -f "$f" ]] || die "no such profile: $1 (looked for $f)"
+  sed -e 's/#.*//' -e 's/[[:space:]]*$//' -e '/^[[:space:]]*$/d' "$f"
+}
+hash_dir() { ( cd "$1" 2>/dev/null && find . -type f | LC_ALL=C sort | while IFS= read -r f; do shasum -a 256 "$f" 2>/dev/null || sha256sum "$f"; done | sha256 ); }
+
+# ── lockfile (JSON, jq) ────────────────────────────────────────────────
+lock_init() { mkdir -p "$DOT_STATE"; [[ -f "$LOCKFILE" ]] || printf '{"lockfileVersion":1,"configs":{}}\n' > "$LOCKFILE"; }
+lock_read() { lock_init; cat "$LOCKFILE"; }
+lock_get()  { lock_read | jq -c --arg n "$1" '.configs[$n] // empty' 2>/dev/null; }
+lock_set()  { lock_init; local tmp; tmp="$(mktemp)"; lock_read | jq --arg n "$1" --argjson v "$2" '.configs[$n]=$v' > "$tmp" && mv "$tmp" "$LOCKFILE"; }
+lock_del()  { lock_init; local tmp; tmp="$(mktemp)"; lock_read | jq --arg n "$1" 'del(.configs[$n])' > "$tmp" && mv "$tmp" "$LOCKFILE"; }
+lock_names() { lock_read | jq -r '.configs | keys[]' 2>/dev/null; }
+
+need() { command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"; }
+
+# ── apply ──────────────────────────────────────────────────────────────
+# apply_config <name> [--dry-run] [--force-post]
+apply_config() {
+  local name="$1"; shift
+  local dry=0 force_post=0 a
+  for a in "$@"; do case "$a" in --dry-run) dry=1 ;; --force-post) force_post=1 ;; esac; done
+
+  local dir mf ver desc cat post
+  dir="$(config_dir "$name")"; mf="$dir/manifest"
+  [[ -f "$mf" ]] || die "unknown config: $name"
+  ver="$(mget "$mf" version)"; desc="$(mget "$mf" description)"
+  cat="$(mget "$mf" category)"; post="$(mget "$mf" post_apply)"
+
+  local plat; plat="$(mget "$mf" platform)"
+  if [[ -n "$plat" && "$plat" != "any" && "$plat" != "$(host_platform)" ]]; then
+    warn "$name: skipped (platform=$plat, host=$(host_platform))"; return 0
+  fi
+
+  local req
+  for req in $(mget "$mf" requires | tr ',' ' '); do
+    [[ -z "$req" ]] && continue
+    [[ -n "$(lock_get "$req")" ]] || { log "$name requires $req"; apply_config "$req" "$@"; }
+  done
+
+  local files=() entry
+  while IFS= read -r entry; do [[ -n "$entry" ]] && files+=("$entry"); done < <(mget_all "$mf" file)
+  [[ ${#files[@]} -gt 0 || -n "$post" ]] || die "$name: manifest declares neither file nor post_apply"
+
+  local mode="${DOT_MODE:-symlink}"
+  local stage store_dir=""
+  if [[ "$mode" == copy ]]; then
+    stage="$(mktemp -d)"
+  else
+    store_dir="$DOT_STORE/$name/$ver"
+    stage="$store_dir"
+  fi
+  if (( dry )); then
+    printf '  %s %s (%s)\n' "$name" "$ver" "$mode"
+    for entry in "${files[@]}"; do printf '      %s -> %s\n' "${entry%%|*}" "$(expand "${entry#*|}")"; done
+    return 0
+  fi
+
+  rm -rf "$stage"; mkdir -p "$stage"
+  for entry in "${files[@]}"; do
+    local src="${entry%%|*}"
+    if [[ -d "$dir/files/$src" ]]; then
+      mkdir -p "$stage/$src"; cp -R "$dir/files/$src/." "$stage/$src/"
+    else
+      [[ -f "$dir/files/$src" ]] || die "$name: missing files/$src"
+      mkdir -p "$stage/$(dirname "$src")"; cp "$dir/files/$src" "$stage/$src"
+    fi
+  done
+
+  local hash; hash="$(hash_dir "$stage")"
+  local targets=() dst
+  for entry in "${files[@]}"; do
+    local src="${entry%%|*}"; dst="$(expand "${entry#*|}")"
+    targets+=("$dst"); mkdir -p "$(dirname "$dst")"
+    if [[ -e "$dst" && ! -L "$dst" ]]; then
+      mv "$dst" "$dst.bak.$(date +%Y%m%d-%H%M%S)"; warn "backed up $dst"
+    fi
+    if [[ "$mode" == copy ]]; then
+      rm -f "$dst"; cp -R "$stage/$src" "$dst"
+    else
+      ln -sfn "$stage/$src" "$dst"
+    fi
+  done
+  [[ "$mode" == copy ]] && rm -rf "$stage"
+
+  local apply_hash; apply_hash="$(printf '%s\n%s\n%s\n' "$ver" "$hash" "$post" | sha256)"
+  local prev prev_ah; prev="$(lock_get "$name")"
+  prev_ah="$(printf '%s' "$prev" | jq -r '.applyHash // empty' 2>/dev/null)"
+
+  local post_ok="true"
+  if [[ -n "$post" ]]; then
+    if (( force_post )) || [[ "$prev_ah" != "$apply_hash" ]]; then
+      log "$name: post_apply"
+      bash -lc "$post" || { warn "$name: post_apply failed"; post_ok="false"; }
+    fi
+  fi
+
+  local targets_json; targets_json="$(printf '%s\n' "${targets[@]}" | jq -R . | jq -s .)"
+  lock_set "$name" "$(jq -n \
+    --arg version "$ver" --arg mode "$mode" --arg category "$cat" \
+    --arg hash "$hash" --arg applyHash "$apply_hash" --arg store "$store_dir" \
+    --argjson targets "$targets_json" --argjson postApplyOk "$post_ok" \
+    --arg installedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    '{version:$version,mode:$mode,category:$category,hash:$hash,applyHash:$applyHash,
+      store:$store,targets:$targets,postApplyOk:$postApplyOk,installedAt:$installedAt}')"
+
+  log "$name $ver"
+  [[ "$post_ok" == "true" ]] || return 1
+}
+
+apply_targets() { # <names...> [flags]
+  local names=() flags=() a
+  for a in "$@"; do
+    case "$a" in --dry-run|--force-post) flags+=("$a") ;; *) names+=("$a") ;; esac
+  done
+  local rc=0 n
+  for n in "${names[@]}"; do apply_config "$n" "${flags[@]+"${flags[@]}"}" || rc=1; done
+  return $rc
+}
+
+# ── config state ───────────────────────────────────────────────────────
+config_state() { # <name> -> ok|not-installed|broken|drifted|modified|stale|inapplicable
+  local name="$1" dir mf entry
+  dir="$(config_dir "$name")"; mf="$dir/manifest"
+  local avail; avail="$(mget "$mf" version)"
+  local plat; plat="$(mget "$mf" platform)"
+  [[ -n "$plat" && "$plat" != "any" && "$plat" != "$(host_platform)" ]] && { echo inapplicable; return; }
+
+  local rec; rec="$(lock_get "$name")"
+  [[ -z "$rec" ]] && { echo not-installed; return; }
+
+  local mode; mode="$(printf '%s' "$rec" | jq -r '.mode // "symlink"')"
+  local inst; inst="$(printf '%s' "$rec" | jq -r '.version')"
+
+  if [[ "$mode" == copy ]]; then
+    local t
+    while IFS= read -r t; do
+      [[ -z "$t" ]] && continue
+      [[ -e "$(expand "$t")" ]] || { echo broken; return; }
+    done < <(printf '%s' "$rec" | jq -r '.targets[]?')
+    ver_gt "$avail" "$inst" && { echo stale; return; }
+    echo ok; return
+  fi
+
+  local store hash
+  store="$(printf '%s' "$rec" | jq -r '.store')"
+  hash="$(printf '%s' "$rec" | jq -r '.hash')"
+  [[ -d "$store" ]] || { echo broken; return; }
+
+  local t
+  while IFS= read -r t; do
+    [[ -z "$t" ]] && continue
+    t="$(expand "$t")"
+    [[ -L "$t" && "$(readlink "$t")" == "$store"/* ]] || { echo drifted; return; }
+  done < <(printf '%s' "$rec" | jq -r '.targets[]?')
+
+  [[ "$(hash_dir "$store")" == "$hash" ]] || { echo modified; return; }
+  ver_gt "$avail" "$inst" && { echo stale; return; }
+  [[ "$(printf '%s' "$rec" | jq -r '.postApplyOk')" == "false" ]] && { echo post-failed; return; }
+  echo ok
+}
+
+# ── commands: config ───────────────────────────────────────────────────
+cmd_list() {
+  local mode=all cat_filter="" json=0
+  while (( $# )); do
+    case "$1" in
+      --installed) mode=installed; shift ;;
+      --available) mode=available; shift ;;
+      --json) json=1; shift ;;
+      --category) cat_filter="${2:-}"; shift 2 ;;
+      --category=*) cat_filter="${1#*=}"; shift ;;
+      *) shift ;;
+    esac
+  done
+
+  if (( json )); then
+    local items="[]" n st
+    for n in $(all_configs); do
+      local mf; mf="$(config_dir "$n")/manifest"
+      st="$(config_state "$n")"
+      [[ "$mode" == installed && "$st" == not-installed ]] && continue
+      [[ "$mode" == available && "$st" != not-installed ]] && continue
+      [[ -n "$cat_filter" && "$(mget "$mf" category)" != "$cat_filter" ]] && continue
+      items="$(printf '%s' "$items" | jq \
+        --arg n "$n" --arg v "$(mget "$mf" version)" --arg d "$(mget "$mf" description)" \
+        --arg c "$(mget "$mf" category)" --arg s "$st" \
+        '. + [{name:$n,version:$v,description:$d,category:$c,state:$s}]')"
+    done
+    printf '%s\n' "$items" | jq .
+    return
+  fi
+
+  local lastcat="" n mf c st
+  for n in $(all_configs); do
+    mf="$(config_dir "$n")/manifest"; c="$(mget "$mf" category)"; st="$(config_state "$n")"
+    [[ "$mode" == installed && "$st" == not-installed ]] && continue
+    [[ "$mode" == available && "$st" != not-installed ]] && continue
+    [[ -n "$cat_filter" && "$c" != "$cat_filter" ]] && continue
+    if [[ "$c" != "$lastcat" ]]; then printf '\n%s%s%s\n' "$B" "$c" "$R"; lastcat="$c"; fi
+    printf '  %-12s %-8s %-12s %s\n' "$n" "$(mget "$mf" version)" "$st" "$(mget "$mf" description)"
+  done
+  printf '\n'
+}
+
+cmd_info() {
+  [[ $# -ge 1 ]] || die "usage: dot info <config>"
+  local n="$1" dir mf
+  dir="$(config_dir "$n")"; mf="$dir/manifest"
+  [[ -f "$mf" ]] || die "unknown config: $n"
+  printf '%s%s%s  %s\n' "$B" "$n" "$R" "$(mget "$mf" description)"
+  printf '  version   %s\n  category  %s\n  platform  %s\n  state     %s\n' \
+    "$(mget "$mf" version)" "$(mget "$mf" category)" "$(mget "$mf" platform)" "$(config_state "$n")"
+  local r; r="$(mget "$mf" requires)"; [[ -n "$r" ]] && printf '  requires  %s\n' "$r"
+  local p; p="$(mget "$mf" post_apply)"; [[ -n "$p" ]] && printf '  post_apply  %s\n' "$p"
+  printf '  files:\n'
+  local entry; while IFS= read -r entry; do
+    [[ -n "$entry" ]] && printf '    %-28s -> %s\n' "${entry%%|*}" "${entry#*|}"
+  done < <(mget_all "$mf" file)
+  printf '  path      %s\n' "$dir"
+}
+
+cmd_apply() {
+  local names=() profile="" flags=() a
+  while (( $# )); do
+    case "$1" in
+      --profile) profile="$2"; shift 2 ;;
+      --profile=*) profile="${1#*=}"; shift ;;
+      --dry-run|--force-post) flags+=("$1"); shift ;;
+      -*) die "unknown flag: $1" ;;
+      *) names+=("$1"); shift ;;
+    esac
+  done
+  if [[ -n "$profile" ]]; then
+    [[ -f "$PROFILES_DIR/$profile.conf" ]] || die "no such profile: $profile"
+    local c; while IFS= read -r c; do names+=("$c"); done < <(profile_configs "$profile")
+  fi
+  [[ ${#names[@]} -gt 0 ]] || { while IFS= read -r c; do names+=("$c"); done < <(all_configs); }
+  apply_targets "${names[@]}" "${flags[@]+"${flags[@]}"}"
+}
+
+cmd_forget() {
+  [[ $# -ge 1 ]] || die "usage: dot forget <config>..."
+  local n rec t rc=0
+  for n in "$@"; do
+    rec="$(lock_get "$n")"
+    [[ -z "$rec" ]] && { warn "$n: not installed"; continue; }
+    while IFS= read -r t; do
+      [[ -z "$t" ]] && continue
+      t="$(expand "$t")"
+      if [[ -L "$t" ]]; then rm -f "$t"; log "removed $t"; fi
+    done < <(printf '%s' "$rec" | jq -r '.targets[]?')
+    lock_del "$n"; log "forgot $n (store kept)"
+  done
+  return $rc
+}
+
+cmd_status() {
+  local json=0 exit_code=0 a
+  for a in "$@"; do case "$a" in --json) json=1 ;; --exit-code) exit_code=1 ;; esac; done
+  if (( json )); then
+    local items="[]" n st
+    for n in $(all_configs); do
+      local mf; mf="$(config_dir "$n")/manifest"; st="$(config_state "$n")"
+      items="$(printf '%s' "$items" | jq --arg n "$n" --arg v "$(mget "$mf" version)" --arg s "$st" \
+        '. + [{name:$n,version:$v,state:$s}]')"
+    done
+    printf '%s\n' "$items" | jq .
+  else
+    printf '%-12s %-12s %-9s %-9s %s\n' config category installed available state
+    local n mf st inst avail
+    for n in $(all_configs); do
+      mf="$(config_dir "$n")/manifest"; st="$(config_state "$n")"
+      inst="$(lock_get "$n" | jq -r '.version // "—"' 2>/dev/null)"; [[ -z "$inst" ]] && inst="—"
+      avail="$(mget "$mf" version)"
+      printf '%-12s %-12s %-9s %-9s %s\n' "$n" "$(mget "$mf" category)" "$inst" "$avail" "$st"
+    done
+  fi
+  if (( exit_code )); then
+    local pending=0
+    for n in $(all_configs); do
+      st="$(config_state "$n")"
+      case "$st" in ok|not-installed|inapplicable) ;; *) pending=1 ;; esac
+    done
+    return $pending
+  fi
+}
+
+cmd_diff() {
+  [[ $# -ge 1 ]] || die "usage: dot diff <config>"
+  local n="$1" rec store dir
+  rec="$(lock_get "$n")"; [[ -n "$rec" ]] || die "$n: not installed"
+  store="$(printf '%s' "$rec" | jq -r '.store')"
+  dir="$(config_dir "$n")"
+  local entry rc=0
+  while IFS= read -r entry; do
+    [[ -n "$entry" ]] || continue
+    local src="${entry%%|*}"
+    if [[ -d "$dir/files/$src" ]]; then
+      diff -ru "$store/$src" "$dir/files/$src" || rc=1
+    else
+      diff -u "$store/$src" "$dir/files/$src" || rc=1
+    fi
+  done < <(mget_all "$dir/manifest" file)
+  (( rc )) || log "in sync"
+}
+
+cmd_edit() {
+  [[ $# -ge 1 ]] || die "usage: dot edit <config>"
+  local n="$1" dir; dir="$(config_dir "$n")"
+  [[ -d "$dir" ]] || die "unknown config: $n"
+  local ed="${EDITOR:-vi}"
+  local first; first="$(mget_all "$dir/manifest" file | head -1)"
+  if [[ -n "$first" ]]; then exec "$ed" "$dir/files/${first%%|*}"; else exec "$ed" "$dir"; fi
+}
+
+cmd_cd() { exec "${SHELL:-/bin/sh}" -c "cd '$REPO' && exec ${SHELL:-/bin/sh} -l"; }
+
+cmd_profiles() {
+  local p c
+  for p in "$PROFILES_DIR"/*.conf; do
+    [[ -f "$p" ]] || continue
+    printf '%s%s%s\n' "$B" "$(basename "$p" .conf)" "$R"
+    while IFS= read -r c; do printf '  %s\n' "$c"; done < <(profile_configs "$(basename "$p" .conf)")
+  done
+}
+
+cmd_doctor() {
+  local fail=0
+  check() { if eval "$2" >/dev/null 2>&1; then printf '  %s✓%s %s\n' "$G" "$R" "$1"; else printf '  %s✗%s %s\n' "$E" "$R" "$1"; fail=1; fi; }
+  printf 'dependencies\n'
+  check "git"        "command -v git"
+  check "jq"         "command -v jq"
+  check "curl"       "command -v curl"
+  printf 'repo\n'
+  check "repo exists ($REPO)" "[[ -d '$REPO' ]]"
+  check "is a git repo"       "git -C '$REPO' rev-parse --git-dir"
+  check "not mid-rebase"      "[[ ! -d '$REPO/.git/rebase-merge' && ! -d '$REPO/.git/rebase-apply' ]]"
+  check "configs/ present"    "[[ -d '$CONFIGS_DIR' ]]"
+  printf 'environment\n'
+  check "~/.local/bin on PATH" "case ':$PATH:' in *':$DOT_BIN_DIR:'*) true;; *) false;; esac"
+  check "store writable"       "mkdir -p '$DOT_STORE' && [[ -w '$DOT_STORE' ]]"
+  check "state writable"       "mkdir -p '$DOT_STATE' && [[ -w '$DOT_STATE' ]]"
+  if command -v dot >/dev/null 2>&1 && [[ "$(command -v dot)" != "$DOT_BIN_DIR/dot" ]]; then
+    warn "another 'dot' shadows this one: $(command -v dot)"
+  fi
+  printf 'manifests\n'
+  local n mf bad=0
+  for n in $(all_configs); do
+    mf="$(config_dir "$n")/manifest"
+    if ! semver_ok "$(mget "$mf" version)"; then warn "$n: invalid semver '$(mget "$mf" version)'"; bad=1; fi
+    [[ -n "$(mget "$mf" description)" ]] || { warn "$n: missing description"; bad=1; }
+  done
+  [[ $bad -eq 0 ]] && printf '  %s✓%s all %s manifests valid\n' "$G" "$R" "$(all_configs | wc -l | tr -d ' ')" || fail=1
+  printf 'lockfile\n'
+  if [[ -f "$LOCKFILE" ]]; then
+    if jq empty "$LOCKFILE" >/dev/null 2>&1; then
+      printf '  %s✓%s parses\n' "$G" "$R"
+      local rec store
+      for n in $(lock_names); do
+        rec="$(lock_get "$n")"; store="$(printf '%s' "$rec" | jq -r '.store')"
+        [[ -d "$store" ]] || { warn "$n: store missing ($store)"; fail=1; }
+      done
+    else
+      printf '  %s✗%s does not parse\n' "$E" "$R"; fail=1
+    fi
+  else
+    printf '  %s·%s no lockfile yet\n' "$Y" "$R"
+  fi
+  printf '\n'
+  if (( fail )); then printf '%sdoctor: problems found%s\n' "$E" "$R"; return 1; fi
+  printf '%sdoctor: all good%s\n' "$G" "$R"
+}
+
+cmd_update() {
+  local pull=1 names=() a
+  while (( $# )); do case "$1" in --no-pull) pull=0; shift ;; --dry-run) a="$1"; shift; names+=("$a") ;; -*) shift ;; *) names+=("$1"); shift ;; esac; done
+  if (( pull )); then
+    if [[ -d "$REPO/.git" ]]; then
+      log "git pull --rebase --autostash"
+      git -C "$REPO" pull --rebase --autostash || die "git pull failed"
+    else
+      warn "not a git clone; skipping pull"
+    fi
+  fi
+  local installed=(); local n
+  if [[ ${#names[@]} -gt 0 ]]; then installed=("${names[@]}")
+  else while IFS= read -r n; do installed+=("$n"); done < <(lock_names); fi
+  [[ ${#installed[@]} -gt 0 ]] || { log "nothing installed"; return 0; }
+
+  local updated=0 failed=0
+  for n in "${installed[@]}"; do
+    [[ -f "$(config_dir "$n")/manifest" ]] || { warn "$n: no longer in repo"; continue; }
+    local avail inst; avail="$(mget "$(config_dir "$n")/manifest" version)"
+    inst="$(lock_get "$n" | jq -r '.version')"
+    if ver_gt "$avail" "$inst"; then
+      log "$n $inst -> $avail"
+      if apply_config "$n"; then updated=$((updated+1)); else failed=$((failed+1)); fi
+    fi
+  done
+  log "$updated updated, $failed failed"
+  (( failed == 0 ))
+}
+
+cmd_rollback() {
+  [[ $# -ge 1 ]] || die "usage: dot rollback <config> [version]"
+  local n="$1" want="${2:-}" rec store root cur versions target
+  rec="$(lock_get "$n")"; [[ -n "$rec" ]] || die "$n: not installed"
+  root="$DOT_STORE/$n"
+  [[ -d "$root" ]] || die "$n: no store versions"
+  if [[ -z "$want" ]]; then
+    versions="$(ls -1 "$root" 2>/dev/null | sort -Vr)"
+    cur="$(printf '%s' "$rec" | jq -r '.version')"
+    want="$(printf '%s\n' "$versions" | grep -vx "$cur" | head -1)"
+    [[ -n "$want" ]] || die "$n: no other version to roll back to"
+  fi
+  target="$root/$want"
+  [[ -d "$target" ]] || die "$n: version $want not in store"
+  local entry t
+  while IFS= read -r entry; do
+    [[ -n "$entry" ]] || continue
+    t="$(expand "${entry#*|}")"; ln -sfn "$target/${entry%%|*}" "$t"; log "$t -> $target/${entry%%|*}"
+  done < <(mget_all "$(config_dir "$n")/manifest" file)
+  local h; h="$(hash_dir "$target")"
+  lock_set "$n" "$(printf '%s' "$rec" | jq --arg v "$want" --arg s "$target" --arg h "$h" \
+    '.version=$v | .store=$s | .hash=$h')"
+  log "rolled back $n to $want"
+}
+
+cmd_bump() {
+  [[ $# -ge 2 ]] || die "usage: dot bump <config> <major|minor|patch>"
+  local n="$1" level="$2" mf; mf="$(config_dir "$n")/manifest"
+  [[ -f "$mf" ]] || die "unknown config: $n"
+  local cur; cur="$(mget "$mf" version)"
+  semver_ok "$cur" || die "$n: invalid version '$cur'"
+  local maj min pat; IFS=. read -r maj min pat <<< "$cur"
+  case "$level" in
+    major) maj=$((maj+1)); min=0; pat=0 ;;
+    minor) min=$((min+1)); pat=0 ;;
+    patch) pat=$((pat+1)) ;;
+    *) die "level must be major|minor|patch" ;;
+  esac
+  local new="$maj.$min.$pat"
+  local tmp; tmp="$(mktemp)"
+  sed "s/^version[[:space:]]*=.*/version     = $new/" "$mf" > "$tmp" && mv "$tmp" "$mf"
+  log "$n $cur -> $new"
+  if [[ -d "$REPO/.git" ]]; then
+    git -C "$REPO" add "$(config_dir "$n")/manifest" 2>/dev/null
+    git -C "$REPO" commit -q -m "chore($n): bump $cur -> $new" 2>/dev/null && log "committed" || warn "commit skipped"
+  fi
+  printf 'next: dot apply %s\n' "$n"
+}
+
+cmd_add() {
+  [[ $# -ge 1 ]] || die "usage: dot add <path>"
+  local src="$1"; [[ -e "$src" ]] || die "no such path: $src"
+  local base; base="$(basename "$src")"
+  local name="${base#.}"; name="${name%%.*}"
+  local category="" description=""
+  if [[ -t 0 ]]; then
+    read -r -p "category [$name]: " category
+    read -r -p "description [$name]: " description
+  fi
+  [[ -n "$category" ]] || category="$name"
+  [[ -n "$description" ]] || description="$name"
+  local dir; dir="$(config_dir "$name")"
+  [[ -e "$dir" ]] && die "$name: config already exists ($dir)"
+  mkdir -p "$dir/files"
+  cp -R "$src" "$dir/files/$base"
+  cat > "$dir/manifest" <<EOF
+version     = 0.1.0
+description = $description
+category    = $category
+file        = $base|$(expand "$src")
+EOF
+  printf '# %s\n\nAdopted from `%s` via `dot add`.\n' "$name" "$src" > "$dir/README.md"
+  log "added $name"
+  apply_config "$name"
+}
+
+cmd_purge() {
+  local yes=0 a; for a in "$@"; do [[ "$a" == "--yes" ]] && yes=1; done
+  local default_repo_path; default_repo_path="$HOME/.local/share/dot/repo"
+  if [[ "$REPO" != "$default_repo_path" ]]; then
+    warn "repo is not the default clone ($REPO); refusing to delete it"
+    warn "pass --force only if you really mean it"
+    [[ " $* " == *" --force "* ]] || return 1
+  fi
+  printf 'will remove:\n  %s\n  %s\n  %s\n  %s\n' "$REPO" "$DOT_STORE" "$DOT_STATE" "$DOT_BIN_DIR/dot"
+  if (( ! yes )); then
+    [[ -t 0 ]] || die "refusing without --yes"
+    read -r -p "purge? [y/N] " ans; [[ "$ans" == "y" || "$ans" == "Y" ]] || { log "aborted"; return 1; }
+  fi
+  rm -rf "$REPO" "$DOT_STORE" "$DOT_STATE"
+  rm -f "$DOT_BIN_DIR/dot"
+  log "purged (config files at their targets are untouched)"
+}
+
+cmd_init() {
+  local profile="" repo_url="$DEFAULT_REPO_URL" ref="$DOT_REF" ephemeral=0 a
+  while (( $# )); do
+    case "$1" in
+      --profile) profile="$2"; shift 2 ;;
+      --profile=*) profile="${1#*=}"; shift ;;
+      --repo) repo_url="$2"; shift 2 ;;
+      --repo=*) repo_url="${1#*=}"; shift ;;
+      --ref) ref="$2"; shift 2 ;;
+      --ref=*) ref="${1#*=}"; shift ;;
+      --ephemeral|--vm) ephemeral=1; shift ;;
+      *) shift ;;
+    esac
+  done
+
+  local cloned=0
+  if [[ ! -d "$REPO/configs" ]]; then
+    need git
+    log "cloning $repo_url -> $REPO"
+    mkdir -p "$(dirname "$REPO")"
+    git clone --depth 1 --branch "$ref" "$repo_url" "$REPO" || die "clone failed"
+    cloned=1
+  else
+    log "repo already present: $REPO"
+  fi
+
+  [[ -n "$profile" ]] || die "dot init requires --profile <name>"
+  [[ -f "$PROFILES_DIR/$profile.conf" ]] || die "no such profile: $profile"
+  log "applying profile: $profile"
+  local names=() c
+  while IFS= read -r c; do names+=("$c"); done < <(profile_configs "$profile")
+
+  # Ephemeral installs are plain copies — the store is deleted afterwards.
+  if (( ephemeral )); then export DOT_MODE=copy; fi
+  apply_targets "${names[@]}" || warn "some configs failed"
+
+  if (( ephemeral )); then
+    log "ephemeral: purging tooling"
+    if (( cloned )) || [[ "$REPO" == "$HOME/.local/share/dot/repo" ]]; then
+      rm -rf "$REPO"
+    else
+      warn "not purging $REPO (not cloned by init — refusing to delete a working checkout)"
+    fi
+    rm -rf "$DOT_STORE" "$DOT_STATE" "$DOT_BIN_DIR/dot"
+    log "done — configs installed, no tooling left behind"
+  fi
+}
+
+# ── runtime verbs (specs/agentic-dev-mvp.md) ───────────────────────────
+TYPES="feat fix docs style refactor perf test build ci chore revert"
+
+cmd_name() {
+  local type="${1:-}"; shift || true
+  [[ -n "$type" ]] || die "usage: dot name <type> <word>..."
+  if [[ "$type" != "--type-any" && " $TYPES " != *" $type "* ]]; then
+    die "invalid type '$type' (one of: $TYPES)"
+  fi
+  local words=() w
+  for w in "$@"; do
+    w="$(printf '%s' "$w" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')"
+    [[ -n "$w" ]] && words+=("$w")
+  done
+  [[ ${#words[@]} -gt 0 ]] || die "no usable words"
+
+  local slug="${words[0]}" i cand
+  for (( i = 1; i < ${#words[@]} && i < 3; i++ )); do
+    cand="$slug-${words[$i]}"
+    (( ${#type} + 1 + ${#cand} <= 32 )) || break
+    slug="$cand"
+  done
+
+  local id="$type-$slug"
+  while (( ${#id} > 32 )); do
+    [[ "$slug" == *-* ]] || { slug="${slug:0:24}"; id="$type-$slug"; break; }
+    slug="${slug%-*}"; id="$type-$slug"
+  done
+  printf '%s\n' "$id"
+}
+
+runtime_stub() {
+  local verb="$1"; shift
+  printf '%serr%s dot %s is specified but not implemented yet.\n' "$E" "$R" "$verb" >&2
+  printf 'See specs/agentic-dev-mvp.md §3.2 for the contract.\n' >&2
+  return 2
+}
+
+# ── dispatch ───────────────────────────────────────────────────────────
+usage() {
+  cat <<EOF
+dot $DOT_VERSION — versioned, selective dotfiles CLI
+
+Config lifecycle:
+  dot init [--profile P] [--repo URL] [--ref R] [--ephemeral]
+  dot apply [<config>…] [--profile P] [--dry-run] [--force-post]
+  dot forget <config>…            remove links (store kept)
+  dot update [<config>…] [--no-pull]
+  dot rollback <config> [version]
+  dot status [--exit-code] [--json]
+  dot diff <config>
+  dot doctor
+  dot list [--installed|--available] [--category C] [--json]
+  dot info <config>
+  dot profiles
+  dot edit <config>
+  dot add <path>
+  dot bump <config> <major|minor|patch>
+  dot cd
+  dot purge [--yes]
+
+Runtime (specs/agentic-dev-mvp.md):
+  dot name <type> <word>…         canonical task id
+  dot up | task | review | web | transcript
+
+Env: DOT_REPO DOT_STORE DOT_STATE DOT_BIN_DIR DOT_REPO_URL DOT_REF
+EOF
+}
+
+main() {
+  local cmd="${1:-}"; shift || true
+  case "$cmd" in
+    init) cmd_init "$@" ;;
+    apply) cmd_apply "$@" ;;
+    forget|uninstall) cmd_forget "$@" ;;
+    update) cmd_update "$@" ;;
+    rollback) cmd_rollback "$@" ;;
+    status) cmd_status "$@" ;;
+    diff) cmd_diff "$@" ;;
+    doctor) cmd_doctor "$@" ;;
+    list|ls) cmd_list "$@" ;;
+    info) cmd_info "$@" ;;
+    profiles) cmd_profiles "$@" ;;
+    edit) cmd_edit "$@" ;;
+    add) cmd_add "$@" ;;
+    bump) cmd_bump "$@" ;;
+    cd) cmd_cd "$@" ;;
+    purge) cmd_purge "$@" ;;
+    name) cmd_name "$@" ;;
+    up|task|review|web|transcript) runtime_stub "$cmd" "$@" ;;
+    version|--version|-V) printf 'dot %s\n' "$DOT_VERSION" ;;
+    ""|help|--help|-h) usage ;;
+    *) die "unknown command: $cmd (try: dot --help)" ;;
+  esac
+}
+main "$@"

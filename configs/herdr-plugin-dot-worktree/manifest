@@ -1,0 +1,6 @@
+version     = 0.1.0
+description = herdr plugin — dot.worktree: tab-per-task worktree workflow
+category    = agents
+requires    = herdr
+file        = .|~/.config/dot/plugins/dot.worktree
+post_apply  = herdr plugin link ~/.config/dot/plugins/dot.worktree && herdr plugin enable dot.worktree

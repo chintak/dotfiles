@@ -1,0 +1,6 @@
+[manager]
+prepend_keymap = [
+	{ on = "<Enter>", run = "open",        desc = "Open (hx / glow / system)" },
+	{ on = "e",       run = "open --hovered", desc = "Edit in Helix" },
+	{ on = "y",       run = "yank --path", desc = "Yank path" },
+]

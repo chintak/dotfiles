@@ -1,0 +1,4 @@
+version     = 1.0.1
+description = zsh — PATH, history, fzf, prompt switch, herdr tab hooks
+category    = shell
+file        = zshrc|~/.zshrc

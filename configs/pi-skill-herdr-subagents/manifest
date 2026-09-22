@@ -1,0 +1,4 @@
+version     = 0.1.0
+description = herdr-subagents — Pi skill for delegating work to subagents in new Herdr tabs
+category    = agents
+file        = .|~/.pi/agent/skills/herdr-subagents

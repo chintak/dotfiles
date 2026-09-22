@@ -1,0 +1,7 @@
+# Dracula-ish, to match Ghostty / herdr / starship.
+[manager]
+cwd = { fg = "#bd93f9" }
+
+[status]
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }

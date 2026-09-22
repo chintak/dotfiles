@@ -1,0 +1,10 @@
+# Helix language servers. Only pin what auto-detect gets wrong.
+# Helix finds `pyright`/`ruff`/`gopls`/`rust-analyzer`/`lua-language-server` on PATH.
+
+[[language]]
+name = "python"
+language-servers = ["pyright", "ruff"]
+
+[[language]]
+name = "lua"
+language-servers = ["lua-language-server"]

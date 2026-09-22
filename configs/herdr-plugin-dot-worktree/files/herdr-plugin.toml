@@ -1,0 +1,45 @@
+id = "dot.worktree"
+name = "dot Worktree"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Tab-per-task worktrees: new task, finish task, review, dev server"
+
+[[actions]]
+id = "new-task"
+title = "New task…"
+contexts = ["workspace"]
+command = ["bash", "bin/new-task.sh"]
+
+[[actions]]
+id = "finish-task"
+title = "Finish task…"
+contexts = ["workspace"]
+command = ["bash", "bin/finish-task.sh"]
+
+[[actions]]
+id = "apply-layout"
+title = "Reconcile layout"
+contexts = ["workspace"]
+command = ["bash", "bin/apply-layout.sh"]
+
+[[actions]]
+id = "open-review"
+title = "Open review panes"
+contexts = ["workspace"]
+command = ["bash", "bin/open-review.sh"]
+
+[[panes]]
+id = "board"
+title = "Tasks"
+placement = "overlay"
+command = ["bash", "bin/task-board.sh"]
+
+[[link_handlers]]
+id = "github-issue"
+title = "New task from issue"
+pattern = "^https://github\\.com/[^/]+/[^/]+/(issues|pull)/[0-9]+$"
+action = "new-task"
+
+[[events]]
+on = "worktree.created"
+command = ["bash", "bin/apply-layout.sh"]

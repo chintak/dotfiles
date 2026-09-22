@@ -1,8 +1,5 @@
-# macOS package manifest — apply with: brew bundle --file ~/git/dotfiles/Brewfile
-# Starship is intentionally NOT here: install.sh puts it in ~/.local/bin
-# (no sudo, and it's the same binary on Linux).
-tap "homebrew/bundle"
-tap "Aloxaf/fzf-tab"
+# macOS package manifest — applied by `dot apply brewfile` (brew bundle).
+# Starship is NOT here: `dot init` puts it in ~/.local/bin (no sudo, same on Linux).
 
 # shell & prompt
 brew "zsh-autosuggestions"
@@ -17,9 +14,15 @@ brew "ripgrep"
 brew "bat"
 brew "eza"
 brew "yazi"
+brew "chafa"
+brew "poppler"
 brew "tealdeer"
 brew "glow"
 brew "gum"
+
+# editors
+brew "helix"
+brew "neovim"
 
 # git
 brew "gh"
@@ -47,11 +50,13 @@ brew "herdr"
 brew "tailscale"
 
 # agents / misc
-brew "nvitop"
 brew "procs"
 brew "dust"
 brew "duf"
 brew "bottom"
 
-cask "ghostty"
 cask "font-jetbrains-mono-nerd-font"
+
+# Ghostty is intentionally not listed: it is the terminal you are already using,
+# and a cask entry conflicts with a manual install. Fresh machines: brew install --cask ghostty
+# nvitop is a Python tool — installed via uv-tools, not Homebrew.

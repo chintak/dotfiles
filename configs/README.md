@@ -21,7 +21,7 @@ doesn't have, and would make `requires`/profiles depend on a folder path.
 | `shell` | zsh |
 | `prompt` | starship |
 | `terminal` | ghostty, yazi |
-| `multiplexer` | herdr, tmux, zellij |
+| `multiplexer` | herdr, tmux |
 | `editor` | helix |
 | `vcs` | git |
 | `agents` | glow, skills-cli |

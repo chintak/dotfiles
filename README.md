@@ -106,13 +106,12 @@ zsh                          zsh
 starship                     starship
 ghostty                      herdr
 herdr                        tmux
-zellij                       git
-tmux                         helix
-git                          yazi
-helix                        glow
-yazi                         uv-tools
-glow                         skills-cli
-brewfile
+tmux                         git
+git                          helix
+helix                        yazi
+yazi                         glow
+glow                         uv-tools
+brewfile                     skills-cli
 uv-tools
 skills-cli
 ```
@@ -399,11 +398,6 @@ Included only for unsupervised long jobs that must survive a **herdr
 server restart** (herdr restores layout and agent conversations, not an
 arbitrary running process). `tmux new -s rl`, then `ctrl+b d` to detach,
 `tmux attach -t rl` to return.
-
-**`zellij`** — a friendlier multiplexer with on-screen key hints
-([docs](https://zellij.dev/documentation/)). Configured as an alternative,
-not the main path. `zj` attaches to a session named after the current
-directory.
 
 **`mosh`** — "mobile shell" ([mosh.org](https://mosh.org/)). Like SSH but
 survives roaming and high latency (it does local echo, so typing feels

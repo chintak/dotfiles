@@ -45,7 +45,6 @@ brew "duckdb"
 # terminal & sessions
 brew "tmux"
 brew "mosh"
-brew "zellij"
 brew "herdr"
 brew "tailscale"
 

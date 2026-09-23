@@ -67,7 +67,6 @@ if [[ -n "$HERDR_TAB_ID" && -n "$HERDR_BIN_PATH" ]]; then
 fi
 
 # ── helpers ────────────────────────────────────────────────────────────
-zj() { zellij attach "${1:-${PWD:t}}" 2>/dev/null || zellij --session "${1:-${PWD:t}}"; }
 leo-agent() { docker exec -it -w /workspace leo-gateway /opt/hermes/.venv/bin/hermes "$@"; }
 [[ -S /tmp/hermes-ssh-agent/socket ]] && export SSH_AUTH_SOCK=/tmp/hermes-ssh-agent/socket
 export NEBULA_GRAPH_ADDRESS=alpha-nebula-graphd-thrift.service.ash1.consul

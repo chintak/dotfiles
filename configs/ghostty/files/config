@@ -90,4 +90,5 @@ scrollback-limit = 100000000
 # herdr keeps processes alive anyway
 confirm-close-surface = false
 shell-integration = detect
-shell-integration-features = cursor,sudo,title
+# no-cursor: keep cursor-style=block at prompt (default forces bar)
+shell-integration-features = no-cursor,sudo,title

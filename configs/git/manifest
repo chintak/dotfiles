@@ -1,0 +1,4 @@
+version     = 1.0.0
+description = git — delta pager, difftastic aliases, zdiff3 merges
+category    = vcs
+file        = config|~/.config/git/config

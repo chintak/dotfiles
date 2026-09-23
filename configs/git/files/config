@@ -1,0 +1,42 @@
+# git — delta as pager, difftastic opt-in, zdiff3 merges.
+# Lives at the XDG global path so ~/.gitconfig (user identity) is untouched.
+
+[core]
+	pager = delta
+	editor = hx
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	side-by-side = true
+	line-numbers = true
+	syntax-theme = TwoDark
+	features = line-numbers decorations
+	true-color = auto
+
+[delta "decorations"]
+	commit-decoration-style = bold yellow box ul
+	file-style = bold yellow ul
+	file-decoration-style = none
+
+[diff]
+	algorithm = histogram
+	colorMoved = default
+
+[difftool]
+	prompt = false
+
+[difftool "difftastic"]
+	cmd = difft "$LOCAL" "$REMOTE"
+
+[merge]
+	conflictStyle = zdiff3
+
+# difftastic is opt-in on purpose: `diff.external` would break `git add -p`.
+[alias]
+	dft   = "!f() { GIT_EXTERNAL_DIFF=difft git diff \"$@\"; }; f"
+	dfst  = "!f() { GIT_EXTERNAL_DIFF=difft git diff --staged \"$@\"; }; f"
+	dshow = "!f() { GIT_EXTERNAL_DIFF=difft git show \"$@\"; }; f"
+	lg    = log --graph --oneline --decorate --all

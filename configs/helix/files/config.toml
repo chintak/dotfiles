@@ -1,0 +1,18 @@
+# Helix — LSP and file editing inside panes. Auto-detects servers on PATH.
+theme = "base16_transparent"
+
+[editor]
+line-number = "relative"
+bufferline = "multiple"
+color-modes = true
+cursorline = true
+
+[editor.lsp]
+display-inlay-hints = true
+
+[editor.indent-guides]
+render = true
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"

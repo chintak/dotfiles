@@ -1,0 +1,100 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Mobile prompt — used over SSH (Termius on iOS). Glyph-free on purpose:
+# Nerd Font icons live in the Private Use Area, which has no OS fallback,
+# so a client whose font lacks them renders tofu boxes. One line, no right
+# prompt, no os/user/time — a right prompt wraps badly at ~43 columns.
+# Desktop twin: starship.toml.
+
+add_newline = false
+command_timeout = 1000
+palette = 'dracula'
+format = "$directory$git_branch$git_status$git_state$python$nodejs$rust$status$cmd_duration$jobs$character"
+
+[palettes.dracula]
+color_fg0    = '#f8f8f2'
+color_cyan   = '#8be9fd'
+color_green  = '#50fa7b'
+color_purple = '#bd93f9'
+color_red    = '#ff5555'
+color_yellow = '#f1fa8c'
+
+[directory]
+style = "bold fg:color_cyan"
+format = "[$path]($style) "
+truncation_length = 2
+truncate_to_repo = true
+read_only = " RO"
+repo_root_style = "bold fg:color_cyan"
+
+[git_branch]
+symbol = "git:"
+style = "bold fg:color_purple"
+format = "[$symbol$branch]($style) "
+truncation_length = 28
+truncation_symbol = "…"
+
+# Trailing space lives inside the ( … ) group: a clean tree renders
+# nothing at all instead of a stray gap.
+[git_status]
+style = "fg:color_yellow"
+format = "[($all_status$ahead_behind )]($style)"
+conflicted = "="
+ahead = ">"
+behind = "<"
+diverged = "<>"
+untracked = "?"
+modified = "!"
+staged = "+"
+renamed = "R"
+deleted = "x"
+
+# Mid-operation state; no conditional — $state is a meta-variable (a
+# ( … ) group around it always hides) and the module self-suppresses
+# when no git operation is running.
+[git_state]
+style = "bold fg:color_red"
+format = "[ $state ]($style)"
+
+[python]
+symbol = "py "
+style = "fg:color_yellow"
+format = "[$symbol$version ]($style)"
+
+[nodejs]
+symbol = "js "
+style = "fg:color_green"
+format = "[$symbol$version ]($style)"
+
+[rust]
+symbol = "rs "
+style = "fg:color_red"
+format = "[$symbol$version ]($style)"
+
+# Line-1 tail — same transient set as the desktop twin, ASCII/emoji only.
+# status is disabled by default in starship — opt in explicitly.
+[status]
+disabled = false
+symbol = "✗ "
+success_symbol = ""
+not_executable_symbol = "✗ "
+not_found_symbol = "✗ "
+sigint_symbol = "✗ "
+signal_symbol = "⚡ "
+style = "bold fg:color_red"
+format = "[$symbol$status ]($style)"
+
+[cmd_duration]
+min_time = 2000
+show_milliseconds = false
+style = "fg:color_yellow"
+format = "[took $duration]($style) "
+
+[jobs]
+style = "bold fg:color_fg0"
+format = "[$symbol$number]($style) "
+
+[character]
+success_symbol = '[❯](bold fg:color_green)'
+error_symbol = '[❯](bold fg:color_red)'
+vimcmd_symbol = '[❮](bold fg:color_green)'

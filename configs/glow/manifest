@@ -1,0 +1,4 @@
+version     = 1.0.0
+description = glow — rendered markdown in the terminal
+category    = agents
+file        = glow.yml|~/.config/glow/glow.yml

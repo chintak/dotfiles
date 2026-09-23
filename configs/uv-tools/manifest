@@ -1,0 +1,5 @@
+version     = 1.0.1
+description = Python CLIs via uv (ruff, pytest, nvitop, huggingface_hub)
+category    = packages
+file        = tools.txt|~/.config/dot/uv-tools.txt
+post_apply  = xargs -n1 uv tool install --quiet < ~/.config/dot/uv-tools.txt

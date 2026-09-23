@@ -1,0 +1,4 @@
+# glow — rendered markdown in the terminal.
+style: dark
+width: 100
+pager: false

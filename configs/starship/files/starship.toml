@@ -17,9 +17,9 @@
 palette = 'dracula'
 
 format = """
-[](fg:color_purple)\
+[](fg:color_purple)\
 [ $directory ](fg:color_fg0 bg:color_purple)\
-[](fg:color_purple)\
+[](fg:color_purple)\
 $git_branch$git_status$git_state$python$nodejs$rust\
 $line_break$status$cmd_duration$jobs\
 $character"""

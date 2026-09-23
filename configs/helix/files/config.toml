@@ -1,5 +1,5 @@
 # Helix — LSP and file editing inside panes. Auto-detects servers on PATH.
-theme = "base16_transparent"
+theme = "gruvbox"
 
 [editor]
 line-number = "relative"
@@ -16,3 +16,22 @@ render = true
 [editor.cursor-shape]
 insert = "bar"
 normal = "block"
+
+# ── macOS-style word/line motion ──────────────────────────────────────
+# Ghostty sends xterm CSI for alt+arrows and Home/End for cmd+arrows
+# (see ghostty/config); herdr forwards both untouched to the pane.
+# home/end already work in insert mode by default; normal mode gets
+# explicit bindings so cmd+arrows work there too. This overrides the
+# tree-sitter select_prev/next_sibling on A-left/A-right in normal mode.
+[keys.insert]
+"A-left" = "move_prev_word_start"
+"A-right" = "move_next_word_start"
+
+[keys.normal]
+"A-left" = "move_prev_word_start"
+"A-right" = "move_next_word_start"
+"home" = "goto_line_start"
+"end" = "goto_line_end"
+# No `editor.auto-reload` exists upstream (helix#1125); agents editing
+# files out from under hx need a manual pull. F5 reloads all buffers.
+"F5" = ":reload-all"

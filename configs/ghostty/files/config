@@ -10,7 +10,7 @@ cursor-style-blink = false
 # none`) keeps rounded corners + shadow. Drag via option+click.
 font-family = JetBrainsMono Nerd Font Mono
 font-size = 14
-theme = Gruvbox Dark
+theme = "TokyoNight Night"
 window-padding-x = 8
 window-padding-y = 8
 window-padding-balance = true

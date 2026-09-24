@@ -18,16 +18,15 @@ language-servers = ["lua-language-server"]
 #     3., ... (markdown renderers normalize it, but the source reads odd)
 #   - space c now toggles "-" line comments on markdown instead of HTML
 #     comments; space C (block comment) is unaffected
-# Markdown writing stack (helix 25.07):
+# Markdown writing stack:
 #   marksman  — headings/links LSP (auto-detected on PATH, pinned here anyway)
-#   harper-ls — offline spell + grammar via LSP diagnostics (brew `harper`).
-#               Helix has no built-in spell checker yet (spellbook PR pending);
-#               harper is the LSP route. `space a` on an underlined word offers
-#               code actions incl. add-to-dictionary (~/.config/harper-ls/dictionary.txt)
 #   prettier  — formatter on save (editor.auto-format is on by default);
 #               proseWrap=preserve so manual line breaks survive
+# Note: harper-ls (spell/grammar) was removed — helix 25.07's builtin
+# language-server definition sends a settings payload harper 2.x rejects
+# ("Settings must be an object"), erroring on every markdown buffer.
 [[language]]
 name = "markdown"
 comment-tokens = ["-", "+", "*", "1.", "> ", "- [ ]"]
-language-servers = ["marksman", "harper-ls"]
+language-servers = ["marksman"]
 formatter = { command = "prettier", args = ["--parser", "markdown"] }

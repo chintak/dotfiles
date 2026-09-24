@@ -65,6 +65,11 @@ normal = "block"
 
 # Live GitHub-styled markdown preview in a browser; auto-reloads on save.
 # `space m p` — m is unused in helix's default space mode, and space chords
-# are not captured by herdr. Requires: gh extension install yusukebe/gh-markdown-preview
-[keys.normal."Space".m]
-p = ":run-shell-command gh markdown-preview %{buffer_name}"
+# are not captured by herdr. :run-shell-command blocks until the command
+# exits, and gh markdown-preview is a blocking watch server, so it must run
+# detached (output discarded). %{buffer_name} is single-quoted because the
+# rest of the line goes to the shell unquoted (paths with spaces, e.g. under
+# "My Drive", would otherwise split into two args).
+# Requires: gh extension install yusukebe/gh-markdown-preview
+[keys.normal."space".m]
+p = ":run-shell-command gh markdown-preview '%{buffer_name}' >/dev/null 2>&1 &"

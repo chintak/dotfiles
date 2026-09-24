@@ -23,10 +23,10 @@ brew "gum"
 # editors
 brew "helix"
 brew "neovim"
-# markdown writing stack (hx): LSP, formatter, spell/grammar
+# markdown writing stack (hx): LSP + formatter. harper removed — see helix
+# languages.toml comment (helix 25.07 sends settings harper 2.x rejects).
 brew "marksman"
 brew "prettier"
-brew "harper"
 
 # git
 brew "gh"

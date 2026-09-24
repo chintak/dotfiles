@@ -48,6 +48,9 @@ Three rules hold the whole thing together:
 
 3. **One theme.** [TokyoNight](https://github.com/tokyo-night/tokyo-night-vscode-theme) across Ghostty and
    Starship, so the terminal looks coherent. (herdr, yazi, and tmux still use Dracula.)
+   **One exception:** helix uses `onelight` — a light theme reads better for
+   long markdown prose, which is hx's main job here. Deliberate divergence,
+   not drift.
 
 The goal is an environment that is **low-latency, glyph-safe, and
 identical on every client** — including a 43-column iPhone screen on a

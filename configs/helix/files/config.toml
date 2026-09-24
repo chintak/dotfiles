@@ -1,5 +1,5 @@
 # Helix — LSP and file editing inside panes. Auto-detects servers on PATH.
-theme = "gruvbox"
+theme = "tokyonight"
 
 [editor]
 line-number = "relative"

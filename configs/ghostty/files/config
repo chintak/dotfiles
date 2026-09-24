@@ -43,39 +43,60 @@ keybind = alt+arrow_left=csi:1;3D
 keybind = alt+arrow_right=csi:1;3C
 keybind = cmd+arrow_left=text:\x1bOH
 keybind = cmd+arrow_right=text:\x1bOF
-keybind = cmd+alt+arrow_up=unbind
-keybind = cmd+alt+arrow_down=unbind
-keybind = cmd+alt+arrow_left=unbind
-keybind = cmd+alt+arrow_right=unbind
-keybind = cmd+ctrl+arrow_up=unbind
-keybind = cmd+ctrl+arrow_down=unbind
-keybind = cmd+ctrl+arrow_left=unbind
-keybind = cmd+ctrl+arrow_right=unbind
-keybind = cmd+t=unbind
-keybind = cmd+w=unbind
-keybind = cmd+shift+[=unbind
-keybind = cmd+shift+]=unbind
-keybind = cmd+n=unbind
-keybind = cmd+shift+w=unbind
-# cmd+1..9 — free both the character and the physical-key trigger
-keybind = cmd+1=unbind
-keybind = cmd+digit_1=unbind
-keybind = cmd+2=unbind
-keybind = cmd+digit_2=unbind
-keybind = cmd+3=unbind
-keybind = cmd+digit_3=unbind
-keybind = cmd+4=unbind
-keybind = cmd+digit_4=unbind
-keybind = cmd+5=unbind
-keybind = cmd+digit_5=unbind
-keybind = cmd+6=unbind
-keybind = cmd+digit_6=unbind
-keybind = cmd+7=unbind
-keybind = cmd+digit_7=unbind
-keybind = cmd+8=unbind
-keybind = cmd+digit_8=unbind
-keybind = cmd+9=unbind
-keybind = cmd+digit_9=unbind
+# ── herdr pane/tab/workspace arrows → herdr ──────────────────────────
+# This is the shift+alt+left/right fix. Ghostty ships no default for
+# shift+alt+arrows, but without an explicit bind the chord can be
+# swallowed (selection handling / macOS composition) and surface inside
+# the pane as a word jump — which looks like Helix stealing it. Send
+# xterm CSI with mods=4 (shift+alt) so herdr matches previous_tab /
+# next_tab / previous_workspace / next_workspace instead of forwarding
+# the bytes to Helix.
+keybind = shift+alt+arrow_left=csi:1;4D
+keybind = shift+alt+arrow_right=csi:1;4C
+keybind = shift+alt+arrow_up=csi:1;4A
+keybind = shift+alt+arrow_down=csi:1;4B
+# ── cmd chords → herdr (CSI-u, Kitty keyboard protocol) ───────────────
+# `unbind` alone is NOT enough for cmd chords: super has no legacy pty
+# encoding, so an unbound cmd chord is dropped and herdr never sees it.
+# Forward every cmd chord herdr binds as an explicit CSI-u sequence, the
+# same pattern as the super+d split forwards above (mods 9 = super,
+# 10 = shift+super, 11 = super+alt, 13 = super+ctrl; letters/digits are
+# USB HID codes: t=116 w=119 n=110 p=112 [=91 ]=93 1..9=49..57).
+keybind = performable:super+alt+arrow_up=csi:1;11A
+keybind = performable:super+alt+arrow_down=csi:1;11B
+keybind = performable:super+alt+arrow_left=csi:1;11D
+keybind = performable:super+alt+arrow_right=csi:1;11C
+keybind = performable:super+ctrl+arrow_up=csi:1;13A
+keybind = performable:super+ctrl+arrow_down=csi:1;13B
+keybind = performable:super+ctrl+arrow_left=csi:1;13D
+keybind = performable:super+ctrl+arrow_right=csi:1;13C
+keybind = performable:super+t=text:\x1b[116;9u
+keybind = performable:super+w=text:\x1b[119;9u
+keybind = performable:super+n=text:\x1b[110;9u
+keybind = performable:super+p=text:\x1b[112;9u
+keybind = performable:super+shift+[=text:\x1b[91;10u
+keybind = performable:super+shift+]=text:\x1b[93;10u
+keybind = performable:super+shift+w=text:\x1b[119;10u
+# cmd+1..9 — free both the character and the physical-key trigger, and
+# forward both as CSI-u so herdr sees switch_workspace.
+keybind = performable:super+1=text:\x1b[49;9u
+keybind = performable:super+digit_1=text:\x1b[49;9u
+keybind = performable:super+2=text:\x1b[50;9u
+keybind = performable:super+digit_2=text:\x1b[50;9u
+keybind = performable:super+3=text:\x1b[51;9u
+keybind = performable:super+digit_3=text:\x1b[51;9u
+keybind = performable:super+4=text:\x1b[52;9u
+keybind = performable:super+digit_4=text:\x1b[52;9u
+keybind = performable:super+5=text:\x1b[53;9u
+keybind = performable:super+digit_5=text:\x1b[53;9u
+keybind = performable:super+6=text:\x1b[54;9u
+keybind = performable:super+digit_6=text:\x1b[54;9u
+keybind = performable:super+7=text:\x1b[55;9u
+keybind = performable:super+digit_7=text:\x1b[55;9u
+keybind = performable:super+8=text:\x1b[56;9u
+keybind = performable:super+digit_8=text:\x1b[56;9u
+keybind = performable:super+9=text:\x1b[57;9u
+keybind = performable:super+digit_9=text:\x1b[57;9u
 
 # ── clipboard ──────────────────────────────────────────────────────────
 clipboard-read = allow

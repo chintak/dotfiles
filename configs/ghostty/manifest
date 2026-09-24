@@ -1,4 +1,4 @@
-version     = 1.0.1
+version     = 1.0.3
 description = Ghostty — fast renderer; hands its chords to herdr
 category    = terminal
 platform    = mac

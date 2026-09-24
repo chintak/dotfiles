@@ -23,13 +23,32 @@ normal = "block"
 # home/end already work in insert mode by default; normal mode gets
 # explicit bindings so cmd+arrows work there too. This overrides the
 # tree-sitter select_prev/next_sibling on A-left/A-right in normal mode.
+#
+# S-A-left/right are bound to the same motion as a fallback: inside herdr
+# they never reach the pane (herdr owns shift+alt+left/right for tab
+# focus), but running hx outside herdr (or if a chord ever leaks through)
+# behaves like plain word motion instead of something surprising.
+#
+# Shadow map — these Helix normal-mode Alt chords never reach hx inside a
+# herdr pane because herdr captures them first (use Helix's Ctrl-w window
+# mode for in-pane splits instead of herdr's alt+d):
+#   alt+d → herdr split_vertical   (hx: delete_selection_noyank)
+#   alt+u → herdr cycle_pane_next  (hx: earlier)
+#   alt+i → herdr cycle_pane_previous (hx: shrink_selection)
+#   alt+n → herdr new_tab          (hx: select_next_sibling)
+# Insert-mode Alt-d / Alt-Backspace (delete word) and prompt-mode Alt-b /
+# Alt-f are NOT captured by herdr and work normally.
 [keys.insert]
 "A-left" = "move_prev_word_start"
 "A-right" = "move_next_word_start"
+"S-A-left" = "move_prev_word_start"
+"S-A-right" = "move_next_word_start"
 
 [keys.normal]
 "A-left" = "move_prev_word_start"
 "A-right" = "move_next_word_start"
+"S-A-left" = "move_prev_word_start"
+"S-A-right" = "move_next_word_start"
 "home" = "goto_line_start"
 "end" = "goto_line_end"
 # No `editor.auto-reload` exists upstream (helix#1125); agents editing

@@ -3,9 +3,13 @@
 The renderer only — herdr owns panes. Two non-obvious jobs:
 
 1. **Hand its chords to herdr.** Ghostty's native split/tab shortcuts are
-   `unbind`-ed so herdr receives them. In 1.3.x the native Split menu can win
-   over `unbind`, so the split chords are emitted as explicit Kitty keyboard
-   protocol CSI-u sequences (`performable:super+d=text:…`).
+   *forwarded* to herdr as explicit Kitty keyboard protocol CSI-u sequences
+   (`performable:super+d=text:…`), not just `unbind`-ed: `unbind` alone drops
+   cmd chords (super has no pty encoding) so herdr would never see them. In
+   1.3.x the native Split menu can win over `unbind`, which is the other
+   reason for explicit sequences. Shift+alt+arrows are forwarded as xterm
+   CSI `1;4A/B/C/D` so herdr matches tab focus / workspace nav instead of
+   the pane seeing a word jump (the old "Helix stole shift+alt+left" symptom).
 2. **Comfort**: TokyoNight Night, 100 MB scrollback (agents emit a lot), `option-as-alt`
    so Alt chords reach herdr, and a global quake terminal on `cmd+shift+`` `.
 

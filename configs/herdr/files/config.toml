@@ -16,14 +16,23 @@ subtext0      = "#b6bdca"
 accent        = "#bd93f9"
 
 # ── keys ───────────────────────────────────────────────────────────────
-# Prefix-free OS/browser-style chords, with prefix+… fallbacks. Ghostty
-# passes cmd/alt through (see ghostty/config).
+# Prefix-free chords, with prefix+… fallbacks that always work. Layout:
+# shift+alt+left/right move TAB focus; cmd+alt+arrows move PANE focus;
+# shift+alt+up/down switch workspaces. Ghostty forwards the arrows as
+# explicit CSI (see ghostty/config) so herdr — not the pane (Helix word
+# jump) — receives them.
+# cmd+… chords have no legacy pty encoding; Ghostty forwards them as
+# Kitty CSI-u (see ghostty/config). If a cmd chord ever does nothing,
+# use the ctrl+alt+… or prefix+… twin — those survive every terminal.
+# The ctrl+alt+… twins below are the reliable layer herdr upstream
+# recommends ("Going prefix-free"): ctrl+alt passes through Ghostty
+# defaults and macOS option-composition untouched.
 [keys]
 prefix = "ctrl+b"
 
-# tabs
-previous_tab = ["alt+[", "cmd+shift+[", "prefix+p"]
-next_tab     = ["alt+]", "cmd+shift+]", "prefix+n"]
+# tabs (shift+alt+left/right move tab focus)
+previous_tab = ["shift+alt+left", "alt+[", "cmd+shift+[", "ctrl+alt+[", "prefix+p"]
+next_tab     = ["shift+alt+right", "alt+]", "cmd+shift+]", "ctrl+alt+]", "prefix+n"]
 new_tab      = ["alt+n", "cmd+t", "prefix+c"]
 rename_tab   = ["alt+r", "prefix+shift+t"]
 close_tab    = ["alt+w", "cmd+w", "prefix+shift+x"]
@@ -31,11 +40,11 @@ move_tab_previous = "alt+shift+["
 move_tab_next     = "alt+shift+]"
 switch_tab   = ["alt+1..9", "prefix+1..9"]
 
-# panes
-focus_pane_left  = ["shift+alt+left", "cmd+alt+left", "prefix+h"]
-focus_pane_right = ["shift+alt+right", "cmd+alt+right", "prefix+l"]
-focus_pane_up    = ["shift+alt+k", "cmd+alt+up", "prefix+k"]
-focus_pane_down  = ["shift+alt+j", "cmd+alt+down", "prefix+j"]
+# panes (cmd+alt+arrows move pane focus)
+focus_pane_left  = ["cmd+alt+left", "ctrl+alt+h", "prefix+h"]
+focus_pane_right = ["cmd+alt+right", "ctrl+alt+l", "prefix+l"]
+focus_pane_up    = ["shift+alt+k", "cmd+alt+up", "ctrl+alt+k", "prefix+k"]
+focus_pane_down  = ["shift+alt+j", "cmd+alt+down", "ctrl+alt+j", "prefix+j"]
 resize_pane_left  = ["ctrl+shift+alt+h", "cmd+ctrl+left"]
 resize_pane_right = ["ctrl+shift+alt+l", "cmd+ctrl+right"]
 resize_pane_up    = ["ctrl+shift+alt+k", "cmd+ctrl+up"]

@@ -36,7 +36,7 @@ color_red    = '#f7768e'
 color_yellow = '#e0af68'
 
 [directory]
-style = "bold fg:color_fg0 bg:color_purple"
+style = "bold fg:color_bg1 bg:color_purple"
 format = "[$path]($style)"
 truncation_length = 3
 truncation_symbol = "…/"

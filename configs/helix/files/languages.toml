@@ -8,3 +8,16 @@ language-servers = ["pyright", "ruff"]
 [[language]]
 name = "lua"
 language-servers = ["lua-language-server"]
+
+# Markdown writing: continue lists/quotes on Enter.
+# Declaring these as comment-tokens makes Helix's continue-comments (default
+# on) repeat the marker of the previous line when Enter is pressed inside a
+# list item or blockquote — bullets, task boxes and quotes continue
+# automatically. Trade-offs (helix discussion #12812):
+#   - numbered lists repeat "1." each time instead of incrementing to 2.,
+#     3., ... (markdown renderers normalize it, but the source reads odd)
+#   - space c now toggles "-" line comments on markdown instead of HTML
+#     comments; space C (block comment) is unaffected
+[[language]]
+name = "markdown"
+comment-tokens = ["-", "+", "*", "1.", "> ", "- [ ]"]

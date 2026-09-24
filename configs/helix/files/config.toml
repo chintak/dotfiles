@@ -6,6 +6,11 @@ line-number = "relative"
 bufferline = "multiple"
 color-modes = true
 cursorline = true
+# Soft-wrap to the viewport width (dynamic, not a fixed text-width column).
+# max-wrap: slack allowed at the end of a line before it wraps (0 = always
+# fill the full width, higher = wrap sooner). max-indent-retain 0 keeps
+# wrapped segments at the far left, which reads better for markdown.
+soft-wrap = { enable = true, max-wrap = 25, max-indent-retain = 0 }
 
 [editor.lsp]
 display-inlay-hints = true

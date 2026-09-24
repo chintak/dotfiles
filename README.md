@@ -46,8 +46,8 @@ Three rules hold the whole thing together:
    an immutable, versioned store and symlinks the target at that copy.
    Edit the repo → commit → `dot update`, and every machine re-links.
 
-3. **One theme.** [Dracula](https://draculatheme.com/) across Ghostty,
-   Starship, and herdr, so the terminal looks coherent.
+3. **One theme.** [TokyoNight](https://github.com/tokyo-night/tokyo-night-vscode-theme) across Ghostty and
+   Starship, so the terminal looks coherent. (herdr, yazi, and tmux still use Dracula.)
 
 The goal is an environment that is **low-latency, glyph-safe, and
 identical on every client** — including a 43-column iPhone screen on a

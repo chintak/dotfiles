@@ -13,7 +13,7 @@ cursorline = true
 # value (vs. 0) keeps wrapped lines aligned with the logical line's indent,
 # so markdown list items and nested code stay under their parent instead of
 # returning to column 0.
-soft-wrap = { enable = true, max-wrap = 25, max-indent-retain = 255 }
+soft-wrap = { enable = true, max-wrap = 25, max-indent-retain = 255, wrap-indicator = "" }
 
 [editor.lsp]
 display-inlay-hints = true

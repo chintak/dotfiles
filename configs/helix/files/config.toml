@@ -1,5 +1,5 @@
 # Helix — LSP and file editing inside panes. Auto-detects servers on PATH.
-theme = "zed_onedark"
+theme = "onelight"
 
 [editor]
 line-number = "relative"
@@ -62,3 +62,9 @@ normal = "block"
 # No `editor.auto-reload` exists upstream (helix#1125); agents editing
 # files out from under hx need a manual pull. F5 reloads all buffers.
 "F5" = ":reload-all"
+
+# Live GitHub-styled markdown preview in a browser; auto-reloads on save.
+# `space m p` — m is unused in helix's default space mode, and space chords
+# are not captured by herdr. Requires: gh extension install yusukebe/gh-markdown-preview
+[keys.normal."Space".m]
+p = ":run-shell-command gh markdown-preview %{buffer_name}"

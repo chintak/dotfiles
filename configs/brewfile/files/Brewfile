@@ -23,6 +23,10 @@ brew "gum"
 # editors
 brew "helix"
 brew "neovim"
+# markdown writing stack (hx): LSP, formatter, spell/grammar
+brew "marksman"
+brew "prettier"
+brew "harper"
 
 # git
 brew "gh"

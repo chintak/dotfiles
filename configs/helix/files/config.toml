@@ -8,9 +8,12 @@ color-modes = true
 cursorline = true
 # Soft-wrap to the viewport width (dynamic, not a fixed text-width column).
 # max-wrap: slack allowed at the end of a line before it wraps (0 = always
-# fill the full width, higher = wrap sooner). max-indent-retain 0 keeps
-# wrapped segments at the far left, which reads better for markdown.
-soft-wrap = { enable = true, max-wrap = 25, max-indent-retain = 0 }
+# fill the full width, higher = wrap sooner). max-indent-retain: how many
+# columns of the line's indentation to carry onto wrapped segments; a large
+# value (vs. 0) keeps wrapped lines aligned with the logical line's indent,
+# so markdown list items and nested code stay under their parent instead of
+# returning to column 0.
+soft-wrap = { enable = true, max-wrap = 25, max-indent-retain = 255 }
 
 [editor.lsp]
 display-inlay-hints = true

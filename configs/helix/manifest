@@ -1,4 +1,4 @@
-version     = 1.1.0
+version     = 1.1.1
 description = Helix — LSP editor for panes and code browsing
 category    = editor
 file        = config.toml|~/.config/helix/config.toml

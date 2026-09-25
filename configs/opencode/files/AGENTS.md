@@ -1,0 +1,2 @@
+- Most files here are managed by the **dot CLI**: edit them in `~/git/dotfiles/configs/opencode/files/` (agents, skills, `opencode.jsonc`, `tui.jsonc`), then run `dot apply opencode` — never edit the live files/symlinks in this directory directly.
+- Exception: `plugins/` is owned by the herdr integration (it overwrites it on update); `cli.json`, `service.json`, `node_modules/` are runtime state.

@@ -114,9 +114,9 @@ git                          helix
 helix                        yazi
 yazi                         glow
 glow                         uv-tools
-brewfile                     skills-cli
+brewfile
 uv-tools
-skills-cli
+opencode
 ```
 
 `dot init --profile mac` installs them in order, expanding each config's
@@ -600,17 +600,11 @@ tools with READMEs ("skills") or extensions.
 
 **`OpenCode`** — an open-source coding agent
 ([docs](https://opencode.ai/docs)). Supports LSP, formatters, plugins, and
-**MCP servers** — so Roblox Studio MCP is wired here, not into Pi.
-
-**`skills-cli`** — installs reusable markdown "skills" from `skills/`
-into a project's `.cursor/`, `.claude/`, or `.codex/` directory, so every
-agent gets the same instructions:
-
-```bash
-skills-cli skills list
-skills-cli skills install ship      # commit, push, open a PR
-skills-cli skills install --all
-```
+**MCP servers** — so Roblox Studio MCP is wired here, not into Pi. The
+`opencode` config versions `opencode.jsonc` (agent settings), `tui.jsonc`
+(herdr TUI plugin loader), plus the `agents/` and `skills/` definitions;
+runtime state (`cli.json`, `service.json`, `node_modules/`, `plugins/`)
+stays out of the store.
 
 ### Roblox
 

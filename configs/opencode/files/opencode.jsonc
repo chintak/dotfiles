@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
+  "formatter": true,
+  "worktree": {
+    // Worktrees for the `do` agent live in <repo>/.worktrees/
+    "directory": ".worktrees",
+  },
+  "mcp": {
+    "servers": {
+      "roblox-studio": {
+        "type": "local",
+        "command": [
+          "/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP"
+        ]
+      }
+    }
+  }
+}

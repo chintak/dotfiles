@@ -1,0 +1,214 @@
+{
+  "document": {
+    "block_prefix": "\n",
+    "block_suffix": "\n",
+    "color": "#282C34",
+    "margin": 2
+  },
+  "block_quote": {
+    "indent": 1,
+    "indent_token": "│ ",
+    "color": "#5C6370"
+  },
+  "paragraph": {},
+  "list": {
+    "level_indent": 2
+  },
+  "heading": {
+    "block_suffix": "\n",
+    "color": "#D50000",
+    "bold": true
+  },
+  "h1": {
+    "prefix": " ",
+    "suffix": " ",
+    "color": "#D50000",
+    "bold": true
+  },
+  "h2": {
+    "prefix": "## ",
+    "color": "#D35400",
+    "bold": true
+  },
+  "h3": {
+    "prefix": "### ",
+    "color": "#FF6F00",
+    "bold": true
+  },
+  "h4": {
+    "prefix": "#### ",
+    "color": "#24A443",
+    "bold": true
+  },
+  "h5": {
+    "prefix": "##### ",
+    "color": "#0061FF",
+    "bold": true
+  },
+  "h6": {
+    "prefix": "###### ",
+    "color": "#B500A9",
+    "bold": true
+  },
+  "text": {},
+  "strikethrough": {
+    "crossed_out": true,
+    "color": "#D50000"
+  },
+  "emph": {
+    "italic": true,
+    "color": "#B500A9"
+  },
+  "strong": {
+    "bold": true,
+    "color": "#FF6F00"
+  },
+  "hr": {
+    "color": "#BDBDBD",
+    "format": "\n--------\n"
+  },
+  "item": {
+    "block_prefix": "• ",
+    "color": "#0091EA"
+  },
+  "enumeration": {
+    "block_prefix": ". ",
+    "color": "#0091EA"
+  },
+  "task": {
+    "ticked": "[✓] ",
+    "unticked": "[ ] "
+  },
+  "link": {
+    "color": "#0086C1",
+    "underline": true
+  },
+  "link_text": {
+    "color": "#0091EA",
+    "bold": true
+  },
+  "image": {
+    "color": "#0091EA",
+    "underline": true
+  },
+  "image_text": {
+    "color": "#5C6370",
+    "format": "Image: {{.text}} →"
+  },
+  "code": {
+    "prefix": " ",
+    "suffix": " ",
+    "color": "#24A443",
+    "background_color": "#EEEEEE"
+  },
+  "code_block": {
+    "color": "#282C34",
+    "margin": 2,
+    "chroma": {
+      "text": {
+        "color": "#282C34"
+      },
+      "error": {
+        "color": "#FAFAFA",
+        "background_color": "#D50000"
+      },
+      "comment": {
+        "color": "#5C6370",
+        "italic": true
+      },
+      "comment_preproc": {
+        "color": "#B500A9"
+      },
+      "keyword": {
+        "color": "#B500A9"
+      },
+      "keyword_reserved": {
+        "color": "#B500A9"
+      },
+      "keyword_namespace": {
+        "color": "#651FFF"
+      },
+      "keyword_type": {
+        "color": "#B500A9"
+      },
+      "operator": {
+        "color": "#D50000"
+      },
+      "punctuation": {
+        "color": "#795548"
+      },
+      "name": {},
+      "name_builtin": {
+        "color": "#0086C1",
+        "bold": true
+      },
+      "name_tag": {
+        "color": "#0086C1"
+      },
+      "name_attribute": {
+        "color": "#FF6F00"
+      },
+      "name_class": {
+        "color": "#D35400",
+        "bold": true
+      },
+      "name_constant": {
+        "color": "#0086C1",
+        "bold": true
+      },
+      "name_decorator": {
+        "color": "#FF6F00"
+      },
+      "name_exception": {
+        "color": "#D50000"
+      },
+      "name_function": {
+        "color": "#0061FF"
+      },
+      "name_other": {},
+      "literal": {},
+      "literal_number": {
+        "color": "#795548",
+        "bold": true
+      },
+      "literal_date": {},
+      "literal_string": {
+        "color": "#24A443"
+      },
+      "literal_string_escape": {
+        "color": "#C2185B"
+      },
+      "generic_deleted": {
+        "color": "#D50000"
+      },
+      "generic_emph": {
+        "italic": true
+      },
+      "generic_inserted": {
+        "color": "#24A443"
+      },
+      "generic_strong": {
+        "bold": true
+      },
+      "generic_heading": {
+        "color": "#D50000",
+        "bold": true
+      },
+      "generic_subheading": {
+        "color": "#5C6370",
+        "bold": true
+      },
+      "background": {
+        "background_color": "#F2F2F2"
+      }
+    }
+  },
+  "table": {},
+  "definition_list": {},
+  "definition_term": {},
+  "definition_description": {
+    "block_prefix": "\n🠶 "
+  },
+  "html_block": {},
+  "html_span": {}
+}

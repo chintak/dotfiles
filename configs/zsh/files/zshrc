@@ -91,6 +91,14 @@ fi
 # git diffs reviewed with delta if configured in ~/.gitconfig
 (( $+commands[delta] )) && GIT_PAGER="${GIT_PAGER:-delta}" && export GIT_PAGER
 
+# glow reads ~/Library/Preferences/glow/glow.yml on macOS by default and does
+# not expand ~ in its style paths, so pin the dotfiles-managed config dir and
+# the One Light theme (matches hx's `onelight`): GLOW_STYLE drives the CLI
+# render, GLAMOUR_STYLE the TUI pager. glow.yml keeps `style: auto` as fallback.
+(( $+commands[glow] )) && export GLOW_CONFIG_HOME="$HOME/.config/glow" \
+  GLOW_STYLE="$HOME/.config/glow/onelight.json" \
+  GLAMOUR_STYLE="$HOME/.config/glow/onelight.json"
+
 # ── zle keys: alt+left/right word jumps ────────────────────────────────
 # Ghostty forwards alt+arrows as explicit CSI (configs/ghostty/config:
 # alt+left/right → CSI 1;3D/C) and herdr passes them to the pane. zle's

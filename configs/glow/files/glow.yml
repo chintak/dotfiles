@@ -1,5 +1,9 @@
 # glow — rendered markdown in the terminal.
-style: dark
+# theme: One Light, matching hx's `onelight` (see onelight.json in this dir).
+# glow reads ~/Library/Preferences/glow/glow.yml on macOS and cannot expand ~
+# in style paths, so zshrc pins GLOW_STYLE/GLAMOUR_STYLE to onelight.json;
+# `auto` here is just the fallback when those env vars are absent.
+style: auto
 width: 100
 pager: true
 # mouse wheel support (TUI-mode only)

@@ -18,3 +18,6 @@ localenvs/
 
 # agent-generated local state
 .claude/
+
+# git worktrees created by the ship/atomic-commit skills
+.worktrees/

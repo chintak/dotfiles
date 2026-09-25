@@ -1,4 +1,10 @@
 # glow — rendered markdown in the terminal.
 style: dark
 width: 100
-pager: false
+pager: true
+# mouse wheel support (TUI-mode only)
+mouse: true
+# show all files, including hidden and ignored (TUI-mode only)
+all: true
+# show line numbers (TUI-mode only)
+showLineNumbers: true

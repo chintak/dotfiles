@@ -58,16 +58,9 @@ fi
 (( $+commands[mise] ))   && eval "$(mise activate zsh)"
 export EDITOR="${EDITOR:-hx}"
 
-# ── herdr: name the tab after the running command ──────────────────────
+# ── herdr: fix TERM so TUI apps render correctly inside herdr ─────────
+# Keep herdr's default tab names; do not rename tabs on shell commands.
 [[ ${HERDR_ENV:-0} == 1 && "$TERM" == "xterm-256color" ]] && export TERM=tmux-256color
-if [[ -n "$HERDR_TAB_ID" && -n "$HERDR_BIN_PATH" ]]; then
-  _herdr_tab_rename() { "$HERDR_BIN_PATH" tab rename "$HERDR_TAB_ID" "$1" >/dev/null 2>&1 &! }
-  _herdr_tab_preexec() { local cmd="${1%% *}"; _herdr_tab_rename "${${cmd:t}:0:24}" }
-  _herdr_tab_precmd()  { local dir="${PWD/#$HOME/~}"; _herdr_tab_rename "${dir##*/}" }
-  autoload -Uz add-zsh-hook
-  add-zsh-hook preexec _herdr_tab_preexec
-  add-zsh-hook precmd  _herdr_tab_precmd
-fi
 
 # ── helpers ────────────────────────────────────────────────────────────
 leo-agent() { docker exec -it -w /workspace leo-gateway /opt/hermes/.venv/bin/hermes "$@"; }

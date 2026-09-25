@@ -1,4 +1,6 @@
-# ~/.zshrc — symlinked from ~/git/dotfiles. Edit the repo, not this file.
+# ~/.zshrc — managed by the dot CLI; never hand-edit this file.
+# Edit ~/git/dotfiles/configs/zsh/files/zshrc, bump the manifest version,
+# then `dot apply zsh` (~/.zshrc is a symlink into the dot store).
 # One config for macOS + Linux. Machine-specific bits: ~/.zshrc.local.
 
 # ── PATH + Homebrew ────────────────────────────────────────────────────
@@ -19,7 +21,7 @@ unset _f
 
 # ── history ────────────────────────────────────────────────────────────
 HISTFILE=~/.zsh_history HISTSIZE=100000 SAVEHIST=100000
-setopt APPEND_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE HIST_SAVE_NO_DUPS SHARE_HISTORY
+setopt APPEND_HISTORY EXTENDED_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE HIST_SAVE_NO_DUPS SHARE_HISTORY
 
 # ── completion ─────────────────────────────────────────────────────────
 [[ -d "$HOME/.docker/completions" ]] && fpath=("$HOME/.docker/completions" $fpath)
@@ -27,7 +29,7 @@ autoload -Uz compinit && compinit
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
-setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS GLOB_COMPLETE
+setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS GLOB_COMPLETE INTERACTIVE_COMMENTS
 
 # colorized group headings in completion menus ("── commands ──")
 zstyle ':completion:*:descriptions' format '%F{cyan}── %d ──%f'
@@ -43,6 +45,60 @@ export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window down:3:wrap --bind 
 export FZF_COMPLETION_TRIGGER='**'
 [[ -o interactive && -t 0 && -t 1 ]] && (( $+commands[fzf] )) && source <(fzf --zsh)
 
+# ── color + readability ───────────────────────────────────────────────
+# LS_COLORS feeds the completion list-colors zstyle above and eza; without
+# it BSD ls and the zstyle both render uncolored.
+export LS_COLORS='rs=0:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;32;01:or=40;31;01:mi=00:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.zip=01;31:*.gz=01;31:*.jpg=01;35:*.jpeg=01;35:*.png=01;35:*.gif=01;35:*.mp3=00;36:*.mp4=00;36:*.log=00;90'
+export GREP_COLORS='ms=01;32' GREP_OPTIONS=''
+export LESS='--RAW-CONTROL-CHARS'
+# pager colored only when the installed less supports it (macOS less 590+)
+if command less --help 2>/dev/null | command grep -q -- --use-color; then
+  export LESS="$LESS --use-color"
+fi
+alias less='less -R'
+alias grep='grep --color=auto'
+command diff --color=auto /dev/null /dev/null >/dev/null 2>&1 && alias diff='diff --color=auto'
+
+# eza replaces ls when present; plain ls -G on machines without it
+if (( $+commands[eza] )); then
+  # pass "." explicitly when arg-less: identical semantics, and eza still
+  # lists when stdout is piped in odd sandboxed environments
+  ls() {
+    if (( $# )); then command eza --group-directories-first --time-style=long-iso --git "$@"
+    else command eza --group-directories-first --time-style=long-iso --git .
+    fi
+  }
+  alias la='ls -a'
+  alias ll='ls -la'
+  alias lt='command eza --tree --level=2 --group-directories-first'
+else
+  alias ls='ls -G'
+  alias la='ls -aG'
+  alias ll='ls -laG'
+fi
+# originals stay reachable: command ls / command eza
+
+# bat as cat, man pages through bat when it's installed
+if (( $+commands[bat] )); then
+  alias cat='bat --paging=never --style=plain'
+  export MANPAGER="sh -c 'col -bx | bat -l man -p'" MANROFFOPT='-c'
+fi
+
+# modern replacements when installed (bypass with command df / command du)
+(( $+commands[duf]  )) && alias df='duf'
+(( $+commands[dust] )) && alias du='dust'
+(( $+commands[procs] )) && alias ps='procs'
+# git diffs reviewed with delta if configured in ~/.gitconfig
+(( $+commands[delta] )) && GIT_PAGER="${GIT_PAGER:-delta}" && export GIT_PAGER
+
+# ── zle keys: alt+left/right word jumps ────────────────────────────────
+# Ghostty forwards alt+arrows as explicit CSI (configs/ghostty/config:
+# alt+left/right → CSI 1;3D/C) and herdr passes them to the pane. zle's
+# emacs keymap only binds the legacy esc+b/esc+f bytes by default, so
+# bind the CSI encodings too or the prompt ignores the chord.
+bindkey '\e[1;3C' forward-word
+bindkey '\e[1;3D' backward-word
+
 # ── prompt: glyph-free over SSH, powerline locally ─────────────────────
 if [[ -n "$SSH_CONNECTION$SSH_TTY" || "$TERM_PROGRAM" == "Termius" ]]; then
   export STARSHIP_CONFIG="$HOME/.config/starship.mobile.toml"
@@ -57,12 +113,48 @@ fi
 (( $+commands[direnv] )) && eval "$(direnv hook zsh)"
 (( $+commands[mise] ))   && eval "$(mise activate zsh)"
 export EDITOR="${EDITOR:-hx}"
+export VISUAL="${VISUAL:-hx}"
 
 # ── herdr: fix TERM so TUI apps render correctly inside herdr ─────────
 # Keep herdr's default tab names; do not rename tabs on shell commands.
 [[ ${HERDR_ENV:-0} == 1 && "$TERM" == "xterm-256color" ]] && export TERM=tmux-256color
 
 # ── helpers ────────────────────────────────────────────────────────────
+mkcd() { mkdir -p "$1" && cd "$1" }
+
+extract() {  # pull any archive apart without remembering flags
+  case "$1" in
+    *.tar.gz|*.tgz)   tar -xzf "$1" ;;
+    *.tar.bz2|*.tbz)  tar -xjf "$1" ;;
+    *.tar.xz|*.txz)   tar -xJf "$1" ;;
+    *.tar)            tar -xf  "$1" ;;
+    *.zip|*.jar|*.war) unzip "$1" ;;
+    *.gz)  gunzip "$1" ;;
+    *.bz2) bunzip2 "$1" ;;
+    *.xz)  unxz  "$1" ;;
+    *.rar) unrar x "$1" ;;
+    *.7z)  7z x "$1" ;;
+    *) echo "unknown archive: $1" >&2; return 1 ;;
+  esac
+}
+
+ip() {  # local + public addresses, one line each
+  echo -n "local:  "
+  ipconfig getifaddr en0 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}'
+  echo -n "public: "; curl -s --max-time 3 ifconfig.me; echo
+}
+
+weather() { curl -s --max-time 5 "wttr.in/${1:-}?format=3"; echo }
+
+reload() { source ~/.zshrc }
+
+# cross-platform "open": macOS open, Linux xdg-open
+o() { (( $+commands[open] )) && open "$@" || xdg-open "$@" 2>/dev/null }
+
+[[ $OSTYPE == darwin* ]] && flushdns() {
+  sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder
+}
+
 leo-agent() { docker exec -it -w /workspace leo-gateway /opt/hermes/.venv/bin/hermes "$@"; }
 [[ -S /tmp/hermes-ssh-agent/socket ]] && export SSH_AUTH_SOCK=/tmp/hermes-ssh-agent/socket
 export NEBULA_GRAPH_ADDRESS=alpha-nebula-graphd-thrift.service.ash1.consul

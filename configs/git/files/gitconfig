@@ -1,0 +1,11 @@
+[user]
+	name = Chintak Sheth
+	email = 3398558+chintak@users.noreply.github.com
+[core]
+	editor = hx
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential

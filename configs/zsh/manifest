@@ -1,4 +1,4 @@
-version     = 1.0.1
-description = zsh — PATH, history, fzf, prompt switch, herdr tab hooks
+version     = 1.2.0
+description = zsh — PATH, history, fzf, prompt switch, color/readability block, herdr TERM fix, alt-word keys
 category    = shell
 file        = zshrc|~/.zshrc

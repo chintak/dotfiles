@@ -1,5 +1,5 @@
-# git — delta as pager, difftastic opt-in, zdiff3 merges.
-# Lives at the XDG global path so ~/.gitconfig (user identity) is untouched.
+# git — global XDG config (delta pager, difftastic, zdiff3) plus ~/.gitconfig
+# (user identity + gh credential helper).
 
 [core]
 	pager = delta

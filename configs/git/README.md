@@ -1,7 +1,11 @@
 # git
 
-Installs to `~/.config/git/config` — the **XDG** global path — so `~/.gitconfig`
-(which holds `user.name`/`user.email`) is left untouched. Git reads both.
+Two files, both versioned:
+
+- `files/config` → `~/.config/git/config` — the **XDG** global path: delta
+  pager, difftastic aliases, zdiff3 merges.
+- `files/gitconfig` → `~/.gitconfig` — user identity (`user.name`/`user.email`)
+  and the gh credential helper. Git reads both.
 
 - **delta is the pager**: every `git diff`/`show`/`log -p` gets side-by-side,
   syntax-aware diffs for free.

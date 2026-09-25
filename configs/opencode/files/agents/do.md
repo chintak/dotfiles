@@ -15,22 +15,19 @@ permissions:
     resource: "/tmp/*"
     effect: allow
   - action: edit
-    resource: "~/.config/*"
+    resource: ".config/**"
     effect: allow
   - action: edit
-    resource: "~/vault/.worktrees/*"
+    resource: "vault/.worktrees/**"
     effect: allow
   - action: edit
-    resource: "~/git/*/.worktrees/*"
+    resource: "git/*"
     effect: allow
   - action: edit
-    resource: "~/git/*"
-    effect: allow
-  - action: edit
-    resource: "~/git/*/**"
+    resource: "git/*/**"
     effect: deny
   - action: edit
-    resource: "~/git/*/.worktrees/**"
+    resource: "git/*/.worktrees/**"
     effect: allow
   - action: shell
     resource: "git -C *vault commit*"

@@ -1,4 +1,4 @@
-version     = 1.2.1
+version     = 1.2.2
 description = yazi — file manager with inline image/PDF previews
 file        = yazi.toml|~/.config/yazi/yazi.toml
 file        = keymap.toml|~/.config/yazi/keymap.toml

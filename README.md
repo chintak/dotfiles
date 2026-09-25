@@ -314,6 +314,7 @@ chezmoi lacks.
 | `dot forget <config>…` | Remove symlinks + lockfile entries (store kept) |
 | `dot update [<config>…] [--no-pull] [--dry-run]` | Pull, then apply newer versions |
 | `dot rollback <config> [version]` | Re-point symlinks at an older store version |
+| `dot gc [--dry-run]` | Prune superseded store versions (stores of uninstalled configs are kept) |
 | `dot purge [--yes]` | Delete repo, store, lockfile, and the CLI |
 | `dot add <path>` | Adopt a file: copy into repo, replace target with a link |
 | `dot edit <config>` | Open the repo file in `$EDITOR` |

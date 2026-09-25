@@ -533,6 +533,50 @@ EOF
   apply_config "$name"
 }
 
+# ── gc ─────────────────────────────────────────────────────────────────
+# gc: prune superseded store versions of installed configs.
+# Stores of configs absent from the lockfile are kept — `dot forget` keeps
+# the store by design, and rollback of an uninstalled config stays possible.
+cmd_gc() {
+  local dry=0 a
+  for a in "$@"; do
+    case "$a" in
+      --dry-run) dry=1 ;;
+      *) die "unknown flag: $a" ;;
+    esac
+  done
+  [[ -d "$DOT_STORE" ]] || die "no store at $DOT_STORE"
+  [[ -f "$LOCKFILE" ]] || die "no lockfile at $LOCKFILE"
+
+  local pruned=0 kept=0 cfg cfg_dir installed vdir v
+  for cfg_dir in "$DOT_STORE"/*/; do
+    [[ -d "$cfg_dir" ]] || continue
+    cfg="$(basename "$cfg_dir")"
+    installed="$(lock_get "$cfg" | jq -r '.version // empty' 2>/dev/null)"
+    if [[ -z "$installed" ]]; then
+      warn "$cfg: not installed; keeping store ($(ls "$cfg_dir" | tr '\n' ' '))"
+      continue
+    fi
+    for vdir in "$cfg_dir"*/; do
+      [[ -d "$vdir" ]] || continue
+      v="$(basename "$vdir")"
+      if [[ "$v" == "$installed" ]]; then continue; fi
+      if (( dry )); then
+        printf '  would prune %s/%s\n' "$cfg" "$v"
+      else
+        rm -rf "$vdir" && { printf '  pruned %s/%s\n' "$cfg" "$v"; pruned=$((pruned+1)); }
+      fi
+    done
+    if [[ -z "$(ls -A "$cfg_dir")" ]]; then rmdir "$cfg_dir"; fi
+  done
+  if (( dry )); then
+    log "gc --dry-run done (nothing removed)"
+  else
+    log "gc pruned $pruned version dir(s)"
+  fi
+  return 0
+}
+
 cmd_purge() {
   local yes=0 a; for a in "$@"; do [[ "$a" == "--yes" ]] && yes=1; done
   local default_repo_path; default_repo_path="$HOME/.local/share/dot/repo"
@@ -657,6 +701,7 @@ Config lifecycle:
   dot add <path>
   dot bump <config> <major|minor|patch>
   dot cd
+  dot gc [--dry-run]
   dot purge [--yes]
 
 Runtime:
@@ -685,6 +730,7 @@ main() {
     add) cmd_add "$@" ;;
     bump) cmd_bump "$@" ;;
     cd) cmd_cd "$@" ;;
+    gc) cmd_gc "$@" ;;
     purge) cmd_purge "$@" ;;
     name) cmd_name "$@" ;;
     up|task|review|web|transcript) runtime_stub "$cmd" "$@" ;;

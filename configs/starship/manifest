@@ -1,5 +1,4 @@
 version     = 1.1.3
 description = Starship prompt — powerline locally, glyph-free over SSH
-category    = prompt
 file        = starship.toml|~/.config/starship.toml
 file        = starship.mobile.toml|~/.config/starship.mobile.toml

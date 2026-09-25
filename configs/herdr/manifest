@@ -1,5 +1,4 @@
 version     = 1.0.2
 description = herdr — agent multiplexer: panes, worktrees, agent state
-category    = multiplexer
 file        = config.toml|~/.config/herdr/config.toml
 post_apply  = herdr integration install pi; herdr integration install opencode; herdr server reload-config

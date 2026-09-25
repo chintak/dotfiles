@@ -1,6 +1,5 @@
 version     = 1.1.1
 description = Homebrew formulae + casks for the whole environment
-category    = packages
 platform    = mac
 file        = Brewfile|~/.config/dot/Brewfile
 post_apply  = brew bundle --file ~/.config/dot/Brewfile

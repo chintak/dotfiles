@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # dot — versioned, selective dotfiles CLI.
-# Spec: specs/dot-cli.md   Runtime verbs: specs/agentic-dev-mvp.md
+# Spec: specs/dot-cli.md
 #
 # Config verbs manage the machine (store + lockfile + ~/.config).
 # Runtime verbs drive herdr (see §3.2 of the MVP spec).
@@ -607,7 +607,7 @@ cmd_init() {
   fi
 }
 
-# ── runtime verbs (specs/agentic-dev-mvp.md) ───────────────────────────
+# ── runtime verbs ──────────────────────────────────────────────────────
 TYPES="feat fix docs style refactor perf test build ci chore revert"
 
 cmd_name() {
@@ -641,7 +641,6 @@ cmd_name() {
 runtime_stub() {
   local verb="$1"; shift
   printf '%serr%s dot %s is specified but not implemented yet.\n' "$E" "$R" "$verb" >&2
-  printf 'See specs/agentic-dev-mvp.md §3.2 for the contract.\n' >&2
   return 2
 }
 
@@ -668,7 +667,7 @@ Config lifecycle:
   dot cd
   dot purge [--yes]
 
-Runtime (specs/agentic-dev-mvp.md):
+Runtime:
   dot name <type> <word>…         canonical task id
   dot up | task | review | web | transcript
 

@@ -1,4 +1,0 @@
-version     = 1.0.0
-description = skills-cli — install agent skills into project dirs
-category    = agents
-file        = skills-cli|~/.local/bin/skills-cli

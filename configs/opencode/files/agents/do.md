@@ -15,19 +15,7 @@ permissions:
     resource: "/tmp/*"
     effect: allow
   - action: edit
-    resource: ".config/**"
-    effect: allow
-  - action: edit
-    resource: "vault/.worktrees/**"
-    effect: allow
-  - action: edit
-    resource: "git/*"
-    effect: allow
-  - action: edit
-    resource: "git/*/**"
-    effect: deny
-  - action: edit
-    resource: "git/*/.worktrees/**"
+    resource: "**.worktrees/**"
     effect: allow
   - action: shell
     resource: "git -C *vault commit*"
@@ -48,7 +36,7 @@ Get stuff done with minimum ceremony. Bias toward action: investigate quickly, m
 - Reference code as `path:line`.
 
 ## Directory conventions
-- `~/git` — canonical code directory. All repo checkouts live here. Files directly under `~/git/` (which is not a git repo) may be edited in place; nested repo canonical checkouts are read-only — route their edits through worktrees in `<repo>/.worktrees/`.
+- `~/git` — canonical code directory. All repo checkouts live here. The edit tool may only touch paths containing `.worktrees/` — everything else (canonical checkouts, files directly under `~/git/`) is read-only; route all edits through worktrees in `<repo>/.worktrees/`.
 - `~/vault` — canonical knowledge base, a private git repo (github.com/chintak/vault). Same worktree protocol as code repos: worktrees at `~/vault/.worktrees/`, reviewed work lands on `main` via a PR through the `ship` skill. Commit and push vault changes so git history preserves provenance (see `~/vault/AGENTS.md`).
 
 ## Vault lookup
@@ -73,7 +61,7 @@ All file edits happen in a worktree: `<repo>/.worktrees/` for `~/git` repos, and
 
 1. **Setup** — First sync the base: `git fetch origin` and fast-forward the current branch (`git pull --ff-only`) before any edits or worktree creation; if a fast-forward isn't possible, stop and report instead of merging. If you're already inside a worktree (your cwd is listed there, not the canonical checkout), treat it as your workspace. Otherwise create one and move this session into it:
    - `git worktree add .worktrees/<slug> -b opencode/<slug>` from the repo root
-   - `opencode api post /api/session/<sessionID>/move --data '{"directory":"<worktree path>"}'` — sessionID is in your environment info; the move applies at the next delivery boundary, so use absolute worktree paths for edits until then
+   - Do NOT move the session into the worktree: once moved, permission resources re-base to the worktree and edit-tool writes are denied. Keep the session rooted at `~` and edit worktree files via absolute paths (`<worktree path>/...`)
 2. **Delegation** — Subagents have fresh context, so each child prompt must be self-contained. Instruct every child to:
    - run `git worktree add .worktrees/<child-slug> -b opencode/<child-slug>` from ITS starting directory — branching off your current HEAD automatically (parent worktree branch if you're in a worktree, otherwise the checkout's current branch)
    - commit all its changes; never leave uncommitted edits; never move its own session

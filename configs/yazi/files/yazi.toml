@@ -23,3 +23,5 @@ run = "glow"
 
 [manager]
 ratio = [1, 3, 4]
+# show hidden/dotfiles by default (toggle with . in the TUI)
+show_hidden = true

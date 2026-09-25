@@ -120,41 +120,6 @@ export VISUAL="${VISUAL:-hx}"
 [[ ${HERDR_ENV:-0} == 1 && "$TERM" == "xterm-256color" ]] && export TERM=tmux-256color
 
 # ── helpers ────────────────────────────────────────────────────────────
-mkcd() { mkdir -p "$1" && cd "$1" }
-
-extract() {  # pull any archive apart without remembering flags
-  case "$1" in
-    *.tar.gz|*.tgz)   tar -xzf "$1" ;;
-    *.tar.bz2|*.tbz)  tar -xjf "$1" ;;
-    *.tar.xz|*.txz)   tar -xJf "$1" ;;
-    *.tar)            tar -xf  "$1" ;;
-    *.zip|*.jar|*.war) unzip "$1" ;;
-    *.gz)  gunzip "$1" ;;
-    *.bz2) bunzip2 "$1" ;;
-    *.xz)  unxz  "$1" ;;
-    *.rar) unrar x "$1" ;;
-    *.7z)  7z x "$1" ;;
-    *) echo "unknown archive: $1" >&2; return 1 ;;
-  esac
-}
-
-ip() {  # local + public addresses, one line each
-  echo -n "local:  "
-  ipconfig getifaddr en0 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}'
-  echo -n "public: "; curl -s --max-time 3 ifconfig.me; echo
-}
-
-weather() { curl -s --max-time 5 "wttr.in/${1:-}?format=3"; echo }
-
-reload() { source ~/.zshrc }
-
-# cross-platform "open": macOS open, Linux xdg-open
-o() { (( $+commands[open] )) && open "$@" || xdg-open "$@" 2>/dev/null }
-
-[[ $OSTYPE == darwin* ]] && flushdns() {
-  sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder
-}
-
 leo-agent() { docker exec -it -w /workspace leo-gateway /opt/hermes/.venv/bin/hermes "$@"; }
 [[ -S /tmp/hermes-ssh-agent/socket ]] && export SSH_AUTH_SOCK=/tmp/hermes-ssh-agent/socket
 export NEBULA_GRAPH_ADDRESS=alpha-nebula-graphd-thrift.service.ash1.consul

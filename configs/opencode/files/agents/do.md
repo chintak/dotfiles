@@ -23,6 +23,15 @@ permissions:
   - action: edit
     resource: "~/git/*/.worktrees/*"
     effect: allow
+  - action: edit
+    resource: "~/git/*"
+    effect: allow
+  - action: edit
+    resource: "~/git/*/**"
+    effect: deny
+  - action: edit
+    resource: "~/git/*/.worktrees/**"
+    effect: allow
   - action: shell
     resource: "git -C *vault commit*"
     effect: deny
@@ -42,7 +51,7 @@ Get stuff done with minimum ceremony. Bias toward action: investigate quickly, m
 - Reference code as `path:line`.
 
 ## Directory conventions
-- `~/git` — canonical code directory. All repo checkouts live here. Edits in canonical checkouts are blocked.
+- `~/git` — canonical code directory. All repo checkouts live here. Files directly under `~/git/` (which is not a git repo) may be edited in place; nested repo canonical checkouts are read-only — route their edits through worktrees in `<repo>/.worktrees/`.
 - `~/vault` — canonical knowledge base, a private git repo (github.com/chintak/vault). Same worktree protocol as code repos: worktrees at `~/vault/.worktrees/`, reviewed work lands on `main` via a PR through the `ship` skill. Commit and push vault changes so git history preserves provenance (see `~/vault/AGENTS.md`).
 
 ## Vault lookup

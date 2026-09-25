@@ -145,7 +145,7 @@ Each `configs/<tool>/` is a package:
 
 | File | What it is |
 |------|------------|
-| `manifest` | version, description, category, platform, `file` mappings, optional `requires` / `post_apply` |
+| `manifest` | version, description, platform, `file` mappings, optional `requires` / `post_apply` |
 | `files/` | what gets installed, paths relative to here |
 | `README.md` | why this tool is configured the way it is |
 
@@ -187,7 +187,6 @@ The lockfile is the record of what this machine has — which is what makes
     "ghostty": {
       "version": "1.0.0",
       "mode": "symlink",
-      "category": "terminal",
       "hash": "sha256:a1b2c3…",
       "store": "~/.local/share/dot/store/ghostty/1.0.0",
       "targets": ["~/.config/ghostty/config"],
@@ -214,7 +213,6 @@ manifests valid) and `--fix` repairs what it safely can.
 ```
 version     = 1.0.0
 description = Ghostty — fast renderer; hands its chords to herdr
-category    = terminal
 platform    = mac
 requires    = zsh
 file        = config|~/.config/ghostty/config
@@ -225,7 +223,6 @@ file        = config|~/.config/ghostty/config
 |-----|----------|---------|
 | `version` | yes | semver of this config |
 | `description` | yes | one line, shown by `dot list` / `dot info` |
-| `category` | yes | grouping tag (`shell`, `prompt`, `terminal`, `multiplexer`, `vcs`, `editor`, `agents`, `packages`) |
 | `file` | yes (≥1, unless `post_apply`) | `src-rel-path\|target` — repeatable; `src` is relative to `files/` |
 | `requires` | no | comma-separated config names applied first |
 | `platform` | no | `mac` / `linux` / `any` (default `any`) |
@@ -240,9 +237,10 @@ unchanged config does not.
 
 **Why flat.** `configs/<tool>/` *is* the config; the atomic unit of `dot` is
 a config, so the directory mirrors that. A `configs/shell/starship/`
-hierarchy would imply nesting the install model doesn't have. Categories are
-a tag, not a location — `dot list` groups by them, and ambiguous cases (Is
-Starship a shell thing or a prompt thing?) stop being structural questions.
+hierarchy would imply nesting the install model doesn't have, and ambiguous
+cases (Is Starship a shell thing or a prompt thing?) stop being structural
+questions. There are no categories — `dot list` is one flat, alphabetical
+table.
 
 Adding a config:
 
@@ -323,18 +321,18 @@ chezmoi lacks.
 | `dot status [--exit-code] [--json]` | What `apply` would change (content drift) |
 | `dot doctor [--fix]` | Environment + tooling health; `--fix` repairs what it can |
 | `dot cd` | Shell into the repo clone |
-| `dot list [--installed\|--available] [--category C] [--json]` | Discover configs |
+| `dot list [--installed\|--available] [--json]` | Discover configs |
 | `dot info <config>` | Files, targets, requires, version, state |
 | `dot profiles` | List profiles and their configs |
 | `dot bump <config> major\|minor\|patch` | Bump version, commit |
 
 ```
 $ dot status
-config     category      installed  available  state
-ghostty    terminal      1.0.0      1.0.0      ok
-zsh        shell         1.4.1      1.5.0      stale
-starship   prompt        1.0.0      1.0.0      modified
-herdr      multiplexer   —          0.9.0      not installed
+config     installed  available  state
+ghostty    1.0.0      1.0.0      ok
+zsh        1.4.1      1.5.0      stale
+starship   1.0.0      1.0.0      modified
+herdr      —          0.9.0      not installed
 ```
 
 The full design lives in [`specs/dot-cli.md`](specs/dot-cli.md).

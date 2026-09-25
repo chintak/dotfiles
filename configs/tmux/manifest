@@ -1,4 +1,3 @@
 version     = 1.0.0
 description = tmux — durable sessions for long-running jobs
-category    = multiplexer
 file        = tmux.conf|~/.config/tmux/tmux.conf

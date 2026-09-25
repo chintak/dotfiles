@@ -82,11 +82,11 @@ apply_config() {
   local dry=0 force_post=0 a
   for a in "$@"; do case "$a" in --dry-run) dry=1 ;; --force-post) force_post=1 ;; esac; done
 
-  local dir mf ver desc cat post
+  local dir mf ver desc post
   dir="$(config_dir "$name")"; mf="$dir/manifest"
   [[ -f "$mf" ]] || die "unknown config: $name"
   ver="$(mget "$mf" version)"; desc="$(mget "$mf" description)"
-  cat="$(mget "$mf" category)"; post="$(mget "$mf" post_apply)"
+  post="$(mget "$mf" post_apply)"
 
   local plat; plat="$(mget "$mf" platform)"
   if [[ -n "$plat" && "$plat" != "any" && "$plat" != "$(host_platform)" ]]; then
@@ -158,11 +158,11 @@ apply_config() {
 
   local targets_json; targets_json="$(printf '%s\n' "${targets[@]}" | jq -R . | jq -s .)"
   lock_set "$name" "$(jq -n \
-    --arg version "$ver" --arg mode "$mode" --arg category "$cat" \
+    --arg version "$ver" --arg mode "$mode" \
     --arg hash "$hash" --arg applyHash "$apply_hash" --arg store "$store_dir" \
     --argjson targets "$targets_json" --argjson postApplyOk "$post_ok" \
     --arg installedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    '{version:$version,mode:$mode,category:$category,hash:$hash,applyHash:$applyHash,
+    '{version:$version,mode:$mode,hash:$hash,applyHash:$applyHash,
       store:$store,targets:$targets,postApplyOk:$postApplyOk,installedAt:$installedAt}')"
 
   log "$name $ver"
@@ -223,14 +223,12 @@ config_state() { # <name> -> ok|not-installed|broken|drifted|modified|stale|inap
 
 # ── commands: config ───────────────────────────────────────────────────
 cmd_list() {
-  local mode=all cat_filter="" json=0
+  local mode=all json=0
   while (( $# )); do
     case "$1" in
       --installed) mode=installed; shift ;;
       --available) mode=available; shift ;;
       --json) json=1; shift ;;
-      --category) cat_filter="${2:-}"; shift 2 ;;
-      --category=*) cat_filter="${1#*=}"; shift ;;
       *) shift ;;
     esac
   done
@@ -242,25 +240,22 @@ cmd_list() {
       st="$(config_state "$n")"
       [[ "$mode" == installed && "$st" == not-installed ]] && continue
       [[ "$mode" == available && "$st" != not-installed ]] && continue
-      [[ -n "$cat_filter" && "$(mget "$mf" category)" != "$cat_filter" ]] && continue
       items="$(printf '%s' "$items" | jq \
         --arg n "$n" --arg v "$(mget "$mf" version)" --arg d "$(mget "$mf" description)" \
-        --arg c "$(mget "$mf" category)" --arg s "$st" \
+        --arg s "$st" \
         --arg i "$(lock_get "$n" | jq -r '.version // ""' 2>/dev/null)" \
-        '. + [{name:$n,installed:$i,available:$v,description:$d,category:$c,state:$s}]')"
+        '. + [{name:$n,installed:$i,available:$v,description:$d,state:$s}]')"
     done
     printf '%s\n' "$items" | jq .
     return
   fi
 
-  local lastcat="" n mf c st
+  local n mf st
   for n in $(all_configs); do
-    mf="$(config_dir "$n")/manifest"; c="$(mget "$mf" category)"; st="$(config_state "$n")"
+    mf="$(config_dir "$n")/manifest"; st="$(config_state "$n")"
     [[ "$mode" == installed && "$st" == not-installed ]] && continue
     [[ "$mode" == available && "$st" != not-installed ]] && continue
-    [[ -n "$cat_filter" && "$c" != "$cat_filter" ]] && continue
-    if [[ "$c" != "$lastcat" ]]; then printf '\n%s%s%s\n' "$B" "$c" "$R"; lastcat="$c"; fi
-    printf '  %-12s %-8s %-12s %s\n' "$n" "$(mget "$mf" version)" "$st" "$(mget "$mf" description)"
+    printf '%-12s %-8s %-12s %s\n' "$n" "$(mget "$mf" version)" "$st" "$(mget "$mf" description)"
   done
   printf '\n'
 }
@@ -271,8 +266,8 @@ cmd_info() {
   dir="$(config_dir "$n")"; mf="$dir/manifest"
   [[ -f "$mf" ]] || die "unknown config: $n"
   printf '%s%s%s  %s\n' "$B" "$n" "$R" "$(mget "$mf" description)"
-  printf '  version   %s\n  category  %s\n  platform  %s\n  state     %s\n' \
-    "$(mget "$mf" version)" "$(mget "$mf" category)" "$(mget "$mf" platform)" "$(config_state "$n")"
+  printf '  version   %s\n  platform  %s\n  state     %s\n' \
+    "$(mget "$mf" version)" "$(mget "$mf" platform)" "$(config_state "$n")"
   local r; r="$(mget "$mf" requires)"; [[ -n "$r" ]] && printf '  requires  %s\n' "$r"
   local p; p="$(mget "$mf" post_apply)"; [[ -n "$p" ]] && printf '  post_apply  %s\n' "$p"
   printf '  files:\n'
@@ -330,13 +325,13 @@ cmd_status() {
     done
     printf '%s\n' "$items" | jq .
   else
-    printf '%-12s %-12s %-9s %-9s %s\n' config category installed available state
+    printf '%-12s %-9s %-9s %s\n' config installed available state
     local n mf st inst avail
     for n in $(all_configs); do
       mf="$(config_dir "$n")/manifest"; st="$(config_state "$n")"
       inst="$(lock_get "$n" | jq -r '.version // "—"' 2>/dev/null)"; [[ -z "$inst" ]] && inst="—"
       avail="$(mget "$mf" version)"
-      printf '%-12s %-12s %-9s %-9s %s\n' "$n" "$(mget "$mf" category)" "$inst" "$avail" "$st"
+      printf '%-12s %-9s %-9s %s\n' "$n" "$inst" "$avail" "$st"
     done
   fi
   if (( exit_code )); then
@@ -519,12 +514,10 @@ cmd_add() {
   local src="$1"; [[ -e "$src" ]] || die "no such path: $src"
   local base; base="$(basename "$src")"
   local name="${base#.}"; name="${name%%.*}"
-  local category="" description=""
+  local description=""
   if [[ -t 0 ]]; then
-    read -r -p "category [$name]: " category
     read -r -p "description [$name]: " description
   fi
-  [[ -n "$category" ]] || category="$name"
   [[ -n "$description" ]] || description="$name"
   local dir; dir="$(config_dir "$name")"
   [[ -e "$dir" ]] && die "$name: config already exists ($dir)"
@@ -533,7 +526,6 @@ cmd_add() {
   cat > "$dir/manifest" <<EOF
 version     = 0.1.0
 description = $description
-category    = $category
 file        = $base|$(expand "$src")
 EOF
   printf '# %s\n\nAdopted from `%s` via `dot add`.\n' "$name" "$src" > "$dir/README.md"
@@ -658,7 +650,7 @@ Config lifecycle:
   dot status [--exit-code] [--json]
   dot diff <config>
   dot doctor
-  dot list [--installed|--available] [--category C] [--json]
+  dot list [--installed|--available] [--json]
   dot info <config>
   dot profiles
   dot edit <config>

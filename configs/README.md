@@ -5,34 +5,22 @@ One folder per config. Each is a **package**:
 ```
 configs/<name>/
 ├── README.md   # why it's configured this way
-├── manifest    # version, category, targets, optional post_apply
+├── manifest    # version, targets, optional post_apply
 └── files/      # what gets installed, paths relative to here
 ```
 
-## Why flat (no domain folders)
+## Why flat
 
 The atomic unit of `dot` is a config, so the directory mirrors that. A
 `configs/shell/starship/` hierarchy would imply nesting the install model
 doesn't have, and would make `requires`/profiles depend on a folder path.
-**Categories are a tag, not a location** — `dot list` groups by them.
-
-| category | configs |
-|---|---|
-| `shell` | zsh |
-| `prompt` | starship |
-| `terminal` | ghostty, yazi |
-| `multiplexer` | herdr, tmux |
-| `editor` | helix |
-| `vcs` | git |
-| `agents` | glow, skills-cli |
-| `packages` | brewfile, uv-tools |
+There are no categories — `dot list` is one flat, alphabetical table.
 
 ## The manifest
 
 ```
 version     = 1.0.0                 # semver — see specs/dot-cli.md §15
 description = one line, shown by `dot list`
-category    = <tag>
 platform    = mac | linux | any     # optional; skipped when mismatched
 requires    = other,configs         # optional; applied first
 file        = src|target            # repeatable; src is relative to files/

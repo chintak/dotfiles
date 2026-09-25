@@ -1,5 +1,4 @@
 version     = 1.0.3
 description = Ghostty — fast renderer; hands its chords to herdr
-category    = terminal
 platform    = mac
 file        = config|~/.config/ghostty/config

@@ -37,7 +37,7 @@ installable package**.
 | G4 | **No drift** — installed files are symlinks into an immutable versioned store |
 | G5 | **Detect drift** when it happens (lockfile + content hash) |
 | G6 | **Ephemeral mode** for VMs/images: install configs, then purge repo + CLI + store, leaving plain files |
-| G7 | Flat, discoverable structure — one folder per config, grouped by a `category` tag |
+| G7 | Flat, discoverable structure — one folder per config; `dot list` is a flat table |
 | G8 | Bash only — no runtime deps beyond `git` + `jq` + coreutils |
 
 ## 3. Non-goals
@@ -60,7 +60,7 @@ installable package**.
 | **D4** | **No `parts/` in v1** | Don't build a composition language before a config needs it. |
 | **D5** | **chezmoi verbs** | `init`, `apply`, `forget`, `update`, `add`, `edit`, `diff`, `status`, `doctor`, `cd` — familiar, well-understood semantics. Plus `rollback`, `purge`, `bump`, `list`, `info`, `profiles` for the versioning layer chezmoi lacks. |
 | **D6** | **Copy mode exists only for ephemeral installs** | The store is the normal path; ephemeral copies to the target and then deletes the store so nothing dangles. |
-| **D7** | **Flat structure: `configs/<tool>/`**, with `category` as metadata | The atomic unit is a config, so the directory mirrors that. A hierarchy would imply nesting the install model doesn't have. Categories are a *view* (grouping in `dot list`), not a location — so "is starship `shell` or `prompt`?" stops being a structural question. See §6. |
+| **D7** | **Flat structure: `configs/<tool>/`** | The atomic unit is a config, so the directory mirrors that. A hierarchy would imply nesting the install model doesn't have, and "is starship `shell` or `prompt`?" stops being a structural question. See §6. |
 | **D8** | **JSON lockfile** | `jq` is already a dependency; JSON nests cleanly (targets as a list) and is trivially queryable. |
 | **D9** | **`update` pulls with `--rebase --autostash`** | Matches chezmoi: `git -C "$repo" pull --rebase --autostash`, then apply. `--no-pull` opts out. |
 | **D10** | **Edits go through `dot edit`, not hand-editing** | Keeps the repo clean and the lifecycle explicit. |
@@ -121,7 +121,7 @@ dotfiles/
 │   ├── mac.conf
 │   └── server.conf
 └── configs/
-    ├── README.md                # index + category legend + design rationale
+    ├── README.md                # index + design rationale
     ├── zsh/                     { README.md, manifest, files/zshrc }
     ├── starship/                { README.md, manifest, files/starship.toml, files/starship.mobile.toml }
     ├── ghostty/                 { README.md, manifest, files/config }
@@ -134,23 +134,19 @@ dotfiles/
     └── uv-tools/                { README.md, manifest, files/tools.txt }
 ```
 
-### Why flat, and what `category` buys
+### Why flat
 
 - **Identity is the folder name.** `configs/herdr/` *is* the `herdr` config.
   Moving it into a group would change its name and break `requires` and
   profiles.
-- **Categories are a view.** `category = multiplexer` groups `herdr`, `tmux`,
-  and `zellij` in `dot list` without pretending they live in a shared folder.
-- **The ambiguous cases disappear.** `starship` is `category = prompt`, not a
-  debate about whether a prompt is part of a "shell domain".
-
-Suggested categories (free-form strings, not an enum):
-`shell`, `prompt`, `terminal`, `multiplexer`, `vcs`, `editor`, `agents`,
-`packages`.
+- **No categories.** `dot list` is one flat, alphabetical table — every
+  supported config is showcased side by side, sorted by name.
+- **The ambiguous cases disappear.** Is Starship a shell thing or a prompt
+  thing? With a flat layout, the question never comes up.
 
 ### READMEs
 
-- `configs/README.md` — the index: category legend, the overall rationale,
+- `configs/README.md` — the index: the overall rationale,
   and how the pieces relate.
 - `configs/<tool>/README.md` — the opinionated choices *for that tool*: why it's
   configured this way, the non-obvious settings, and the trade-offs.
@@ -167,7 +163,6 @@ the *how*.
 ```
 version     = 1.0.0
 description = Ghostty — fast renderer; hands its chords to herdr
-category    = terminal
 platform    = mac
 requires    = zsh
 file        = config|~/.config/ghostty/config
@@ -178,7 +173,6 @@ file        = config|~/.config/ghostty/config
 |-----|----------|---------|
 | `version` | yes | semver of this config (§15) |
 | `description` | yes | one line, shown by `dot list` / `dot info` |
-| `category` | yes | grouping tag (§6) |
 | `file` | yes (≥1, unless `post_apply`) | `src-rel-path\|target` — repeatable |
 | `requires` | no | comma-separated config names applied first |
 | `platform` | no | `mac` / `linux` / `any` (default `any`) |
@@ -219,7 +213,6 @@ does not. `--force-post` overrides.
     "ghostty": {
       "version": "1.0.0",
       "mode": "symlink",
-      "category": "terminal",
       "hash": "sha256:a1b2c3…",
       "store": "~/.local/share/dot/store/ghostty/1.0.0",
       "targets": ["~/.config/ghostty/config"],
@@ -326,18 +319,18 @@ Verbs match `chezmoi` where an equivalent exists.
 | `dot status [--exit-code] [--json]` | What `apply` would change (content drift) | `status` |
 | `dot doctor [--fix]` | Environment + tooling health; `--fix` repairs what it can | `doctor` |
 | `dot cd` | Shell into the repo clone | `cd` |
-| `dot list [--installed\|--available] [--category C] [--json]` | Discover configs | `managed` |
+| `dot list [--installed\|--available] [--json]` | Discover configs | `managed` |
 | `dot info <config>` | Files, targets, requires, version, state | — |
 | `dot profiles` | List profiles and their configs | — |
 | `dot bump <config> major\|minor\|patch` | Bump version, commit | — |
 
 ```
 $ dot status
-config     category      installed  available  state
-ghostty    terminal      1.0.0      1.0.0      ok
-zsh        shell         1.4.1      1.5.0      stale
-starship   prompt        1.0.0      1.0.0      modified
-herdr      multiplexer   —          0.9.0      not installed
+config     installed  available  state
+ghostty    1.0.0      1.0.0      ok
+zsh        1.4.1      1.5.0      stale
+starship   1.0.0      1.0.0      modified
+herdr      —          0.9.0      not installed
 
 $ dot update
 → git pull --rebase --autostash (repo)
@@ -537,7 +530,7 @@ passes on the new layout.
 
 | # | Question | Decision |
 |---|----------|----------|
-| 1 | `dot add` defaults | Prompt for `category` and `description`; folder name is the `description` default |
+| 1 | `dot add` defaults | Prompt for `description`; folder name is the `description` default |
 | 2 | `post_apply` re-run rule | Runs when the config's `applyHash` changes (version + files + `post_apply`); `--force-post` overrides |
 | 3 | Store pruning | Keep all versions in v1; a `dot gc` (keep last N) is deferred |
 | 4 | `status` vs `doctor` | Kept separate, chezmoi-style: `status` = content drift, `doctor` = environment health. `status --exit-code` for prompts |

@@ -1,5 +1,4 @@
 version     = 1.1.0
 description = git — delta pager, difftastic aliases, zdiff3 merges, gitconfig identity
-category    = vcs
 file        = config|~/.config/git/config
 file        = gitconfig|~/.gitconfig

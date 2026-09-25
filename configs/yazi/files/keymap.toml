@@ -1,4 +1,4 @@
-[manager]
+[mgr]
 prepend_keymap = [
 	{ on = "<Enter>", run = "open",        desc = "Open (hx / glow / system)" },
 	{ on = "e",       run = "open --hovered", desc = "Edit in Helix" },

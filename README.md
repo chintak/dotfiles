@@ -136,9 +136,12 @@ dotfiles/
 ├── dot                  # the CLI (bash)
 ├── bootstrap.sh         # curl entrypoint
 ├── README.md
-├── specs/dot-cli.md     # the full design
 ├── profiles/            # mac.conf, server.conf, …
 └── configs/<tool>/      # one folder per config: README.md, manifest, files/
+```
+
+Design decisions and a recreation prompt live outside the repo in
+`~/vault/projects/dot-cli.md`.
 ```
 
 Each `configs/<tool>/` is a package:
@@ -336,7 +339,8 @@ starship   1.0.0      1.0.0      modified
 herdr      —          0.9.0      not installed
 ```
 
-The full design lives in [`specs/dot-cli.md`](specs/dot-cli.md).
+Design history: the full design was distilled into
+`~/vault/projects/dot-cli.md` (recreation prompt).
 
 ---
 

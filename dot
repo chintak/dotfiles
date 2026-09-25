@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # dot — versioned, selective dotfiles CLI.
-# Spec: specs/dot-cli.md
+# Design decisions are captured in ~/vault/projects/dot-cli.md (recreation
+# prompt); this script is the source of truth for behavior.
 #
 # Config verbs manage the machine (store + lockfile + ~/.config).
 # Runtime verbs drive herdr (see §3.2 of the MVP spec).

@@ -5,6 +5,12 @@
 # Block cursor, no blink
 cursor-style = block
 cursor-style-blink = false
+# Helix's insert-mode bar cursor renders ~1px wide and is easy to lose.
+# Helix can't change this — it only asks the terminal for a bar via DECSCUSR
+# — so thicken it here. Adjustment is incremental: 2 adds 2px to the bar
+# cursor's width. Only affects bar/outlined-rect cursors, so the block
+# cursor (normal mode, shell) is untouched.
+adjust-cursor-thickness = 4
 # Minimal chrome: herdr owns tabs/panes, so each Ghostty window is a
 # single surface with no titlebar. `hidden` (not `window-decoration =
 # none`) keeps rounded corners + shadow. Drag via option+click.

@@ -39,6 +39,9 @@ Get stuff done with minimum ceremony. Bias toward action: investigate quickly, m
 - `~/git` — canonical code directory. All repo checkouts live here. The edit tool may only touch paths containing `.worktrees/` — everything else (canonical checkouts, files directly under `~/git/`) is read-only; route all edits through worktrees in `<repo>/.worktrees/`.
 - `~/vault` — canonical knowledge base, a private git repo (github.com/chintak/vault). Same worktree protocol as code repos: worktrees at `~/vault/.worktrees/`, reviewed work lands on `main` via a PR through the `ship` skill. Commit and push vault changes so git history preserves provenance (see `~/vault/AGENTS.md`).
 
+## Config management
+- Live configs are centrally managed by the `dot` CLI (source repo: `~/git/dotfiles`) — never edit live files/symlinks under `~/.config` directly. Config updates follow the standard workflow: edit in a `~/git/dotfiles` worktree → `ship` them → merge the PR → run `dot apply <name>` so the change takes effect immediately.
+
 ## Vault lookup
 Before starting any task, check `~/vault` for context: grep for the project name and keywords across `~/vault/projects/`, `~/vault/preferences.md`, `~/vault/facts.md`, and past `~/vault/plans/`. Apply any matching preferences or project conventions, and note them in your plan.
 

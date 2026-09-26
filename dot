@@ -41,6 +41,9 @@ self_path() {
 default_repo() {
   local self; self="$(self_path)"
   if [[ -n "$self" && -d "$self/configs" ]]; then printf '%s' "$self"; return; fi
+  # canonical clone (a machine with ~/git/dotfiles checked out): prefer it
+  # over the ephemeral fallback, which may not exist
+  if [[ -d "$HOME/git/dotfiles/configs" ]]; then printf '%s' "$HOME/git/dotfiles"; return; fi
   printf '%s' "$HOME/.local/share/dot/repo"
 }
 REPO="${DOT_REPO:-$(default_repo)}"
@@ -397,6 +400,7 @@ cmd_doctor() {
   check "not mid-rebase"      "[[ ! -d '$REPO/.git/rebase-merge' && ! -d '$REPO/.git/rebase-apply' ]]"
   check "configs/ present"    "[[ -d '$CONFIGS_DIR' ]]"
   printf 'environment\n'
+  check "dot installed ($DOT_BIN_DIR/dot)" "[[ -x '$DOT_BIN_DIR/dot' ]]"
   check "~/.local/bin on PATH" "case ':$PATH:' in *':$DOT_BIN_DIR:'*) true;; *) false;; esac"
   check "store writable"       "mkdir -p '$DOT_STORE' && [[ -w '$DOT_STORE' ]]"
   check "state writable"       "mkdir -p '$DOT_STATE' && [[ -w '$DOT_STATE' ]]"

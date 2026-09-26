@@ -42,6 +42,13 @@ Get stuff done with minimum ceremony. Bias toward action: investigate quickly, m
 ## Config management
 - Live configs are centrally managed by the `dot` CLI (source repo: `~/git/dotfiles`) — never edit live files/symlinks under `~/.config` directly. Config updates follow the standard workflow: edit in a `~/git/dotfiles` worktree → `ship` them → merge the PR → run `dot apply <name>` so the change takes effect immediately.
 
+## Herdr terminals
+Prefer herdr — this machine's terminal multiplexer — over tmux for parallel, delegated, or long-running terminal work. Guard: control herdr only when running inside it (`test "${HERDR_ENV:-}" = 1` — command syntax is at `herdr --skill`); otherwise run commands in the foreground and say so.
+
+- **Pane vs tab by task nature and count** — sibling panes in the current tab for 1–2 short subagent tasks or quick test runs (`herdr pane split --current --direction right|down --cwd "$PWD" --no-focus`: wide pane → right, tall/narrow → down; avoid repeated same-direction splits). A new tab (`herdr tab create`) for 3+ parallel subagents, long-running or independent workstreams, or when splits would get cramped.
+- **Run and test commands in herdr panes, never tmux** — `herdr pane run <id> "<cmd>"`, wait with `herdr pane wait-output <id> --match <text> --timeout <ms>`, read with `herdr pane read <id> --source recent-unwrapped --lines N`. Parse pane IDs from JSON responses; use `--no-focus` to keep the user's focus; never close panes/tabs you didn't create.
+- **Subagent deployment** — provision the pane/tab up front and pass the pane ID in the child prompt (children must be self-contained); a recognized agent starts with `herdr agent start <name> --kind opencode --pane <id>`.
+
 ## Vault lookup
 Before starting any task, check `~/vault` for context: grep for the project name and keywords across `~/vault/projects/`, `~/vault/preferences.md`, `~/vault/facts.md`, and past `~/vault/plans/`. Apply any matching preferences or project conventions, and note them in your plan.
 

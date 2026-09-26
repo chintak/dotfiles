@@ -15,5 +15,20 @@
         ]
       }
     }
+  },
+  "agents": {
+    // Lock the default Build agent: edits only in tmp. ALL writes under
+    // ~/git/ and ~/vault/ — including .worktrees/ — must be delegated to
+    // the `do` agent, which owns the worktree protocol there.
+    "build": {
+      "permissions": [
+        { "action": "edit", "resource": "*", "effect": "deny" },
+        { "action": "edit", "resource": "/private/tmp/*", "effect": "allow" },
+        { "action": "edit", "resource": "/tmp/*", "effect": "allow" },
+        { "action": "edit", "resource": "~/git/*", "effect": "deny" },
+        { "action": "edit", "resource": "~/vault/*", "effect": "deny" },
+        { "action": "subagent", "resource": "do", "effect": "allow" }
+      ]
+    }
   }
 }

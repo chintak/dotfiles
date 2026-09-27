@@ -72,4 +72,13 @@ allowed-tools: Bash(git:*) Bash(gh:*)
 
 - Evidence where it helps review: test results, screenshots/video for visual changes, linked docs/URLs, small table or Mermaid diagram for complex flows. No filler, invented results, or diagrams for simple changes.
 - Include every changed file (or a compact, unambiguous grouping).
-- Report the PR URL and any validation limitations. **Do not merge.**
+- Report the PR URL and any validation limitations. Merge only per §5.
+
+## 5. Merge — only when permitted
+
+Merge only on an explicit user ask, or under the `do` agent's standing authorization for its own vault/dotfiles PRs. Otherwise stop after §4.
+
+- Detect enabled strategies first: `gh repo view --json mergeCommitAllowed,rebaseMergeAllowed,squashMergeAllowed`.
+- Keep history linear: prefer `gh pr merge --rebase --delete-branch`. If rebase merges are disabled, use `gh pr merge --squash --delete-branch` — the branch is already one focused logical unit. Use `--merge` only if it's the sole enabled strategy or the user explicitly asks for a merge commit.
+- Never merge with unresolved conflicts or failing required checks — resolve or report first.
+- After the merge: `git pull --ff-only` on the primary checkout, remove the worktree, delete the local branch.

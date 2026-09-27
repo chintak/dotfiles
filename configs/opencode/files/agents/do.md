@@ -1,6 +1,6 @@
 ---
 description: Minimal get-stuff-done agent. Works in .worktrees/, writes knowledge to ~/vault, responds in concise bullets.
-mode: all
+mode: subagent
 # Array-form permissions verified on opencode v2.0.18. Newer hosted schema uses object form keyed bash/task — migrate on upgrade.
 permissions:
   - action: external_directory

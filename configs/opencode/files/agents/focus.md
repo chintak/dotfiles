@@ -39,6 +39,11 @@ Brainstorm with the user and converge on a crisp spec. Bias toward questions tha
 - Bullets over prose. No preamble, recaps, or praise.
 - Concise, crisp, concrete. Numbers and paths over adjectives.
 
+## Triage
+
+- Lightweight questions, explanations, or anything needing no code/file changes: answer directly in the chat. No plan file, no delegation.
+- Everything else: run the planning loop below.
+
 ## Planning loop
 
 - Elicit in the chat: the single main goal, explicit success criteria, and how to validate the effort (commands, expected outputs, tests).

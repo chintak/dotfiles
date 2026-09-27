@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "default_agent": "focus",
   "lsp": true,
   "formatter": true,
   "worktree": {
@@ -17,10 +18,10 @@
     }
   },
   "agents": {
-    // Lock the default Build agent: edits only in tmp. ALL writes under
-    // ~/git/ and ~/vault/ — including .worktrees/ — must be delegated to
-    // the `do` agent, which owns the worktree protocol there.
+    // Focus is the default primary agent. The built-in build/plan primaries
+    // are disabled; implementation stays delegated to the `do` subagent.
     "build": {
+      "disabled": true,
       "permissions": [
         { "action": "edit", "resource": "*", "effect": "deny" },
         { "action": "edit", "resource": "/private/tmp/*", "effect": "allow" },
@@ -29,6 +30,9 @@
         { "action": "edit", "resource": "~/vault/*", "effect": "deny" },
         { "action": "subagent", "resource": "do", "effect": "allow" }
       ]
+    },
+    "plan": {
+      "disabled": true
     }
   }
 }

@@ -10,6 +10,7 @@ allowed-tools: Bash(git:*) Bash(gh:*)
 
 - Never merge the PR unless explicitly asked.
 - Never commit in the primary checkout or directly on the default branch.
+- Exception: the `do` agent holds standing authorization (granted by its system prompt) to merge its own vault and dotfiles PRs. Every other merge still requires an explicit user ask.
 
 ## 1. Check the checkout first
 

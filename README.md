@@ -329,6 +329,9 @@ chezmoi lacks.
 | `dot info <config>` | Files, targets, requires, version, state |
 | `dot profiles` | List profiles and their configs |
 | `dot bump <config> major\|minor\|patch` | Bump version, commit |
+| `dot name <type> <word>…` | Canonical task id (kebab-cased, lowercased) |
+| `dot transcript [<session>] [--all] [--vault DIR]` | Deterministic session export: `.raw/<ses>/` + memo skeleton |
+| `dot transcript --mine [<session>\|--all] [--apply]` | Curate unannotated memos via the `transcript-eval` agent → memo + annotation + `eval/samples.jsonl` rows + harness deltas (`--apply` writes them) |
 
 ```
 $ dot status

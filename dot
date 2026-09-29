@@ -685,6 +685,251 @@ runtime_stub() {
   return 2
 }
 
+# ── transcript ─────────────────────────────────────────────────────────
+# Deterministic session export (no LLM). Reads the live opencode store
+# (session_v2 + session_message + instruction_state/instruction_blob) and
+# writes, per session:
+#   .raw/<ses>/messages.jsonl    every session_message row, in seq order
+#   .raw/<ses>/context.json      harness snapshot, content-addressed
+#   sessions/<date>-<slug>.md    memo skeleton (frontmatter + turn outline)
+# No wall-clock timestamps go into the output, so re-runs are idempotent.
+ODB="${DOT_OPENCODE_DB:-$HOME/.local/share/opencode/opencode.db}"
+
+epoch_date() { date -r "$1" +%Y-%m-%d 2>/dev/null || date -d "@$1" +%Y-%m-%d; }
+
+yaml_str() { jq -n --arg s "$1" '$s'; }   # a JSON string is a valid YAML scalar
+yaml_list() { # <key> <json-string-array> <key-indent> <item-indent>
+  local key="$1" arr="$2" kpad="$3" pad="$4"
+  if [[ "$(jq 'length' <<< "$arr")" == "0" ]]; then printf '%s%s: []\n' "$kpad" "$key"; return; fi
+  printf '%s%s:\n' "$kpad" "$key"
+  jq -r --arg pad "$pad" '.[] | $pad + "- " + .' <<< "$arr"
+}
+
+project_of() { # <directory> -> vault project name (best effort)
+  local dir="$1" top base
+  if [[ -z "$dir" ]]; then printf 'user\n'; return; fi
+  dir="$(expand "$dir")"
+  if [[ "$dir" == "$HOME" || "$dir" == "$HOME/" ]]; then printf 'user\n'; return; fi
+  top="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)"
+  [[ -n "$top" ]] || top="$dir"
+  case "$top" in */.worktrees/*) top="${top%%/.worktrees/*}" ;; esac
+  base="$(basename "$top")"; [[ -n "$base" && "$base" != "/" ]] || base=user
+  printf '%s\n' "$base"
+}
+
+memo_slug() { # <title> <fallback> — `dot name` slug with its type prefix stripped
+  local title="$1" fallback="$2" slug="" words=()
+  if [[ -n "$title" ]]; then
+    IFS=' ' read -r -a words <<< "$title"
+  fi
+  if [[ ${#words[@]} -gt 0 ]]; then
+    # `dot name` needs a conventional-commit type; `chore` is a neutral prefix
+    # used only to reuse its slug rules, and is stripped back off.
+    slug="$(cmd_name chore "${words[@]}" 2>/dev/null)"
+    slug="${slug#chore-}"
+  fi
+  printf '%s\n' "${slug:-$fallback}"
+}
+
+transcript_export() { # <session-id> <vault> <can-commit> <why>
+  local sid="$1" vault="$2" can_commit="$3" why="$4"
+  local raw="$vault/.raw/$sid"
+  mkdir -p "$raw" "$vault/sessions" || return 1
+
+  local sess title dir created
+  sess="$(sqlite3 -json "$ODB" "select id,slug,title,directory,agent,model,time_created,time_updated from session_v2 where id='$sid'")"
+  [[ "$sess" != "[]" && -n "$sess" ]] || { warn "$sid: not in session_v2"; return 1; }
+  title="$(jq -r '.[0].title // ""' <<< "$sess")"
+  dir="$(jq -r '.[0].directory // ""' <<< "$sess")"
+  created="$(jq -r '.[0].time_created' <<< "$sess")"
+
+  # 1. messages.jsonl — faithful, self-describing rows in seq order.
+  sqlite3 -json "$ODB" \
+    "select seq,type,time_created,data from session_message where session_id='$sid' order by seq" |
+  jq -c '.[] | (.data | fromjson) as $d
+         | {seq, type, time: .time_created,
+            model: (if ($d.model | type) == "object" then (($d.model.providerID // "") + "/" + ($d.model.id // ""))
+                    elif ($d.model | type) == "string" then $d.model else null end),
+            agent: ($d.agent // null),
+            content: ($d.content // null),
+            data: $d}' > "$raw/messages.jsonl" || return 1
+  if [[ -s "$raw/messages.jsonl" ]] && ! jq -e . "$raw/messages.jsonl" >/dev/null; then
+    warn "$sid: messages.jsonl did not parse"; return 1
+  fi
+
+  # 2. context.json — the harness the model saw, content-addressed.
+  local cur blobs comps sha="unknown"
+  cur="$(sqlite3 "$ODB" "select current_values from instruction_state where session_id='$sid'")"
+  blobs="$(sqlite3 -json "$ODB" "select hash,value from instruction_blob")"
+  comps="{}"
+  if [[ -n "$cur" ]]; then
+    # sha256 over the sorted, newline-terminated "key:blobhash" lines.
+    sha="$(jq -r 'to_entries | sort_by(.key) | .[] | "\(.key):\(.value)"' <<< "$cur" | sha256)"
+    comps="$(jq -n --argjson cv "$cur" --argjson blobs "${blobs:-[]}" '
+      ($blobs | map({key: .hash, value: .value}) | from_entries) as $b
+      | $cv | to_entries
+      | map({key: .key, value: {hash: .value, value: ($b[.value] // null)}})
+      | from_entries')"
+  fi
+
+  local models agents state=null
+  models="$( { jq -r 'select(.model != null and .model != "") | .model' "$raw/messages.jsonl"
+              jq -r '.[0].model // "" | (try fromjson catch null) | if type == "object" then ((.providerID // "") + "/" + (.id // "")) else (. // "") end' <<< "$sess"
+            } | sort -u | jq -Rn '[inputs | select(length > 0)]')"
+  agents="$( { jq -r 'select(.agent != null and .agent != "") | .agent' "$raw/messages.jsonl"
+              jq -r '.[0].agent // ""' <<< "$sess"
+            } | sort -u | jq -Rn '[inputs | select(length > 0)]')"
+  # Which epoch the snapshot was valid through; null when there is no snapshot.
+  if [[ -n "$cur" ]]; then
+    state="$(sqlite3 -json "$ODB" "select epoch_start,through_seq from instruction_state where session_id='$sid'" | jq '.[0] // null')"
+  fi
+
+  jq -n --argjson sess "$(jq '.[0] | .model |= (try fromjson catch null)' <<< "$sess")" \
+        --arg sha "$sha" --argjson comps "$comps" \
+        --argjson models "$models" --argjson agents "$agents" \
+        --argjson state "$state" \
+        '{session: $sess, context_sha: $sha, components: $comps,
+          models: $models, agents: $agents, instruction_state: $state}' > "$raw/context.json" || return 1
+  jq -e . "$raw/context.json" >/dev/null || { warn "$sid: context.json did not parse"; return 1; }
+
+  # 3. memo skeleton — frontmatter + auto turn outline, [m<seq>] pointers.
+  local date slug proj memo rel
+  date="$(epoch_date "$((created / 1000))")"
+  slug="$(memo_slug "$title" "$(jq -r '.[0].slug // "session"' <<< "$sess")")"
+  proj="$(project_of "$dir")"
+  memo="$vault/sessions/$date-$slug.md"
+  rel="sessions/$date-$slug.md"
+
+  {
+    printf -- '---\n'
+    printf 'session: %s\n' "$sid"
+    printf 'date: %s\n' "$date"
+    printf 'project: %s\n' "$proj"
+    printf 'branch: unknown\n'
+    printf 'task: %s\n' "$(yaml_str "$title")"
+    printf 'outcome: unknown\n'
+    yaml_list models "$models" "" "  "
+    printf 'harness:\n'
+    yaml_list agents "$agents" "  " "    "
+    printf '  context_sha: %s\n' "$sha"
+    printf 'annotated: false\n'
+    printf 'tags: []\nfailure_modes: []\nharness_updates: []\nsamples: []\n'
+    printf -- '---\n\n'
+    printf '# %s\n\n' "${title:-$slug}"
+    printf '<!-- Skeleton written by `dot transcript` (deterministic, no LLM).\n'
+    printf '     `dot transcript --mine` curates the prose, fills the annotation,\n'
+    printf '     and emits training rows. Pointers `[m<seq>]` are the `seq` field of\n'
+    printf '     `.raw/%s/messages.jsonl`. -->\n\n' "$sid"
+    printf '## Goal\n\n'
+    printf '## What happened\n'
+    if [[ -s "$raw/messages.jsonl" ]]; then
+      jq -r '
+        def flat: gsub("[ \t\n\r]+"; " ") | sub("^ "; "") | sub(" $"; "");
+        def clip(n): if length > n then .[0:n] + "…" else . end;
+        "- [m\(.seq)] " + (
+          if .type == "assistant" then
+            (.content // []) as $c
+            | ([$c[] | select(.type == "text") | .text] | join(" ") | flat | clip(110)) as $t
+            | ([$c[] | select(.type == "tool") | .name] | unique) as $tools
+            | (([$c[] | select(.type == "reasoning")] | length) > 0) as $think
+            | ([ (if $t != "" then $t elif ($tools | length) == 0 then "assistant" else empty end),
+                 (if ($tools | length) > 0 then "[tools: \($tools | join(","))]" else empty end),
+                 (if $think then "[+reasoning]" else empty end) ]
+               | if length == 0 then "assistant (empty)" else join(" ") end)
+          elif .type == "shell" then
+            "shell — $ " + ((.data.command // "") | flat | clip(140)) + " (exit \(.data.exit // "?"))"
+          elif .type == "model-switched" then
+            "model-switched — \(.data.previous.providerID // "?")/\(.data.previous.id // "?") → \(.data.model.providerID // "?")/\(.data.model.id // "?")"
+          elif .type == "agent-switched" then
+            "agent-switched — \(.data.previous // "?") → \(.data.agent // "?")"
+          elif .type == "location-switched" then
+            "location-switched — \(.data.projectID // "?")/\(.data.subpath // "")"
+          elif .type == "idle" then
+            "idle — \(.data.outcome // "")"
+          elif .type == "user" or .type == "synthetic" or .type == "system" then
+            .type + " — " + ((.data.text // "") | flat | clip(160))
+          else
+            .type + " — " + ((.data.text // .data.description // "") | flat | clip(120))
+          end
+        )' "$raw/messages.jsonl"
+    fi
+    printf '\n## Verification\n\n## Observations\n<!-- each tagged harness|model|noise -->\n\n'
+    printf '## Links\n- raw: `.raw/%s/` (gitignored)\n' "$sid"
+  } > "$memo" || return 1
+
+  log "$sid → $raw/{messages.jsonl,context.json} + $rel"
+
+  if (( can_commit )); then
+    if [[ -n "$(git -C "$vault" status --porcelain -- "$rel")" ]]; then
+      if git -C "$vault" add -- "$rel" &&
+         git -C "$vault" commit -q -m "docs(sessions): add $date-$slug memo"; then
+        log "committed $rel"
+      else
+        warn "$rel: commit failed; memo left uncommitted"
+      fi
+    else
+      log "$rel unchanged"
+    fi
+  else
+    warn "$vault: skipping commit ($why); files written only"
+  fi
+}
+
+cmd_transcript() {
+  local sid="" all=0 mine=0 vault="${DOT_VAULT:-$HOME/vault}"
+  while (( $# )); do
+    case "$1" in
+      --all) all=1; shift ;;
+      --mine) mine=1; shift ;;
+      --vault) [[ -n "${2:-}" ]] || die "--vault needs a directory"; vault="$2"; shift 2 ;;
+      --vault=*) vault="${1#*=}"; shift ;;
+      --session) [[ -n "${2:-}" ]] || die "--session needs a session id"; sid="$2"; shift 2 ;;
+      --session=*) sid="${1#*=}"; shift ;;
+      -*) die "unknown flag: $1 (usage: dot transcript [<session>] [--all] [--vault DIR])" ;;
+      *) sid="$1"; shift ;;
+    esac
+  done
+  (( mine )) && die "dot transcript --mine: mining is not implemented yet (planned in a later change; plain 'dot transcript' does the deterministic extraction)"
+
+  need sqlite3; need jq
+  [[ -f "$ODB" ]] || die "opencode session store not found: $ODB (override with DOT_OPENCODE_DB)"
+  vault="$(expand "$vault")"
+  [[ -d "$vault" ]] || die "vault directory not found: $vault"
+
+  local ids=() id
+  if [[ -n "$sid" ]]; then
+    [[ -n "$(sqlite3 "$ODB" "select id from session_v2 where id='$sid'")" ]] || die "no such session: $sid"
+    ids=("$sid")
+  elif (( all )); then
+    while IFS= read -r id; do [[ -n "$id" ]] && ids+=("$id"); done < <(sqlite3 "$ODB" "select id from session_v2 order by time_created")
+    [[ ${#ids[@]} -gt 0 ]] || die "no sessions in $ODB"
+  else
+    local recent; recent="$(sqlite3 -json "$ODB" "select id,title from session_v2 order by time_updated desc limit 1")"
+    [[ "$recent" != "[]" && -n "$recent" ]] || die "no sessions in $ODB"
+    sid="$(jq -r '.[0].id' <<< "$recent")"
+    log "no session given — using $sid, the most recently updated: $(jq -r '.[0].title // "(untitled)"' <<< "$recent")"
+    ids=("$sid")
+  fi
+
+  # Whether we may commit is a property of the vault checkout, not of each
+  # session: sample it once, before this run writes anything.
+  local can_commit=1 why=""
+  if ! git -C "$vault" rev-parse --git-dir >/dev/null 2>&1; then
+    can_commit=0; why="not a git checkout"
+  elif [[ "$(git -C "$vault" symbolic-ref --short -q HEAD 2>/dev/null)" != "main" ]]; then
+    can_commit=0; why="HEAD is not main"
+  elif [[ -n "$(git -C "$vault" status --porcelain)" ]]; then
+    can_commit=0; why="working tree is dirty"
+  fi
+
+  local n=0
+  for id in "${ids[@]}"; do
+    transcript_export "$id" "$vault" "$can_commit" "$why" || return 1
+    n=$((n + 1))
+  done
+  log "captured $n session(s) into $vault"
+}
+
 # ── dispatch ───────────────────────────────────────────────────────────
 usage() {
   cat <<EOF
@@ -711,9 +956,12 @@ Config lifecycle:
 
 Runtime:
   dot name <type> <word>…         canonical task id
-  dot up | task | review | web | transcript
+  dot transcript [<session>] [--all] [--vault DIR]
+                                  export a session: .raw/ + memo skeleton
+  dot up | task | review | web
 
 Env: DOT_REPO DOT_STORE DOT_STATE DOT_BIN_DIR DOT_REPO_URL DOT_REF
+     DOT_VAULT DOT_OPENCODE_DB
 EOF
 }
 
@@ -738,7 +986,8 @@ main() {
     gc) cmd_gc "$@" ;;
     purge) cmd_purge "$@" ;;
     name) cmd_name "$@" ;;
-    up|task|review|web|transcript) runtime_stub "$cmd" "$@" ;;
+    transcript) cmd_transcript "$@" ;;
+    up|task|review|web) runtime_stub "$cmd" "$@" ;;
     version|--version|-V) printf 'dot %s\n' "$DOT_VERSION" ;;
     ""|help|--help|-h) usage ;;
     *) die "unknown command: $cmd (try: dot --help)" ;;

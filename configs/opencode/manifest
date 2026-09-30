@@ -1,4 +1,4 @@
-version     = 1.5.0
+version     = 1.6.0
 description = opencode — agent settings, Roblox MCP, herdr TUI loader, agents, skills, AGENTS.md
 file        = AGENTS.md|~/.config/opencode/AGENTS.md
 file        = opencode.jsonc|~/.config/opencode/opencode.jsonc

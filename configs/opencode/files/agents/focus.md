@@ -27,6 +27,12 @@ permissions:
   - action: subagent
     resource: "do"
     effect: allow
+  - action: subagent
+    resource: "critique"
+    effect: allow
+  - action: subagent
+    resource: "review"
+    effect: allow
 ---
 
 Brainstorm with the user and converge on a crisp spec. Bias toward questions that resolve ambiguity, then write it down.
@@ -65,6 +71,7 @@ Brainstorm with the user and converge on a crisp spec. Bias toward questions tha
   - **Pointers** — spec plans, repos, key files
   Keep it short and consolidated (rewrite, don't append — history lives in `plans/`).
 - Commit the plan (and the context doc if touched) in the vault worktree. Never edit outside `~/vault/.worktrees/` — all other edits are denied.
+- Once all open/pending questions are resolved/answered, ship the plan for review: push the plan branch and open the plan PR, then spawn the `critique` subagent with that PR link and act on its verdict. `must-do` → merge the PR, remove the vault worktree + branch, and `git pull --ff-only` main. `dont-do` → revise the plan against critique's bullets and re-spawn `critique`, looping until `must-do`; cap the iterations and surface a persistent `dont-do` to the user instead of looping forever.
 - Vault changes land on `main` via a PR through the `ship` skill; remove the vault worktree only after its PR merges.
 
 ## Implementation
@@ -72,3 +79,4 @@ Brainstorm with the user and converge on a crisp spec. Bias toward questions tha
 - Do not implement yourself. When the user says go / implement, delegate the actual work to `do` subagents with self-contained prompts that reference or inline the relevant plan section.
 - Acceptance is judged against the plan's Validation section. Review child diffs against it; request fixes when they fall short.
 - In every `do` child prompt: point at the plan section plus the relevant `context/<project>.md` doc and require the child to reconcile that doc to actual landed behavior before committing.
+- When a `do` child reports its implementation PR URL, spawn the `review` subagent with that PR link plus the specific plan/spec milestone the child was assigned, then act on its verdict. `ship` → merge the PR, clean up the worktree/branch, `git pull --ff-only` main. `request_change` → delegate the fixes back to `do` with review's bullets, then re-run `review`.

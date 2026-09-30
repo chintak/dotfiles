@@ -5,6 +5,4 @@ file        = keymap.toml|~/.config/yazi/keymap.toml
 file        = theme.toml|~/.config/yazi/theme.toml
 file        = piper.yazi|~/.config/yazi/plugins/piper.yazi
 file        = flavors/tokyo-night.yazi/flavor.toml|~/.config/yazi/flavors/tokyo-night.yazi/flavor.toml
-file        = flavors/tokyo-night.yazi/tmtheme.xml|~/.config/yazi/flavors/tokyo-night.yazi/tmtheme.xml
 file        = flavors/tokyo-night.yazi/LICENSE|~/.config/yazi/flavors/tokyo-night.yazi/LICENSE
-file        = flavors/tokyo-night.yazi/LICENSE-tmtheme|~/.config/yazi/flavors/tokyo-night.yazi/LICENSE-tmtheme

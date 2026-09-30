@@ -34,3 +34,15 @@ run = 'piper -- PAGER=cat CLICOLOR_FORCE=1 glow -w=$w -s dracula "$1"'
 ratio = [1, 3, 4]
 # show hidden/dotfiles by default (toggle with . in the TUI)
 show_hidden = true
+
+# git.yazi (vendored in plugins/) shows git status as linemode signs.
+# Two fetchers: files (`*`) and directories (`*/`) — per the plugin README.
+[[plugin.prepend_fetchers]]
+url = "*"
+run = "git"
+group = "git"
+
+[[plugin.prepend_fetchers]]
+url = "*/"
+run = "git"
+group = "git"

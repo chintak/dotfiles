@@ -3,4 +3,12 @@ prepend_keymap = [
 	{ on = "<Enter>", run = "open",        desc = "Open (hx / glow / system)" },
 	{ on = "e",       run = "open --hovered", desc = "Edit in Helix" },
 	{ on = "y",       run = "copy --hovered path", desc = "Yank path" },
+	# Official plugins (vendored in plugins/, yazi-rs/plugins@7200d73).
+	# All prepend, so each wins over the shipped preset (verified against
+	# keymap-default.toml); shadows documented in README.
+	{ on = [ "g", "c" ], run = "plugin vcs-files", desc = "Show Git file changes" },
+	{ on = "l",          run = "plugin smart-enter", desc = "Enter dir, or open file" },
+	{ on = "f",          run = "plugin jump-to-char", desc = "Jump to file by first char" },
+	{ on = "T",          run = "plugin toggle-pane min-preview", desc = "Show or hide the preview pane" },
+	{ on = "<C-p>",      run = "plugin diff", desc = "Diff selected with hovered (copy patch)" },
 ]

@@ -6,6 +6,12 @@ line-number = "relative"
 bufferline = "multiple"
 color-modes = true
 cursorline = true
+# Typewriter centering (helix has no dedicated option, issue #3265): a
+# scrolloff >= half the window height makes every vertical motion keep the
+# cursor near mid-pane. Near the file start/end the view pins to the content
+# instead (vim scrolloff=999 behavior). Soft-wrap keeps this from ever
+# scrolling horizontally, so the large value is horizontal-safe too.
+scrolloff = 999
 # Soft-wrap to the viewport width (dynamic, not a fixed text-width column).
 # max-wrap: slack allowed at the end of a line before it wraps (0 = always
 # fill the full width, higher = wrap sooner). max-indent-retain: how many

@@ -93,11 +93,12 @@ fi
 
 # glow reads ~/Library/Preferences/glow/glow.yml on macOS by default and does
 # not expand ~ in its style paths, so pin the dotfiles-managed config dir and
-# the One Light theme (matches hx's `onelight`): GLOW_STYLE drives the CLI
-# render, GLAMOUR_STYLE the TUI pager. glow.yml keeps `style: auto` as fallback.
+# the dracula theme (glamour built-in, readable on the dark Ghostty terminal):
+# GLOW_STYLE drives the CLI render, GLAMOUR_STYLE the TUI pager. glow.yml keeps
+# `style: dracula` as fallback.
 (( $+commands[glow] )) && export GLOW_CONFIG_HOME="$HOME/.config/glow" \
-  GLOW_STYLE="$HOME/.config/glow/onelight.json" \
-  GLAMOUR_STYLE="$HOME/.config/glow/onelight.json"
+  GLOW_STYLE="dracula" \
+  GLAMOUR_STYLE="dracula"
 
 # ── zle keys: alt+left/right word jumps ────────────────────────────────
 # Ghostty forwards alt+arrows as explicit CSI (configs/ghostty/config:

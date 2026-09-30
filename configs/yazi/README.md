@@ -8,9 +8,9 @@ File manager with inline previews — useful for watching agents mutate files.
   the system viewer for PDFs/images.
 - Markdown previews render through the official `piper.yazi` plugin
   (vendored in `files/piper.yazi`, sourced from yazi-rs/plugins@main) shelling
-  out to `glow` with glamour's built-in `tokyo-night` style (readable on the
+  out to `glow` with glamour's built-in `dracula` style (readable on the
   dark Ghostty terminal). The command in `yazi.toml` sets `CLICOLOR_FORCE=1`
-  (piper pipes glow's output), pins `-s tokyo-night` explicitly (an env-set
+  (piper pipes glow's output), pins `-s dracula` explicitly (an env-set
   style alone makes glow fall back to notty when not a tty, and relying on
   the parent env makes the theme depend on how yazi was launched), and
   `PAGER=cat` so glow's `pager: true` doesn't run `less` in the pane.

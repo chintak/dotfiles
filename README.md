@@ -138,7 +138,7 @@ dotfiles/
 ```
 
 Design decisions and a recreation prompt live outside the repo in
-`~/vault/projects/dot-cli.md`.
+`~/vault/context/dot-cli.md`.
 ```
 
 Each `configs/<tool>/` is a package:
@@ -340,7 +340,7 @@ herdr      —          0.9.0      not installed
 ```
 
 Design history: the full design was distilled into
-`~/vault/projects/dot-cli.md` (recreation prompt).
+`~/vault/context/dot-cli.md` (recreation prompt).
 
 ---
 

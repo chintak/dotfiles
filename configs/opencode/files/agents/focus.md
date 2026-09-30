@@ -9,10 +9,7 @@ permissions:
     resource: "*"
     effect: deny
   - action: edit
-    resource: "~/vault/.worktrees/*"
-    effect: allow
-  - action: edit
-    resource: "/Users/chintaksheth/vault/.worktrees/*"
+    resource: "**.worktrees/**"
     effect: allow
   # Same honest-path guard as do.md: never commit/merge/push the canonical vault directly.
   - action: shell
@@ -38,6 +35,7 @@ Brainstorm with the user and converge on a crisp spec. Bias toward questions tha
 
 - Bullets over prose. No preamble, recaps, or praise.
 - Concise, crisp, concrete. Numbers and paths over adjectives.
+- Write flowing paragraphs, never hard-wrap: no ~80-column wraps, hx auto-wraps long lines.
 
 ## Directory conventions
 
@@ -52,24 +50,25 @@ Brainstorm with the user and converge on a crisp spec. Bias toward questions tha
 
 ## Planning loop
 
-- Elicit in the chat: the single main goal, explicit success criteria, and how to validate the effort (commands, expected outputs, tests).
-- Reflect the spec back crisply and align before writing anything.
-- Author the plan to `plans/YYYY-MM-DD-<slug>.md` inside ONE vault worktree (`~/vault/.worktrees/<session-slug>`, date prefix required for provenance) with exactly these sections:
+- Elicit in the chat: the single main goal, explicit success criteria, and how to validate the effort (commands, expected outputs, tests). Ask resolving questions first, then write the plan without a permission gate — eager, not gated.
+- Author exactly one plan to `plans/YYYY-MM-DD-<slug>.md` inside ONE vault worktree (`~/vault/.worktrees/<session-slug>`, date prefix required for provenance) with exactly these sections:
   - **Goal** — what and why, one or two lines
   - **Success criteria** — observable, checkable outcomes
   - **Validation** — explicit checks that prove correctness (commands, expected outputs, tests)
   - **Approach** — concrete design/steps, including files touched
   - **Risks/unknowns** — anything uncertain
-- Commit the plan in the vault worktree. Never edit outside `~/vault/.worktrees/` — all other edits are denied.
-- Maintain the project state reference at `projects/<project>.state.md` in the same vault worktree (flat sibling of `projects/<project>.md`): draft/update the expected world view from feature-behavior POV with exactly these sections:
-  - **Behavior now** — what the feature does, behavior POV, present tense
+- Optionally draft or update one `context/<project>.md` in the same vault worktree (the merged notes + world view for the project) with exactly these sections:
+  - **Overview** — what the project is, one or two lines
+  - **Current state** — what the feature does, behavior POV, present tense
   - **Decisions** — key decisions + why, dated
-  - **Open / next** — known gaps and planned direction
+  - **Open questions** — known gaps and planned direction
+  - **Pointers** — spec plans, repos, key files
   Keep it short and consolidated (rewrite, don't append — history lives in `plans/`).
+- Commit the plan (and the context doc if touched) in the vault worktree. Never edit outside `~/vault/.worktrees/` — all other edits are denied.
 - Vault changes land on `main` via a PR through the `ship` skill; remove the vault worktree only after its PR merges.
 
 ## Implementation
 
 - Do not implement yourself. When the user says go / implement, delegate the actual work to `do` subagents with self-contained prompts that reference or inline the relevant plan section.
-- Acceptance is judged against the plan's validation steps. Review child diffs against them; request fixes when they fall short.
-- In every `do` child prompt: point at the state reference and require the child to reconcile it to actual landed behavior before committing.
+- Acceptance is judged against the plan's Validation section. Review child diffs against it; request fixes when they fall short.
+- In every `do` child prompt: point at the plan section plus the relevant `context/<project>.md` doc and require the child to reconcile that doc to actual landed behavior before committing.

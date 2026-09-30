@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # dot — versioned, selective dotfiles CLI.
-# Design decisions are captured in ~/vault/projects/dot-cli.md (recreation
+# Design decisions are captured in ~/vault/context/dot-cli.md (recreation
 # prompt); this script is the source of truth for behavior.
 #
 # Config verbs manage the machine (store + lockfile + ~/.config).
@@ -986,8 +986,8 @@ Rules (non-negotiable):
 - \`body\` must contain exactly these sections, in order: Goal, What happened, Verification,
   Observations, Links; every observation appears in Observations, tagged
   \`harness\`|\`model\`|\`noise\`.
-- delta.file is learnings.md | facts.md | preferences.md | projects/<name>.state.md. For a
-  state file also set delta.section to one of "Behavior now", "Decisions", "Open / next".
+- delta.file is learnings.md | facts.md | preferences.md | context/<name>.md. For a
+  state file also set delta.section to one of "Current state", "Decisions", "Open questions".
 - Output ONLY the JSON object.
 EOF
 }
@@ -1253,8 +1253,7 @@ transcript_mine() { # <sid> <all> <apply> <vault>
         esac
         case "$dfile" in
           learnings.md|facts.md|preferences.md) mine_delta_append "$vault/$dfile" "$dtext" ;;
-          projects/*.state.md) mine_delta_section "$vault/$dfile" "${dsec:-Open / next}" "$dtext" ;;
-          *) dfile="learnings.md"; mine_delta_append "$vault/$dfile" "$dtext" ;;
+          context/*.md) mine_delta_section "$vault/$dfile" "${dsec:-Open questions}" "$dtext" ;;          *) dfile="learnings.md"; mine_delta_append "$vault/$dfile" "$dtext" ;;
         esac
         changed+=("$dfile")
         deltas_applied=$((deltas_applied + 1))

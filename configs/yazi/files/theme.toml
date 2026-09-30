@@ -1,7 +1,17 @@
-# Dracula-ish, to match Ghostty / herdr / starship.
+# TokyoNight Night, to match Ghostty / starship / fzf.
+# UI comes from the vendored `tokyo-night` flavor (BennyOe/tokyo-night.yazi,
+# pinned copy under files/flavors/); only local overrides live here.
+[flavor]
+dark = "tokyo-night"
+
 [manager]
-cwd = { fg = "#bd93f9" }
+# Row highlight + cwd emphasis + symlink target: absent from the flavor.
+hovered         = { fg = "#1a1b26", bg = "#7aa2f7" }
+preview_hovered = { fg = "#1a1b26", bg = "#7aa2f7" }
+cwd             = { fg = "#7aa2f7", bold = true }
+symlink_target  = { fg = "#7dcfff" }
 
 [status]
+# No powerline glyphs in this setup.
 sep_left  = { open = "", close = "" }
 sep_right = { open = "", close = "" }

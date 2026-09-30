@@ -1,6 +1,12 @@
 # Helix language servers. Only pin what auto-detect gets wrong.
 # Helix finds `pyright`/`ruff`/`gopls`/`rust-analyzer`/`lua-language-server` on PATH.
 
+# Helix 25.x's builtin rust entry has no formatter; rustfmt is on PATH via
+# rustup, so format-on-save needs it pinned here.
+[[language]]
+name = "rust"
+formatter = { command = "rustfmt" }
+
 [[language]]
 name = "python"
 language-servers = ["pyright", "ruff"]

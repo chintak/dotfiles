@@ -73,3 +73,10 @@ normal = "block"
 # Requires: gh extension install yusukebe/gh-markdown-preview
 [keys.normal."space".m]
 p = ":run-shell-command gh markdown-preview '%{buffer_name}' >/dev/null 2>&1 &"
+
+# Swap the symbol pickers: space s is the muscle-memory key, so it gets the
+# project-wide picker (rust-analyzer workspace/symbol: all crates in the LSP
+# root, e.g. core/ here). Document (single-buffer) symbols move to space S.
+[keys.normal."space"]
+s = "workspace_symbol_picker"
+S = "symbol_picker"

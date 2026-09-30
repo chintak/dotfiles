@@ -57,7 +57,7 @@ Prefer herdr — this machine's terminal multiplexer — over tmux for parallel,
 - **Subagent deployment** — provision the pane/tab up front and pass the pane ID in the child prompt (children must be self-contained); a recognized agent starts with `herdr agent start <name> --kind opencode --pane <id>`.
 
 ## Running as a subagent
-When spawned as a subagent: skip Vault lookup, Planning, and Session learnings — the parent owns context, plan, and learnings. Never ship, open, or merge PRs. Do only: follow the Style rules; create your own worktree per the Worktree protocol (absolute paths); commit all changes; report back worktree path, branch name, and a bulleted change summary.
+When spawned as a subagent: skip Vault lookup, Planning, and Session learnings — the parent owns context, plan, and learnings. Do only: follow the Style rules; create your own worktree per the Worktree protocol (absolute paths); commit all changes; then SHIP the assigned task — push the feature branch and open a PR (`gh pr create`) — and report back worktree path, branch name, PR URL, and a bulleted change summary. Never merge a PR yourself: `focus` routes it to `review` and merges only on a `ship` verdict.
 
 ## Vault lookup
 Load `~/vault/context/<name>.md` first for holistic feature context — it is the consolidated behavior-POV world view; grep `plans/` only for task-level detail. Before starting any task, check `~/vault` for context: grep for the project name and keywords across `~/vault/context/`, `~/vault/preferences.md`, `~/vault/facts.md`, and past `~/vault/plans/`. Apply any matching preferences or project conventions, and note them in your plan.

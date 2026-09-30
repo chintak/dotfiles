@@ -40,6 +40,7 @@ Get stuff done with minimum ceremony. Bias toward action: investigate quickly, m
 - Lead with the outcome.
 - Bullets over prose. No preamble, recaps, or praise.
 - Reference code as `path:line`.
+- Write flowing paragraphs, never hard-wrap: no ~80-column wraps, hx auto-wraps long lines.
 
 ## Directory conventions
 - `~/git` — canonical code directory. All repo checkouts live here. The edit tool may only touch paths containing `.worktrees/`, plus `/tmp` and the opencode temp dir; everything else is read-only — including files directly under `~/git/`, which stay read-only even though `~/git/AGENTS.md` says they're editable in place, because simple wildcards can't allow top-level-only (a `~/git/*` allow would also unlock every nested canonical checkout); ask the user to edit loose `~/git/` files manually. Route all edits through worktrees in `<repo>/.worktrees/`.
@@ -59,7 +60,7 @@ Prefer herdr — this machine's terminal multiplexer — over tmux for parallel,
 When spawned as a subagent: skip Vault lookup, Planning, and Session learnings — the parent owns context, plan, and learnings. Never ship, open, or merge PRs. Do only: follow the Style rules; create your own worktree per the Worktree protocol (absolute paths); commit all changes; report back worktree path, branch name, and a bulleted change summary.
 
 ## Vault lookup
-Load `~/vault/projects/<name>.state.md` first for holistic feature context — it is the consolidated behavior-POV world view; grep `plans/` only for task-level detail. Before starting any task, check `~/vault` for context: grep for the project name and keywords across `~/vault/projects/`, `~/vault/preferences.md`, `~/vault/facts.md`, and past `~/vault/plans/`. Apply any matching preferences or project conventions, and note them in your plan.
+Load `~/vault/context/<name>.md` first for holistic feature context — it is the consolidated behavior-POV world view; grep `plans/` only for task-level detail. Before starting any task, check `~/vault` for context: grep for the project name and keywords across `~/vault/context/`, `~/vault/preferences.md`, `~/vault/facts.md`, and past `~/vault/plans/`. Apply any matching preferences or project conventions, and note them in your plan.
 
 ## Planning
 Before performing non-trivial edits, write a plan/spec file at `plans/YYYY-MM-DD-<slug>.md` inside your vault worktree (date prefix required for provenance) and commit it there. Structure it categorically:
@@ -69,7 +70,7 @@ Before performing non-trivial edits, write a plan/spec file at `plans/YYYY-MM-DD
 - **Risks/unknowns** — anything uncertain
 This file is the contract for both your own edits and any subagent delegation: every child prompt must reference or inline the relevant plan section, and acceptance is judged against the verification steps.
 - Use ONE vault worktree per session (`~/vault/.worktrees/<session-slug>`), reused across tasks; plans and session learnings accumulate there. Ship the vault PR when the session's work is done or when the user asks — it lands independently of code PRs; remove the vault worktree only after its PR merges.
-- Reconcile `projects/<project>.state.md` to actual landed behavior (`Behavior now` / `Decisions` / `Open-next`) and commit it with the work — the parent plan's version is the expected view, yours is the actual one.
+- Reconcile `context/<project>.md` to actual landed behavior (`Overview` / `Current state` / `Decisions` / `Open questions` / `Pointers`) and commit it with the work — the parent plan's version is the expected view, yours is the actual one.
 
 ## Session learnings
 At the end of a session, append to `learnings.md` in your vault worktree (commit the change; it lands on `main` through the ship/PR flow):

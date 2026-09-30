@@ -1,4 +1,4 @@
-version     = 1.4.0
+version     = 1.5.0
 description = yazi — file manager with inline image/PDF previews
 file        = yazi.toml|~/.config/yazi/yazi.toml
 file        = keymap.toml|~/.config/yazi/keymap.toml
@@ -6,3 +6,10 @@ file        = theme.toml|~/.config/yazi/theme.toml
 file        = piper.yazi|~/.config/yazi/plugins/piper.yazi
 file        = flavors/tokyo-night.yazi/flavor.toml|~/.config/yazi/flavors/tokyo-night.yazi/flavor.toml
 file        = flavors/tokyo-night.yazi/LICENSE|~/.config/yazi/flavors/tokyo-night.yazi/LICENSE
+file        = init.lua|~/.config/yazi/init.lua
+file        = plugins/git.yazi|~/.config/yazi/plugins/git.yazi
+file        = plugins/vcs-files.yazi|~/.config/yazi/plugins/vcs-files.yazi
+file        = plugins/diff.yazi|~/.config/yazi/plugins/diff.yazi
+file        = plugins/toggle-pane.yazi|~/.config/yazi/plugins/toggle-pane.yazi
+file        = plugins/smart-enter.yazi|~/.config/yazi/plugins/smart-enter.yazi
+file        = plugins/jump-to-char.yazi|~/.config/yazi/plugins/jump-to-char.yazi

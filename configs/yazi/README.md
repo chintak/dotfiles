@@ -22,6 +22,29 @@ File manager with inline previews — useful for watching agents mutate files.
 - Openers use yazi's `%s` shell formatting — `$@` was deprecated in yazi 26
   and stopped passing the file to `hx`.
 - `e` edits in Helix; `y` yanks the path.
+- Six official plugins vendored under `files/plugins/` (yazi-rs/plugins,
+  pinned at `7200d7374462ba11c0fa5662115a96dd6ef8c9ab`, declarative like
+  `piper.yazi` — never `ya pkg add`):
+  - `git.yazi` — git status as linemode signs (`init.lua` runs
+    `require("git"):setup { order = 1500 }`; `yazi.toml` registers the `*`
+    and `*/` fetchers). Signs colored dracula via `[git]` in `theme.toml`
+    (untracked pink, unstaged yellow, staged/added green, deleted red,
+    updated orange, ignored comment-grey).
+  - `vcs-files.yazi` (`g c`) — flat view of git-changed files. Shadows the
+    preset `g c` (`cd ~/.config`); prepend wins. Includes upstream `old.lua`
+    (runtime fallback the plugin `require`s when the `vf` VFS global is
+    absent).
+  - `smart-enter.yazi` (`l`) — enter dir or open file in one key. Shadows
+    preset `l` (`enter`) — the plugin's intended use. No setup call:
+    hovered-only default matches the `Enter`/`e` convention.
+  - `jump-to-char.yazi` (`f`) — vim-like `f<char>` jump to next file by
+    first char. Shadows preset `f` (`filter --smart`); `/` find still
+    available.
+  - `toggle-pane.yazi` (`T`) — `min-preview`: hide/show the preview pane
+    (upstream's key example; free in the preset).
+  - `diff.yazi` (`<C-p>`) — diff selected vs hovered, copy patch to
+    clipboard. Upstream suggests `<C-d>`, but that's preset half-page-down,
+    so `<C-p>` (patch mnemonic, free in `mgr`) instead.
 
 Needs the terminal to expose a graphics protocol — Ghostty does
 (`kitty_graphics = true` in `herdr/config.toml`).

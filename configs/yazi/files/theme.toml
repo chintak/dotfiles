@@ -15,3 +15,13 @@ symlink_target  = { fg = "#7dcfff" }
 # No powerline glyphs in this setup.
 sep_left  = { open = "", close = "" }
 sep_right = { open = "", close = "" }
+
+[git]
+# git.yazi linemode signs in dracula (flavor defaults otherwise stand).
+untracked = { fg = "#ff79c6" }
+unstaged  = { fg = "#f1fa8c" }
+staged    = { fg = "#50fa7b" }
+added     = { fg = "#50fa7b" }
+deleted   = { fg = "#ff5555" }
+updated   = { fg = "#ffb86c" }
+ignored   = { fg = "#6272a3" }

@@ -79,6 +79,18 @@ lock_names() { lock_read | jq -r '.configs | keys[]' 2>/dev/null; }
 
 need() { command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"; }
 
+# _refresh_completion — keep the bootstrap-installed zsh completion in sync
+# with the repo. bootstrap.sh drops completions/_dot next to the dotfiles
+# clone; whenever the repo copy differs (e.g. after a pull), copy it over.
+# Called from init/update/apply — apply because it is the verb most likely
+# run right after editing completions in-repo.
+_refresh_completion() {
+  local src="$REPO/completions/_dot" dst="$HOME/.local/share/dot/completions/_dot"
+  [[ -f "$src" ]] || return 0
+  [[ -f "$dst" ]] && cmp -s "$src" "$dst" 2>/dev/null && return 0
+  mkdir -p "${dst%/*}" && cp "$src" "$dst" || warn "could not refresh zsh completion ($dst)"
+}
+
 # ── apply ──────────────────────────────────────────────────────────────
 # apply_config <name> [--dry-run] [--force-post]
 apply_config() {
@@ -283,6 +295,7 @@ cmd_info() {
 
 cmd_apply() {
   local names=() profile="" flags=() a
+  _refresh_completion
   while (( $# )); do
     case "$1" in
       --profile) profile="$2"; shift 2 ;;
@@ -467,6 +480,7 @@ cmd_update() {
       warn "not a git clone; skipping pull"
     fi
   fi
+  _refresh_completion
   local installed=(); local n
   if [[ ${#names[@]} -gt 0 ]]; then installed=("${names[@]}")
   else while IFS= read -r n; do installed+=("$n"); done < <(lock_names); fi
@@ -611,12 +625,14 @@ cmd_purge() {
     warn "pass --force only if you really mean it"
     [[ " $* " == *" --force "* ]] || return 1
   fi
-  printf 'will remove:\n  %s\n  %s\n  %s\n  %s\n' "$REPO" "$DOT_STORE" "$DOT_STATE" "$DOT_BIN_DIR/dot"
+  printf 'will remove:\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+    "$REPO" "$DOT_STORE" "$DOT_STATE" "$DOT_BIN_DIR/dot" \
+    "$HOME/.local/share/dot/completions"
   if (( ! yes )); then
     [[ -t 0 ]] || die "refusing without --yes"
     read -r -p "purge? [y/N] " ans; [[ "$ans" == "y" || "$ans" == "Y" ]] || { log "aborted"; return 1; }
   fi
-  rm -rf "$REPO" "$DOT_STORE" "$DOT_STATE"
+  rm -rf "$REPO" "$DOT_STORE" "$DOT_STATE" "$HOME/.local/share/dot/completions"
   rm -f "$DOT_BIN_DIR/dot"
   log "purged (config files at their targets are untouched)"
 }
@@ -656,6 +672,7 @@ cmd_init() {
   # Ephemeral installs are plain copies — the store is deleted afterwards.
   if (( ephemeral )); then export DOT_MODE=copy; fi
   apply_targets "${names[@]}" || warn "some configs failed"
+  _refresh_completion
 
   if (( ephemeral )); then
     log "ephemeral: purging tooling"

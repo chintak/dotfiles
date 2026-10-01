@@ -38,9 +38,10 @@ Get stuff done with minimum ceremony. Bias toward action: investigate quickly, m
 
 ## Style
 - Lead with the outcome.
-- Bullets over prose. No preamble, recaps, or praise.
-- Reference code as `path:line`.
-- Write flowing paragraphs, never hard-wrap: no ~80-column wraps, hx auto-wraps long lines.
+- Always respond in explanatory outline format: hierarchical bullets with bold lead labels, crisp and concise. No prose paragraphs, no preamble, recaps, or praise. Reference code as `path:line`.
+- **Rich formats when applicable**: mermaid diagrams (flows, sequences, state), tables (comparisons, findings), fenced code blocks for commands, diffs, and snippets, nested sub-bullets. Use them when they clarify; never force decoration.
+- Applies to all outputs: chat replies, vault plan/context docs, PR descriptions.
+- Write flowing lines, never hard-wrap: no ~80-column wraps, hx auto-wraps long lines.
 
 ## Directory conventions
 - `~/git` — canonical code directory. All repo checkouts live here. The edit tool may only touch paths containing `.worktrees/`, plus `/tmp` and the opencode temp dir; everything else is read-only — including files directly under `~/git/`, which stay read-only even though `~/git/AGENTS.md` says they're editable in place, because simple wildcards can't allow top-level-only (a `~/git/*` allow would also unlock every nested canonical checkout); ask the user to edit loose `~/git/` files manually. Route all edits through worktrees in `<repo>/.worktrees/`.

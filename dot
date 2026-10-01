@@ -79,6 +79,18 @@ lock_names() { lock_read | jq -r '.configs | keys[]' 2>/dev/null; }
 
 need() { command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"; }
 
+# _refresh_completion — keep the bootstrap-installed zsh completion in sync
+# with the repo. bootstrap.sh drops completions/_dot next to the dotfiles
+# clone; whenever the repo copy differs (e.g. after a pull), copy it over.
+# Called from init/update/apply — apply because it is the verb most likely
+# run right after editing completions in-repo.
+_refresh_completion() {
+  local src="$REPO/completions/_dot" dst="$HOME/.local/share/dot/completions/_dot"
+  [[ -f "$src" ]] || return 0
+  [[ -f "$dst" ]] && cmp -s "$src" "$dst" 2>/dev/null && return 0
+  mkdir -p "${dst%/*}" && cp "$src" "$dst" || warn "could not refresh zsh completion ($dst)"
+}
+
 # ── apply ──────────────────────────────────────────────────────────────
 # apply_config <name> [--dry-run] [--force-post]
 apply_config() {
@@ -282,16 +294,21 @@ cmd_info() {
 }
 
 cmd_apply() {
-  local names=() profile="" flags=() a
+  local names=() profile="" flags=() a dry=0
   while (( $# )); do
     case "$1" in
       --profile) profile="$2"; shift 2 ;;
       --profile=*) profile="${1#*=}"; shift ;;
-      --dry-run|--force-post) flags+=("$1"); shift ;;
+      --dry-run) dry=1; flags+=("$1"); shift ;;
+      --force-post) flags+=("$1"); shift ;;
       -*) die "unknown flag: $1" ;;
       *) names+=("$1"); shift ;;
     esac
   done
+  # --dry-run promises to touch nothing; _refresh_completion copies the
+  # repo completion over the installed one, so run it only when the apply
+  # is real. (Side effects after flag parsing, never before.)
+  (( dry )) || _refresh_completion
   if [[ -n "$profile" ]]; then
     [[ -f "$PROFILES_DIR/$profile.conf" ]] || die "no such profile: $profile"
     local c; while IFS= read -r c; do names+=("$c"); done < <(profile_configs "$profile")
@@ -379,7 +396,28 @@ cmd_edit() {
 cmd_cd() { exec "${SHELL:-/bin/sh}" -c "cd '$REPO' && exec ${SHELL:-/bin/sh} -l"; }
 
 cmd_profiles() {
-  local p c
+  local p c a json=0
+  for a in "$@"; do [[ "$a" == "--json" ]] && json=1; done
+  if (( json )); then
+    # [{name,configs:[…]}] — mirrors cmd_list --json's jq-built array style
+    local items="[]" cfgs cc cjson
+    for p in "$PROFILES_DIR"/*.conf; do
+      [[ -f "$p" ]] || continue
+      local -a cfgs=()
+      while IFS= read -r cc; do [[ -n "$cc" ]] && cfgs+=("$cc"); done \
+        < <(profile_configs "$(basename "$p" .conf)")
+      if (( ${#cfgs[@]} )); then
+        cjson="$(printf '%s\n' "${cfgs[@]}" | jq -R . | jq -s .)"
+      else
+        cjson="[]"
+      fi
+      items="$(printf '%s' "$items" | jq \
+        --arg n "$(basename "$p" .conf)" --argjson c "$cjson" \
+        '. + [{name:$n,configs:$c}]')"
+    done
+    printf '%s\n' "$items" | jq .
+    return
+  fi
   for p in "$PROFILES_DIR"/*.conf; do
     [[ -f "$p" ]] || continue
     printf '%s%s%s\n' "$B" "$(basename "$p" .conf)" "$R"
@@ -446,6 +484,7 @@ cmd_update() {
       warn "not a git clone; skipping pull"
     fi
   fi
+  _refresh_completion
   local installed=(); local n
   if [[ ${#names[@]} -gt 0 ]]; then installed=("${names[@]}")
   else while IFS= read -r n; do installed+=("$n"); done < <(lock_names); fi
@@ -590,12 +629,14 @@ cmd_purge() {
     warn "pass --force only if you really mean it"
     [[ " $* " == *" --force "* ]] || return 1
   fi
-  printf 'will remove:\n  %s\n  %s\n  %s\n  %s\n' "$REPO" "$DOT_STORE" "$DOT_STATE" "$DOT_BIN_DIR/dot"
+  printf 'will remove:\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+    "$REPO" "$DOT_STORE" "$DOT_STATE" "$DOT_BIN_DIR/dot" \
+    "$HOME/.local/share/dot/completions"
   if (( ! yes )); then
     [[ -t 0 ]] || die "refusing without --yes"
     read -r -p "purge? [y/N] " ans; [[ "$ans" == "y" || "$ans" == "Y" ]] || { log "aborted"; return 1; }
   fi
-  rm -rf "$REPO" "$DOT_STORE" "$DOT_STATE"
+  rm -rf "$REPO" "$DOT_STORE" "$DOT_STATE" "$HOME/.local/share/dot/completions"
   rm -f "$DOT_BIN_DIR/dot"
   log "purged (config files at their targets are untouched)"
 }
@@ -635,6 +676,7 @@ cmd_init() {
   # Ephemeral installs are plain copies — the store is deleted afterwards.
   if (( ephemeral )); then export DOT_MODE=copy; fi
   apply_targets "${names[@]}" || warn "some configs failed"
+  _refresh_completion
 
   if (( ephemeral )); then
     log "ephemeral: purging tooling"

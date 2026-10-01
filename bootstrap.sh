@@ -85,6 +85,41 @@ fetch_dot() {
   fi
 }
 
+# fetch_completion <dest> — obtain completions/_dot, using the same source
+# order as fetch_dot (local checkout → DOT_REPO → raw URL → clone fallback).
+fetch_completion() {
+  dest="$1"
+  self_dir=""
+  case "$0" in
+    */*) self_dir="$(cd "$(dirname "$0")" 2>/dev/null && pwd || true)" ;;
+  esac
+  if [ -n "$self_dir" ] && [ -f "$self_dir/completions/_dot" ]; then
+    log "using local completion: $self_dir/completions/_dot"
+    cp "$self_dir/completions/_dot" "$dest"
+    return 0
+  fi
+  if [ -n "${DOT_REPO:-}" ] && [ -f "${DOT_REPO%/}/completions/_dot" ]; then
+    log "using completion from DOT_REPO: ${DOT_REPO%/}/completions/_dot"
+    cp "${DOT_REPO%/}/completions/_dot" "$dest"
+    return 0
+  fi
+  if url="$(raw_url "$REPO_URL" "$REF" completions/_dot)"; then
+    log "downloading completions/_dot @ $REF"
+    curl -fsSL "$url" -o "$dest"
+    return 0
+  fi
+  log "cloning $REPO_URL @ $REF (for completions/_dot)"
+  tmp="$(mktemp -d)"
+  if git clone --depth 1 --branch "$REF" "$REPO_URL" "$tmp/repo" >/dev/null 2>&1 \
+     && [ -f "$tmp/repo/completions/_dot" ]; then
+    cp "$tmp/repo/completions/_dot" "$dest"
+    rm -rf "$tmp"
+    return 0
+  fi
+  rm -rf "$tmp"
+  return 1
+}
+
 mkdir -p "$BIN_DIR" || die "cannot create $BIN_DIR"
 tmp_dot="$BIN_DIR/.dot.tmp.$$"
 trap 'rm -f "$tmp_dot"' EXIT INT TERM
@@ -101,6 +136,23 @@ case ":$PATH:" in
 esac
 
 log "installed dot -> $BIN_DIR/dot"
+
+# Best-effort: install the zsh completion next to the CLI's data dir
+# (~/.local/share/dot/completions/_dot). Completion is a nicety, not a
+# dependency — a failure here warns and never aborts bootstrap.
+comp_dir="$HOME/.local/share/dot/completions"
+tmp_comp="$comp_dir/._dot.tmp.$$"
+if mkdir -p "$comp_dir" 2>/dev/null; then
+  if fetch_completion "$tmp_comp" && [ -s "$tmp_comp" ]; then
+    mv "$tmp_comp" "$comp_dir/_dot"
+    log "installed zsh completion -> $comp_dir/_dot"
+  else
+    rm -f "$tmp_comp"
+    warn "could not install the zsh completion (continuing)"
+  fi
+else
+  warn "could not create $comp_dir (continuing without completion)"
+fi
 
 # Ensure `dot` resolves to the copy we just installed, then hand off.
 PATH="$BIN_DIR:$PATH"

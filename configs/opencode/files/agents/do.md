@@ -58,10 +58,10 @@ Prefer herdr — this machine's terminal multiplexer — over tmux for parallel,
 - **Subagent deployment** — provision the pane/tab up front and pass the pane ID in the child prompt (children must be self-contained); a recognized agent starts with `herdr agent start <name> --kind opencode --pane <id>`.
 
 ## Running as a subagent
-When spawned as a subagent: skip Vault lookup, Planning, and Session learnings — the parent owns context, plan, and learnings. Do only: follow the Style rules; create your own worktree per the Worktree protocol (absolute paths); commit all changes; then SHIP the assigned task — push the feature branch and open a PR (`gh pr create`) — and report back worktree path, branch name, PR URL, and a bulleted change summary. Never merge a PR yourself: `focus` routes it to `review` and merges only on a `ship` verdict.
+When spawned as a subagent: skip Vault lookup and Planning — the parent owns context and plan. Do only: follow the Style rules; create your own worktree per the Worktree protocol (absolute paths); commit all changes; then SHIP the assigned task — push the feature branch and open a PR (`gh pr create`) — and report back worktree path, branch name, PR URL, and a bulleted change summary. Never merge a PR yourself: `focus` routes it to `review` and merges only on a `ship` verdict.
 
 ## Vault lookup
-Load `~/vault/context/<name>.md` first for holistic feature context — it is the consolidated behavior-POV world view; grep `plans/` only for task-level detail. Before starting any task, check `~/vault` for context: grep for the project name and keywords across `~/vault/context/`, `~/vault/preferences.md`, `~/vault/facts.md`, and past `~/vault/plans/`. Apply any matching preferences or project conventions, and note them in your plan.
+Load `~/vault/context/<name>.md` first for holistic feature context — it is the consolidated behavior-POV world view; grep `plans/` only for task-level detail. Before starting any task, check `~/vault` for context: grep for the project name and keywords across `~/vault/context/` and past `~/vault/plans/`. Apply any matching project conventions, and note them in your plan.
 
 ## Planning
 Before performing non-trivial edits, write a plan/spec file at `plans/YYYY-MM-DD-<slug>.md` inside your vault worktree (date prefix required for provenance) and commit it there. Structure it categorically:
@@ -70,14 +70,8 @@ Before performing non-trivial edits, write a plan/spec file at `plans/YYYY-MM-DD
 - **Verification** — explicit checks that prove correctness (commands to run, expected outputs, tests)
 - **Risks/unknowns** — anything uncertain
 This file is the contract for both your own edits and any subagent delegation: every child prompt must reference or inline the relevant plan section, and acceptance is judged against the verification steps.
-- Use ONE vault worktree per session (`~/vault/.worktrees/<session-slug>`), reused across tasks; plans and session learnings accumulate there. Ship the vault PR when the session's work is done or when the user asks — it lands independently of code PRs; remove the vault worktree only after its PR merges.
+- Use ONE vault worktree per session (`~/vault/.worktrees/<session-slug>`), reused across tasks; plans accumulate there. Ship the vault PR when the session's work is done or when the user asks — it lands independently of code PRs; remove the vault worktree only after its PR merges.
 - Reconcile `context/<project>.md` to actual landed behavior (`Overview` / `Current state` / `Decisions` / `Open questions` / `Pointers`) and commit it with the work — the parent plan's version is the expected view, yours is the actual one.
-
-## Session learnings
-At the end of a session, append to `learnings.md` in your vault worktree (commit the change; it lands on `main` through the ship/PR flow):
-- One bullet per learning: `good` or `bad`, a short description of the behavior or approach, why it matters, and a specific example from this session
-- Capture model-behavior and problem-solving learnings only — what to do differently next time to solve the same task more effectively
-- Skip nit-picks (styling trivia, one-off mistakes); prefer repeatable process improvements
 
 ## Worktree protocol
 All file edits happen in a worktree: `<repo>/.worktrees/` for `~/git` repos, and `~/vault/.worktrees/` for the vault repo (its root is `~/vault` itself). Run `git -C <repo> worktree list` at task start. Always invoke git with `git -C <repo>` and use ABSOLUTE worktree paths (`<repo>/.worktrees/<slug>`): relative worktree adds fail when the session is rooted at `~`, silently nest inside the parent worktree when run from a worktree, and `git worktree remove <relative-path>` can delete the wrong worktree via basename matching.

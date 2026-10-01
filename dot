@@ -379,7 +379,28 @@ cmd_edit() {
 cmd_cd() { exec "${SHELL:-/bin/sh}" -c "cd '$REPO' && exec ${SHELL:-/bin/sh} -l"; }
 
 cmd_profiles() {
-  local p c
+  local p c a json=0
+  for a in "$@"; do [[ "$a" == "--json" ]] && json=1; done
+  if (( json )); then
+    # [{name,configs:[…]}] — mirrors cmd_list --json's jq-built array style
+    local items="[]" cfgs cc cjson
+    for p in "$PROFILES_DIR"/*.conf; do
+      [[ -f "$p" ]] || continue
+      local -a cfgs=()
+      while IFS= read -r cc; do [[ -n "$cc" ]] && cfgs+=("$cc"); done \
+        < <(profile_configs "$(basename "$p" .conf)")
+      if (( ${#cfgs[@]} )); then
+        cjson="$(printf '%s\n' "${cfgs[@]}" | jq -R . | jq -s .)"
+      else
+        cjson="[]"
+      fi
+      items="$(printf '%s' "$items" | jq \
+        --arg n "$(basename "$p" .conf)" --argjson c "$cjson" \
+        '. + [{name:$n,configs:$c}]')"
+    done
+    printf '%s\n' "$items" | jq .
+    return
+  fi
   for p in "$PROFILES_DIR"/*.conf; do
     [[ -f "$p" ]] || continue
     printf '%s%s%s\n' "$B" "$(basename "$p" .conf)" "$R"

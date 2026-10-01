@@ -17,11 +17,15 @@
 #      assert what the completion system actually offers.
 #
 # Fixture (mktemp sandbox, env-injected into the child):
-#   DOT_REPO   = fixture  (configs/helix, configs/herdr; profiles/dev.conf,
-#                          profiles/prod.conf)
+#   DOT_REPO   = fixture  (configs/helix, configs/herdr,
+#                          configs/linuxonly [platform = linux → state
+#                          inapplicable even on macOS, absent from the
+#                          lockfile]; profiles/dev.conf, profiles/prod.conf)
 #   DOT_STATE  = fixture/state  (lockfile: helix installed)
 #   DOT_STORE  = fixture/store  (helix/0.0.9 + helix/0.1.0)
-# so `dot list --json` reports helix installed, herdr not-installed.
+# so `dot list --json` reports helix installed, herdr not-installed,
+# linuxonly inapplicable-with-installed="" (the Linux-path pin: forget/
+# update/rollback/diff must exclude it, apply must include it).
 
 emulate -L zsh
 
@@ -42,7 +46,8 @@ mkdir -p "$FIX/bin" "$FIX/bin-stub" "$FIX/zd" "$FIX/state" \
          "$FIX/configs/helix" "$FIX/configs/herdr" "$FIX/profiles" \
          "$FIX/targets"
 
-mkdir -p "$FIX/configs/helix" "$FIX/configs/herdr" "$FIX/profiles" "$FIX/targets"
+mkdir -p "$FIX/configs/helix" "$FIX/configs/herdr" "$FIX/configs/linuxonly" \
+         "$FIX/profiles" "$FIX/targets"
 
 for c in helix herdr; do
   cat > "$FIX/configs/$c/manifest" <<EOF
@@ -51,6 +56,15 @@ description = $c fixture config
 file        = x|$FIX/targets/$c
 EOF
 done
+# platform = linux → config_state = inapplicable even on this macOS host;
+# it is deliberately NOT in the lockfile below, so `installed` is "" —
+# the exact shape of brewfile/ghostty on a real Linux box.
+cat > "$FIX/configs/linuxonly/manifest" <<EOF
+version     = 0.1.0
+description = linuxonly fixture config
+platform    = linux
+file        = x|$FIX/targets/linuxonly
+EOF
 echo x > "$FIX/store/helix/0.1.0/x"
 echo x > "$FIX/store/helix/0.0.9/x"
 
@@ -123,8 +137,11 @@ unit() { # unit <label> <bin-dir> <zsh-code> <expected>
 JSON_BIN="$FIX/bin"
 STUB_BIN="$FIX/bin-stub"
 
-unit "configs all (helix+herdr)"      "$JSON_BIN" 'source "$COMPL/_dot"; _dot_configs all'       $'helix\nherdr'
-unit "configs installed (helix only)" "$JSON_BIN" 'source "$COMPL/_dot"; _dot_configs installed' "helix"
+unit "configs all (helix+herdr+linuxonly)" "$JSON_BIN" 'source "$COMPL/_dot"; _dot_configs all'       $'helix\nherdr\nlinuxonly'
+# pins the lockfile-driven filter: under the old state-based filter
+# (state != "not-installed") linuxonly's `inapplicable` state would leak
+# into the installed set.
+unit "configs installed (helix only, excludes inapplicable)" "$JSON_BIN" 'source "$COMPL/_dot"; _dot_configs installed' "helix"
 unit "profiles via --json"            "$JSON_BIN" 'source "$COMPL/_dot"; _dot_profiles'          $'dev\nprod'
 unit "rollback store versions"        "$JSON_BIN" 'source "$COMPL/_dot"; _dot_rollback_versions helix' $'0.0.9\n0.1.0'
 # fallback path: stub dot has no --json → pretty (ANSI) parse for profiles,
@@ -194,6 +211,7 @@ zpty_tab "$FIX/bin" "dot " && {
 zpty_tab "$FIX/bin" "dot apply " && {
   have   "apply TAB → helix"        "helix" "$OUT"
   have   "apply TAB → herdr"        "herdr" "$OUT"
+  have   "apply TAB → linuxonly (all repo configs)" "linuxonly" "$OUT"
   havent "apply TAB excludes prod"  "prod"  "$OUT"
 }
 zpty_tab "$FIX/bin" "dot apply he" && {
@@ -207,6 +225,7 @@ zpty_tab "$FIX/bin" "dot apply --profile " && {
 zpty_tab "$FIX/bin" "dot forget " && {
   have   "forget TAB → installed helix"  "helix" "$OUT"
   havent "forget TAB excludes herdr"     "herdr" "$OUT"
+  havent "forget TAB excludes linuxonly (inapplicable, not in lockfile)" "linuxonly" "$OUT"
 }
 zpty_tab "$FIX/bin" "dot info " && {
   have "info TAB → helix"           "helix" "$OUT"

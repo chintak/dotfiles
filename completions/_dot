@@ -6,9 +6,13 @@
 # matches the machine's real state:
 #
 #   configs  — `dot list --json` piped through jq (jq is already a hard
-#              dependency of dot). `installed` = state != "not-installed",
-#              i.e. lockfile-driven — exactly the set forget / update /
-#              rollback / diff operate on.
+#              dependency of dot). `installed` = the lockfile field
+#              (`select(.installed != "")`), i.e. present in the lockfile
+#              — exactly the set forget / update / rollback / diff operate
+#              on. (Matching on `state` would wrongly offer configs whose
+#              platform doesn't match the host — e.g. mac-only configs on
+#              Linux are `inapplicable`, never in the lockfile, yet their
+#              state isn't `not-installed` either.)
 #   profiles — `dot profiles --json`. Older `dot` versions silently ignore
 #              the flag (exit 0, pretty output), so the fallback is
 #              detected by jq PARSE FAILURE — never by exit code — after
@@ -47,7 +51,7 @@ _dot_cached() {
 _dot_configs() {
   local mode="$1" filter='.[] | .name'
   [[ "$mode" == installed ]] && \
-    filter='.[] | select(.state as $s | $s != "not-installed") | .name'
+    filter='.[] | select(.installed != "") | .name'
   _dot_cached "configs:$mode" _dot_fetch_configs "$filter"
 }
 _dot_fetch_configs() {
@@ -185,6 +189,7 @@ _dot_verbs() {
     'init:clone the repo and apply a profile'
     'apply:install or reinstall configs'
     'forget:remove symlinks (store kept)'
+    'uninstall:forget (alias)'
     'update:pull the repo and apply newer configs'
     'rollback:re-point symlinks at an older store version'
     'status:per-config install state'
@@ -227,7 +232,7 @@ _dot() {
       case "$verb" in
         init)       _dot_init ;;
         apply)      _dot_apply ;;
-        forget)     _dot_forget ;;
+        forget|uninstall) _dot_forget ;;
         update)     _dot_update ;;
         rollback)   _dot_rollback ;;
         status)     _dot_status ;;

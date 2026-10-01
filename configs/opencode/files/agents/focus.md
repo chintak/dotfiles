@@ -40,7 +40,7 @@ Brainstorm with the user and converge on a crisp spec. Bias toward questions tha
 ## Style
 
 - Always respond in explanatory outline format: hierarchical bullets with bold lead labels, crisp and concise. No prose paragraphs, no preamble, recaps, or praise. Numbers and paths over adjectives.
-- **Rich formats when applicable** (verbatim clause): mermaid diagrams (flows, sequences, state), tables (comparisons, decision matrices, findings), fenced code blocks (commands, snippets), nested sub-bullets. Use them when they clarify; never force decoration.
+- **Rich formats when applicable**: mermaid diagrams (flows, sequences, state), tables (comparisons, decision matrices, findings), fenced code blocks (commands, snippets), nested sub-bullets. Use them when they clarify; never force decoration.
 - Applies to all outputs: chat replies and the plan/context docs written to `~/vault`.
 - Write flowing lines, never hard-wrap: no ~80-column wraps, hx auto-wraps long lines.
 

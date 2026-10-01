@@ -15,6 +15,7 @@ sections, then use [The toolbox](#the-toolbox) as a reference.
 
 - [Philosophy](#philosophy)
 - [Bootstrap a new machine](#bootstrap-a-new-machine)
+- [Completions](#completions)
 - [Profiles](#profiles)
 - [Repo layout](#repo-layout)
 - [The store, symlinks & the lockfile](#the-store-symlinks--the-lockfile)
@@ -95,6 +96,31 @@ configs, and `dot purge` removes the repo, store, lockfile, and the CLI.
 
 ---
 
+## Completions
+
+`dot` ships zsh tab-completion (`completions/_dot`): every verb, per-verb
+flags, and **dynamic** config/profile names — `dot apply <TAB>` suggests the
+real configs, `dot forget <TAB>` only the installed ones.
+
+- **Bootstrap path**: `bootstrap.sh` installs the completion to
+  `~/.local/share/dot/completions/_dot` next to the CLI's data dir; the zsh
+  `fpath` hook in `configs/zsh` (added **before** `compinit`) picks it up.
+- **Canonical clones** (`~/git/dotfiles`) get completion straight from the
+  repo dir — the hook prefers the dev checkout, then the bootstrap clone,
+  then the installed copy.
+- Dynamic names come from `dot list --json` / `dot profiles --json` and are
+  cached for **~60 seconds**, so a config added seconds ago may not be
+  offered yet. `dot apply` / `dot update` also refresh the installed copy
+  whenever the repo's `completions/_dot` differs.
+- Older `dot` binaries that predate `profiles --json` are handled: the
+  completion falls back to parsing the pretty output (ANSI-stripped), or
+  silently offers nothing — it never crashes.
+- First install of the hook needs a one-time fpath rescan: `dot apply zsh`
+  (the 1.4.0 `post_apply` removes `~/.zcompdump`), or manually
+  `rm -f ~/.zcompdump && exec zsh`.
+
+---
+
 ## Profiles
 
 A profile is a plain list of config names in `profiles/<name>.conf`. It is
@@ -133,6 +159,7 @@ dotfiles/
 ├── dot                  # the CLI (bash)
 ├── bootstrap.sh         # curl entrypoint
 ├── README.md
+├── completions/_dot     # zsh tab-completion
 ├── profiles/            # mac.conf, server.conf, …
 └── configs/<tool>/      # one folder per config: README.md, manifest, files/
 ```

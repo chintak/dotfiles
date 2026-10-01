@@ -25,6 +25,16 @@ setopt APPEND_HISTORY EXTENDED_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE HI
 
 # ── completion ─────────────────────────────────────────────────────────
 [[ -d "$HOME/.docker/completions" ]] && fpath=("$HOME/.docker/completions" $fpath)
+# `dot` tab-completion: the completions dir must be on fpath BEFORE compinit
+# runs below, or _dot is never autoloadable. Preference order (dev checkout
+# first, then the bootstrap clone, then the bootstrap-installed copy) — the
+# loop prepends, so it iterates in reverse:
+for _dot_fpath in "$HOME/.local/share/dot/completions" \
+                  "$HOME/.local/share/dot/repo/completions" \
+                  "$HOME/git/dotfiles/completions"; do
+  [[ -d "$_dot_fpath" ]] && fpath=("$_dot_fpath" $fpath)
+done
+unset _dot_fpath
 autoload -Uz compinit && compinit
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*' menu select

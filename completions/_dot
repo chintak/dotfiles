@@ -1,0 +1,241 @@
+#compdef dot
+# zsh tab-completion for `dot` — the versioned, selective dotfiles CLI
+# (github.com/chintak/dotfiles).
+#
+# Dynamic candidates come from the `dot` binary itself, so completion
+# matches the machine's real state:
+#
+#   configs  — `dot list --json` piped through jq (jq is already a hard
+#              dependency of dot). `installed` = state != "not-installed",
+#              i.e. lockfile-driven — exactly the set forget / update /
+#              rollback / diff operate on.
+#   profiles — `dot profiles --json`. Older `dot` versions silently ignore
+#              the flag (exit 0, pretty output), so the fallback is
+#              detected by jq PARSE FAILURE — never by exit code — after
+#              which ANSI codes are stripped and the pretty format is
+#              parsed: non-indented (bold) lines are profile names,
+#              indented lines are the profile's configs. On total failure
+#              the helper degrades silently to no candidates.
+#
+# Dynamic results are cached in assoc arrays with a ~60s TTL
+# (zsh/datetime $EPOCHSECONDS): running the CLI for every TAB would be
+# wasteful, and a config added seconds ago being unlisted for a minute is
+# acceptable (documented in the dotfiles README).
+
+typeset -gA _DOT_CACHE _DOT_CACHE_TS
+typeset -g  _DOT_CACHE_TTL=60
+
+# _dot_cached <key> <cmd> [args…] — print the candidate list for <key>,
+# refreshing it from <cmd> when the TTL has expired. Empty results are
+# cached too, so a broken or absent dot isn't retried on every keystroke.
+_dot_cached() {
+  local key="$1"; shift
+  (( $+EPOCHSECONDS )) || zmodload -F zsh/datetime p:EPOCHSECONDS 2>/dev/null
+  local now="$EPOCHSECONDS" ts="${_DOT_CACHE_TS[$key]:-0}"
+  if [[ -n "${_DOT_CACHE[$key]+x}" && $(( now - ts )) -lt "$_DOT_CACHE_TTL" ]]; then
+    printf '%s' "${_DOT_CACHE[$key]}"
+    return 0
+  fi
+  local out
+  out="$("$@")" || out=""
+  _DOT_CACHE[$key]="$out"
+  _DOT_CACHE_TS[$key]="$now"
+  printf '%s' "$out"
+}
+
+# _dot_configs all|installed — config names via `dot list --json`.
+_dot_configs() {
+  local mode="$1" filter='.[] | .name'
+  [[ "$mode" == installed ]] && \
+    filter='.[] | select(.state as $s | $s != "not-installed") | .name'
+  _dot_cached "configs:$mode" _dot_fetch_configs "$filter"
+}
+_dot_fetch_configs() {
+  command dot list --json 2>/dev/null | jq -r "$1" 2>/dev/null
+}
+_dot_configs_all()       { _dot_configs all; }
+_dot_configs_installed() { _dot_configs installed; }
+
+# _dot_profiles — profile names via `dot profiles --json`, falling back to
+# the pretty output of older `dot` versions (see the header comment).
+_dot_profiles() {
+  _dot_cached profiles _dot_fetch_profiles
+}
+_dot_fetch_profiles() {
+  local raw
+  raw="$(dot profiles --json 2>/dev/null)" || raw=""
+  [[ -n "$raw" ]] || return 0
+  local names
+  # JSON path — jq PARSE FAILURE (not exit code) triggers the fallback.
+  if names="$(jq -r '.[] | .name' 2>/dev/null <<< "$raw")"; then
+    [[ -n "$names" ]] && printf '%s\n' "$names"
+    return 0
+  fi
+  # Fallback: strip ANSI codes, then every non-indented non-empty line is
+  # a profile name (indented lines list the profile's configs).
+  setopt localoptions extendedglob
+  raw="${raw//$'\e'\[[0-9;]#m/}"
+  local -a lines out=()
+  lines=("${(@f)raw}")
+  local l
+  for l in "${lines[@]}"; do
+    [[ -z "$l" || "$l" == [[:space:]]* ]] && continue
+    l="${l##[[:space:]]#}"; l="${l%%[[:space:]]#}"
+    [[ -n "$l" ]] && out+=("$l")
+  done
+  (( ${#out[@]} )) && printf '%s\n' "${out[@]}"
+  return 0
+}
+
+# _dot_rollback_versions [config] — store versions for `dot rollback`.
+# In completion (no $1) the config comes from the command line ($words[2]).
+_dot_rollback_versions() {
+  local cfg="${1:-$words[2]}"
+  local store="${DOT_STORE:-$HOME/.local/share/dot/store}"
+  local -a vers=("$store/$cfg"/*(N:t))
+  (( ${#vers[@]} )) && printf '%s\n' "${vers[@]}"
+  return 0
+}
+
+# ── per-verb argument specs ───────────────────────────────────────────
+# Each is called with words=(verb args…): the top-level `_dot` shifts the
+# command word away before dispatching.
+
+_dot_init() {
+  _arguments \
+    '--profile[apply every config in a profile]:profile:_dot_profiles' \
+    '--repo[repo URL to clone]:url:' \
+    '--ref[branch, tag, or SHA to clone]:ref:' \
+    '--ephemeral[apply in copy mode, then purge all tooling]' \
+    '--vm[alias for --ephemeral]'
+}
+
+_dot_apply() {
+  _arguments \
+    '--profile[apply every config in a profile]:profile:_dot_profiles' \
+    '--dry-run[print what would change; touch nothing]' \
+    '--force-post[re-run post_apply even when applyHash is unchanged]' \
+    '*:config:_dot_configs_all'
+}
+
+_dot_forget() { _arguments '*:config:_dot_configs_installed'; }
+
+_dot_update() {
+  _arguments \
+    '--no-pull[skip git pull --rebase --autostash]' \
+    '*:config:_dot_configs_installed'
+}
+
+_dot_rollback() {
+  _arguments \
+    '1:config:_dot_configs_installed' \
+    '2:version:_dot_rollback_versions'
+}
+
+_dot_status() {
+  _arguments \
+    '--exit-code[exit non-zero when anything is pending]' \
+    '--json[emit JSON]'
+}
+
+_dot_diff() { _arguments '1:config:_dot_configs_installed'; }
+_dot_doctor() { _arguments '1: :()' '*: :()'; }
+_dot_list() {
+  _arguments \
+    '--installed[only installed configs]' \
+    '--available[only not-installed configs]' \
+    '--json[emit JSON]'
+}
+_dot_info() { _arguments '1:config:_dot_configs_all'; }
+_dot_edit() { _arguments '1:config:_dot_configs_all'; }
+_dot_add()  { _arguments '*:file:_files'; }
+_dot_bump() {
+  _arguments \
+    '1:config:_dot_configs_all' \
+    '2:level:(major minor patch)'
+}
+_dot_gc() {
+  _arguments '--dry-run[list what would be pruned, remove nothing]'
+}
+_dot_purge() {
+  _arguments \
+    '--yes[skip the confirmation prompt]' \
+    '--force[allow purging a non-default repo]'
+}
+_dot_name() {
+  _arguments \
+    '--type-any[allow any type prefix]' \
+    '1:type:(feat fix docs style refactor perf test build ci chore revert)' \
+    '*:word:'
+}
+# verbs that take no arguments
+_dot_noargs() { _arguments '1: :()' '*: :()'; }
+
+_dot_verbs() {
+  local -a verbs=(
+    'init:clone the repo and apply a profile'
+    'apply:install or reinstall configs'
+    'forget:remove symlinks (store kept)'
+    'update:pull the repo and apply newer configs'
+    'rollback:re-point symlinks at an older store version'
+    'status:per-config install state'
+    'diff:repo vs installed content'
+    'doctor:environment health check'
+    'list:flat config discovery table'
+    'ls:list (alias)'
+    'info:config details'
+    'profiles:list profiles and their configs'
+    'edit:open the repo file in $EDITOR'
+    'add:adopt a file into the repo'
+    'bump:bump a config semver and commit'
+    'cd:shell into the repo clone'
+    'gc:prune superseded store versions'
+    'purge:full uninstall'
+    'name:canonical task id'
+    'up:not implemented yet'
+    'task:not implemented yet'
+    'review:not implemented yet'
+    'web:not implemented yet'
+    'help:show usage'
+    'version:print the version'
+  )
+  _describe -t dot-verbs 'dot verb' verbs
+}
+
+_dot() {
+  local state line
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[show usage]' \
+    '(-V --version)'{-V,--version}'[print the version]' \
+    '1: :_dot_verbs' \
+    '*:: :->args'
+  case "$state" in
+    args)
+      # With -C and a `->` state on the 1: spec, _arguments already removed
+      # the command word: words[1] is the verb here.
+      local verb="${line[1]:-$words[1]}"
+      case "$verb" in
+        init)       _dot_init ;;
+        apply)      _dot_apply ;;
+        forget)     _dot_forget ;;
+        update)     _dot_update ;;
+        rollback)   _dot_rollback ;;
+        status)     _dot_status ;;
+        diff)       _dot_diff ;;
+        doctor)     _dot_doctor ;;
+        list|ls)    _dot_list ;;
+        info)       _dot_info ;;
+        profiles)   _dot_noargs ;;
+        edit)       _dot_edit ;;
+        add)        _dot_add ;;
+        bump)       _dot_bump ;;
+        cd)         _dot_noargs ;;
+        gc)         _dot_gc ;;
+        purge)      _dot_purge ;;
+        name)       _dot_name ;;
+        up|task|review|web|help|version) _dot_noargs ;;
+      esac ;;
+  esac
+}
+
+_dot "$@"

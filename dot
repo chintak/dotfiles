@@ -294,17 +294,21 @@ cmd_info() {
 }
 
 cmd_apply() {
-  local names=() profile="" flags=() a
-  _refresh_completion
+  local names=() profile="" flags=() a dry=0
   while (( $# )); do
     case "$1" in
       --profile) profile="$2"; shift 2 ;;
       --profile=*) profile="${1#*=}"; shift ;;
-      --dry-run|--force-post) flags+=("$1"); shift ;;
+      --dry-run) dry=1; flags+=("$1"); shift ;;
+      --force-post) flags+=("$1"); shift ;;
       -*) die "unknown flag: $1" ;;
       *) names+=("$1"); shift ;;
     esac
   done
+  # --dry-run promises to touch nothing; _refresh_completion copies the
+  # repo completion over the installed one, so run it only when the apply
+  # is real. (Side effects after flag parsing, never before.)
+  (( dry )) || _refresh_completion
   if [[ -n "$profile" ]]; then
     [[ -f "$PROFILES_DIR/$profile.conf" ]] || die "no such profile: $profile"
     local c; while IFS= read -r c; do names+=("$c"); done < <(profile_configs "$profile")

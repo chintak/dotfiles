@@ -15,4 +15,15 @@ Single shell config for macOS and Linux. Notable choices:
 - **alt+left/right word jumps**: zle binds Ghostty's CSI encodings
   (`\e[1;3C`/`\e[1;3D`) so the chords forwarded by Ghostty/herdr work at the
   prompt, not just inside Helix.
+- **`dot` completion hook**: the zshrc adds the `dot` completions dir to
+  `fpath` **before** `compinit` (fpath must be final when compinit scans it,
+  or `_dot` never autoloads). Preference order: dev checkout
+  (`~/git/dotfiles/completions`), the bootstrap clone
+  (`~/.local/share/dot/repo/completions`), then the bootstrap-installed copy
+  (`~/.local/share/dot/completions/_dot`).
+- **zcompdump rescan is deterministic, not doc-only**: the manifest's
+  `post_apply` removes `~/.zcompdump`, and the 1.3.0 → 1.4.0 version bump
+  changes `applyHash`, so the one-time rescan (picking up the new fpath
+  hook) happens exactly when this version lands. `dot apply --force-post`
+  re-runs it any time.
 - Machine-specific bits go in `~/.zshrc.local` (never committed).

@@ -20,6 +20,26 @@
       "alphaxiv": {
         "type": "remote",
         "url": "https://api.alphaxiv.org/mcp/v1"
+      },
+      // HuggingFace models/datasets/spaces search, model cards, HF daily
+      // papers. OAuth: sign in via /mcps on first use.
+      "huggingface": {
+        "type": "remote",
+        "url": "https://huggingface.co/mcp"
+      },
+      // GitHub repos/issues/PRs. OAuth via Copilot MCP: sign in via /mcps.
+      "github": {
+        "type": "remote",
+        "url": "https://api.githubcopilot.com/mcp/"
+      },
+      // Exa semantic web search for trend signals (blogs, launches, X
+      // threads). Needs EXA_API_KEY exported in the shell env.
+      "exa": {
+        "type": "local",
+        "command": ["npx", "-y", "exa-mcp-server"],
+        "environment": {
+          "EXA_API_KEY": "{env:EXA_API_KEY}"
+        }
       }
     }
   },

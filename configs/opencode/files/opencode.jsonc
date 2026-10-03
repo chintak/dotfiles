@@ -25,7 +25,7 @@
       // papers. OAuth: sign in via /mcps on first use.
       "huggingface": {
         "type": "remote",
-        "url": "https://mcp.huggingface.co/mcp"
+        "url": "https://huggingface.co/mcp"
       },
       // GitHub repos/issues/PRs. OAuth via Copilot MCP: sign in via /mcps.
       "github": {

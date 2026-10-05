@@ -22,8 +22,9 @@
         "url": "https://api.alphaxiv.org/mcp/v1"
       },
       // HuggingFace models/datasets/spaces search, model cards, HF daily
-      // papers. Authenticated via {env:HF_TOKEN} (exported in ~/.env from
-      // stored CLI credentials); oauth disabled — header auth avoids
+      // papers. Authenticated via {env:HF_TOKEN} — a literal in ~/.env,
+      // persisted for the daemon with `opencode service set env HF_TOKEN`,
+      // then restart the service. oauth disabled — header auth avoids
       // anonymous rate limits.
       "huggingface": {
         "type": "remote",
@@ -33,9 +34,10 @@
           "Authorization": "Bearer {env:HF_TOKEN}"
         }
       },
-      // GitHub repos/issues/PRs. Uses gh CLI credentials: GITHUB_TOKEN is
-      // exported in ~/.env as $(gh auth token); oauth disabled (Copilot MCP
-      // endpoint doesn't support OpenCode's OAuth flow).
+      // GitHub repos/issues/PRs. GITHUB_TOKEN is a literal in ~/.env,
+      // persisted for the daemon with `opencode service set env GITHUB_TOKEN`,
+      // then restart the service. oauth disabled (Copilot MCP endpoint
+      // doesn't support OpenCode's OAuth flow).
       "github": {
         "type": "remote",
         "url": "https://api.githubcopilot.com/mcp/",

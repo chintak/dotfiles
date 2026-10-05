@@ -799,10 +799,12 @@ mkdir -p ~/.config/localenvs
 echo 'export HF_TOKEN="hf_xxx"' > ~/.config/localenvs/huggingface.local
 ```
 
-All three are sourced from `~/.zshenv`, so **every** zsh — interactive, login,
-and non-interactive — exports them. Keep `~/.env` to literal values; never
-`$(...)`, which silently yields an empty token when the tool it calls is
-missing or not logged in.
+The two secret files — `~/.env` and `~/.config/localenvs/*.local` — are
+sourced from `~/.zshenv`, so **every** zsh (interactive, login, and
+non-interactive) exports them; `~/.zshrc.local` stays in `~/.zshrc` and
+remains interactive-only. Keep `~/.env` to literal values; never `$(...)`,
+which silently yields an empty token when the tool it calls is missing or not
+logged in.
 
 ### OpenCode: persist env for the daemon (agents, do this)
 

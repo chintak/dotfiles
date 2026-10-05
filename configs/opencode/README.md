@@ -26,14 +26,15 @@ owns and stays independent.
 shell. The service is usually started by launchd or the desktop app, so it
 only sees variables persisted *for it*:
 
-- Shell-level values live in `~/.env` (literal, no `$(...)`) and are sourced
-  from `~/.zshenv`.
-- Persist each into the daemon — this is what makes MCP auth work on a fresh
-  machine:
+- `~/.env` (sourced from `~/.zshenv`) holds **static** keys — `LANGFUSE_*`,
+  `OPENCODE_ENABLE_EXA`, `EXA_API_KEY`.
+- **CLI-derived tokens are pulled from their CLI**, never frozen into `~/.env`
+  (a frozen copy shadows `gh`/`hf`'s own credential and expires). Persist them
+  into the daemon — this is what makes MCP auth work on a fresh machine:
 
   ```bash
-  opencode service set env GITHUB_TOKEN "$GITHUB_TOKEN"
-  opencode service set env HF_TOKEN     "$HF_TOKEN"
+  opencode service set env GITHUB_TOKEN "$(gh auth token)"
+  opencode service set env HF_TOKEN     "$(cat ~/.cache/huggingface/token)"
   opencode service set env EXA_API_KEY  "$EXA_API_KEY"
   opencode service stop && opencode service start
   opencode api get /api/mcp        # expect all "connected"
@@ -44,6 +45,8 @@ only sees variables persisted *for it*:
 
 If a remote server reports `HTTP 400 Authorization header is badly formatted`,
 the daemon is sending an empty `Bearer ` — the credential never reached it.
+Rotate an expired token by re-running the relevant `service set env` line and
+restarting the service.
 
 **Deliberately not versioned:**
 - `plugins/` — `herdr-agent-state.js` is installed and overwritten by the

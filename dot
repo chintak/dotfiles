@@ -676,6 +676,11 @@ EOF
 # gc: prune superseded store versions of installed configs.
 # Stores of configs absent from the lockfile are kept — `dot forget` keeps
 # the store by design, and rollback of an uninstalled config stays possible.
+# Version dirs may carry a @<profile> suffix (per-profile variants, PR #40);
+# the lockfile record's .store path is the source of truth for "installed":
+# a dir it references is never pruned, whatever suffix it carries. A dir is
+# also kept when it is where apply would land for the host's resolved
+# profile (same version, suffix matching host_profile).
 cmd_gc() {
   local dry=0 a
   for a in "$@"; do
@@ -687,19 +692,35 @@ cmd_gc() {
   [[ -d "$DOT_STORE" ]] || die "no store at $DOT_STORE"
   [[ -f "$LOCKFILE" ]] || die "no lockfile at $LOCKFILE"
 
-  local pruned=0 kept=0 cfg cfg_dir installed vdir v
+  local pruned=0 cfg cfg_dir rec installed store resolved vdir v ver prof keep
+  resolved="$(host_profile)"
   for cfg_dir in "$DOT_STORE"/*/; do
     [[ -d "$cfg_dir" ]] || continue
     cfg="$(basename "$cfg_dir")"
-    installed="$(lock_get "$cfg" | jq -r '.version // empty' 2>/dev/null)"
-    if [[ -z "$installed" ]]; then
+    rec="$(lock_get "$cfg")"
+    if [[ -z "$rec" ]]; then
       warn "$cfg: not installed; keeping store ($(ls "$cfg_dir" | tr '\n' ' '))"
       continue
     fi
+    installed="$(printf '%s' "$rec" | jq -r '.version // empty' 2>/dev/null)"
+    store="$(printf '%s' "$rec" | jq -r '.store // empty' 2>/dev/null)"
     for vdir in "$cfg_dir"*/; do
       [[ -d "$vdir" ]] || continue
       v="$(basename "$vdir")"
-      if [[ "$v" == "$installed" ]]; then continue; fi
+      keep=0
+      [[ "${vdir%/}" == "$store" ]] && keep=1
+      if (( ! keep )); then
+        ver="$v"; prof=""
+        case "$v" in *@*) prof="${v##*@}"; ver="${v%@*}" ;; esac
+        if [[ "$ver" == "$installed" ]]; then
+          if [[ -n "$resolved" ]]; then
+            [[ "$prof" == "$resolved" ]] && keep=1
+          else
+            [[ -z "$prof" ]] && keep=1
+          fi
+        fi
+      fi
+      (( keep )) && continue
       if (( dry )); then
         printf '  would prune %s/%s\n' "$cfg" "$v"
       else

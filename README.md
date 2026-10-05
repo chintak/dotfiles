@@ -64,7 +64,7 @@ One command installs the `dot` CLI and sets up a machine. It needs only
 ```bash
 # whole machine in one shot (macOS profile)
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/chintak/dotfiles/master/bootstrap.sh)" \
-  -- init --profile mac
+  -- init --profile mac-personal
 
 # minimal headless server
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/chintak/dotfiles/master/bootstrap.sh)" \
@@ -127,7 +127,7 @@ A profile is a plain list of config names in `profiles/<name>.conf`. It is
 the answer to "don't install everything everywhere":
 
 ```
-# profiles/mac.conf          # profiles/server.conf
+# profiles/mac-personal.conf  # profiles/server.conf
 zsh                          zsh
 starship                     starship
 ghostty                      herdr
@@ -142,9 +142,12 @@ uv-tools
 opencode
 ```
 
-`dot init --profile mac` installs them in order, expanding each config's
+`dot init --profile mac-personal` installs them in order, expanding each config's
 `requires` first and skipping any whose `platform` doesn't match this host
-(so `brewfile` — macOS casks — never lands on a headless box).
+(so `brewfile` — macOS casks — never lands on a headless box). Three
+profiles ship: `mac-personal` (the full daily driver), `mac-work` (same
+twelve configs, but opencode installs its `file@mac-work` variant without
+MCP servers), and `server` (headless).
 
 There is deliberately **no `ios` profile**: the phone (Termius) doesn't run
 `dot`; it SSHes into a host that already has a profile. The glyph-free
@@ -160,7 +163,7 @@ dotfiles/
 ├── bootstrap.sh         # curl entrypoint
 ├── README.md
 ├── completions/_dot     # zsh tab-completion
-├── profiles/            # mac.conf, server.conf, …
+├── profiles/            # mac-personal.conf, mac-work.conf, server.conf, …
 └── configs/<tool>/      # one folder per config: README.md, manifest, files/
 ```
 
@@ -251,6 +254,7 @@ file        = config|~/.config/ghostty/config
 | `version` | yes | semver of this config |
 | `description` | yes | one line, shown by `dot list` / `dot info` |
 | `file` | yes (≥1, unless `post_apply`) | `src-rel-path\|target` — repeatable; `src` is relative to `files/` |
+| `file@<profile>` | no | per-profile variant of the file list: replaces the `file` entry with the same `src` (else the same target), or adds a profile-only file |
 | `requires` | no | comma-separated config names applied first |
 | `platform` | no | `mac` / `linux` / `any` (default `any`) |
 | `post_apply` | no | one command run after the config is (re)installed |
@@ -261,6 +265,27 @@ only hook: it exists so configs whose job is an *action* rather than a file
 `applyHash` — version + file contents + the `post_apply` string — changes,
 so adding a tool to `uv-tools.txt` re-runs it while re-applying an
 unchanged config does not.
+
+### Per-profile file variants (`file@<profile>`)
+
+Machines in the same profile family sometimes want different *content* for
+the same target — the `mac-work` box runs opencode without MCP servers.
+Manifests express this without a second config package:
+
+```
+file        = opencode.jsonc|~/.config/opencode/opencode.jsonc
+file@mac-work = opencode-work.jsonc|~/.config/opencode/opencode.jsonc
+```
+
+The host profile resolves as: `$DOT_PROFILE` env → the lockfile's top-level
+`profile` field (written by `dot init --profile P` and `dot apply --profile P`)
+→ unset (defaults only). With a profile active, each `file@<profile>` entry
+replaces the default `file` entry with the same `src` — or the same target —
+or appends a profile-only file; everything else applies identically.
+Variant applies store into `<config>/<version>@<profile>` in the store, so
+alternating profiles on one host never clobber each other's links, and
+`dot rollback` only offers versions of the active profile. `dot info` shows
+the resolved profile and which entries came from variants.
 
 **Why flat.** `configs/<tool>/` *is* the config; the atomic unit of `dot` is
 a config, so the directory mirrors that. A `configs/shell/starship/`

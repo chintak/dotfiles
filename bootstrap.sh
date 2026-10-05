@@ -2,7 +2,7 @@
 # bootstrap.sh — the single curl entrypoint for the dotfiles `dot` CLI.
 #
 #   sh -c "$(curl -fsSL https://raw.githubusercontent.com/chintak/dotfiles/master/bootstrap.sh)" \
-#     -- init --profile mac
+#     -- init --profile mac-personal
 #
 # It downloads `dot`, installs it on PATH, then forwards every argument to
 # it. Needs only bash, curl, git, and jq — bash is required by `dot` itself.

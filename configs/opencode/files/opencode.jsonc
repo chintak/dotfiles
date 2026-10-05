@@ -49,7 +49,8 @@
         }
       },
       // Exa semantic web search for trend signals (blogs, launches, X
-      // threads). Needs EXA_API_KEY exported in the shell env.
+      // threads). EXA_API_KEY is static in ~/.env and persisted for the daemon
+      // with `opencode service set env EXA_API_KEY`.
       "exa": {
         "type": "local",
         "command": ["npx", "-y", "exa-mcp-server"],

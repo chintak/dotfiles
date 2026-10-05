@@ -23,33 +23,30 @@ owns and stays independent.
 ## Environment & secrets
 
 `{env:NAME}` for MCP is resolved in the **background service**, not your
-shell. The service is usually started by launchd or the desktop app, so it
-only sees variables persisted *for it*:
+shell. The service is usually started by launchd or the desktop app, so every
+credential must be persisted *for it*:
 
-- `~/.env` (sourced from `~/.zshenv`) holds **static** keys — `LANGFUSE_*`,
-  `OPENCODE_ENABLE_EXA`, `EXA_API_KEY`.
-- **`github` uses a fine-grained PAT** (`GITHUB_PERSONAL_ACCESS_TOKEN`,
-  GitHub's documented remote pattern) persisted straight into the daemon — not
-  stored in `~/.env`. Never use `GITHUB_TOKEN`: the gh CLI `gho_` token is
-  unsupported, expires, and a left-over `GITHUB_TOKEN` is a documented 401 cause.
-- **HuggingFace/Exa** pull their token from source, never frozen into `~/.env`,
-  and persist it into the daemon:
+```bash
+opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN "<fine-grained PAT>"  # github MCP
+opencode service set env HF_TOKEN "$(cat ~/.cache/huggingface/token)"       # huggingface MCP
+opencode service set env EXA_API_KEY "$EXA_API_KEY"                         # exa MCP (static)
+opencode service stop && opencode service start
+opencode api get /api/mcp        # expect all "connected"
+```
 
-  ```bash
-  opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN "$GITHUB_PERSONAL_ACCESS_TOKEN"
-  opencode service set env HF_TOKEN     "$(cat ~/.cache/huggingface/token)"
-  opencode service set env EXA_API_KEY  "$EXA_API_KEY"
-  opencode service stop && opencode service start
-  opencode api get /api/mcp        # expect all "connected"
-  ```
-
+- **`github`**: a fine-grained PAT (`GITHUB_PERSONAL_ACCESS_TOKEN`). Not stored
+  in `~/.env`; never use `GITHUB_TOKEN` (gh CLI `gho_` token — unsupported,
+  expires, and a documented 401 cause).
+- **`HF_TOKEN`**: pulled from the hf CLI; never frozen into `~/.env` (a frozen
+  copy shadows the CLI's own credential).
+- **Static keys** in `~/.env` (sourced from `~/.zshenv`): `EXA_API_KEY`,
+  `LANGFUSE_*`, `OPENCODE_ENABLE_EXA`.
 - Persisted env lives in `~/.config/opencode/service.json` (`0600`); read with
   `opencode service get env NAME`, remove with `opencode service unset env NAME`.
 
 If a remote server reports `HTTP 400 Authorization header is badly formatted`,
 the daemon is sending an empty `Bearer ` — the credential never reached it.
-Rotate an expired token by re-running the relevant `service set env` line and
-restarting the service.
+Rotate by re-running the relevant `service set env` line and restarting.
 
 **Deliberately not versioned:**
 - `plugins/` — `herdr-agent-state.js` is installed and overwritten by the

@@ -796,7 +796,7 @@ Nothing secret is committed. Three escape hatches, all git-ignored:
 
 ```bash
 mkdir -p ~/.config/localenvs
-echo 'export HF_TOKEN="hf_xxx"' > ~/.config/localenvs/huggingface.local
+echo 'export MY_API_KEY="..."' > ~/.config/localenvs/myapp.local
 ```
 
 The two secret files — `~/.env` and `~/.config/localenvs/*.local` — are
@@ -824,7 +824,7 @@ For credentials OpenCode needs (MCP headers, plugin keys):
   daemon:
 
 ```bash
-opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN "$GITHUB_PERSONAL_ACCESS_TOKEN"
+opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN "<fine-grained PAT>"
 opencode service set env HF_TOKEN    "$(cat ~/.cache/huggingface/token)"
 opencode service set env EXA_API_KEY "$EXA_API_KEY"
 opencode service stop && opencode service start        # a set stops the service

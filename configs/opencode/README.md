@@ -6,7 +6,9 @@ owns and stays independent.
 
 - `files/opencode.jsonc` → `~/.config/opencode/opencode.jsonc` — agent
   settings: LSP + formatters on, `.worktrees/` worktree directory for the
-  `do` agent, and the Roblox Studio MCP server wired here (not into Pi).
+  `do` agent, and the MCP servers wired here (not into Pi): Roblox Studio
+  (local), alphaxiv/HuggingFace/GitHub (remote, OAuth via `/mcps`), and
+  Exa (local, needs `EXA_API_KEY` in the environment).
 - `files/tui.jsonc` → `~/.config/opencode/tui.jsonc` — loads the herdr
   TUI session plugin (`herdr-tui-session.js`), which the herdr opencode
   integration installs and keeps updated.

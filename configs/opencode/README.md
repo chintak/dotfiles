@@ -7,8 +7,9 @@ owns and stays independent.
 - `files/opencode.jsonc` → `~/.config/opencode/opencode.jsonc` — agent
   settings: LSP + formatters on, `.worktrees/` worktree directory for the
   `do` agent, and the MCP servers wired here (not into Pi): Roblox Studio
-  (local), alphaxiv/HuggingFace/GitHub (remote, OAuth via `/mcps`), and
-  Exa (local, needs `EXA_API_KEY` in the environment).
+  (local), alphaxiv (remote, OAuth via `/mcps`), HuggingFace and **github**
+  (remote, `oauth: false` + Bearer `{env:HF_TOKEN}` /
+  `{env:GITHUB_PERSONAL_ACCESS_TOKEN}`), and Exa (local, `{env:EXA_API_KEY}`). See **Environment & secrets** below.
 - `files/tui.jsonc` → `~/.config/opencode/tui.jsonc` — loads the herdr
   TUI session plugin (`herdr-tui-session.js`), which the herdr opencode
   integration installs and keeps updated.
@@ -18,6 +19,34 @@ owns and stays independent.
   (`ship/SKILL.md`). Edit in the repo and re-apply.
 - `files/AGENTS.md` → `~/.config/opencode/AGENTS.md` — one-line pointer so
   agents edit the repo + `dot apply opencode` instead of the live symlinks.
+
+## Environment & secrets
+
+`{env:NAME}` for MCP is resolved in the **background service**, not your
+shell. The service is usually started by launchd or the desktop app, so every
+credential must be persisted *for it*:
+
+```bash
+opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN "<fine-grained PAT>"  # github MCP
+opencode service set env HF_TOKEN "$(cat ~/.cache/huggingface/token)"       # huggingface MCP
+opencode service set env EXA_API_KEY "$EXA_API_KEY"                         # exa MCP (static)
+opencode service stop && opencode service start
+opencode api get /api/mcp        # expect all "connected"
+```
+
+- **`github`**: a fine-grained PAT (`GITHUB_PERSONAL_ACCESS_TOKEN`). Not stored
+  in `~/.env`; never use `GITHUB_TOKEN` (gh CLI `gho_` token — unsupported,
+  expires, and a documented 401 cause).
+- **`HF_TOKEN`**: pulled from the hf CLI; never frozen into `~/.env` (a frozen
+  copy shadows the CLI's own credential).
+- **Static keys** in `~/.env` (sourced from `~/.zshenv`): `EXA_API_KEY`,
+  `LANGFUSE_*`, `OPENCODE_ENABLE_EXA`.
+- Persisted env lives in `~/.config/opencode/service.json` (`0600`); read with
+  `opencode service get env NAME`, remove with `opencode service unset env NAME`.
+
+If a remote server reports `HTTP 400 Authorization header is badly formatted`,
+the daemon is sending an empty `Bearer ` — the credential never reached it.
+Rotate by re-running the relevant `service set env` line and restarting.
 
 **Deliberately not versioned:**
 - `plugins/` — `herdr-agent-state.js` is installed and overwritten by the

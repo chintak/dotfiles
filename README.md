@@ -796,8 +796,48 @@ Nothing secret is committed. Three escape hatches, all git-ignored:
 
 ```bash
 mkdir -p ~/.config/localenvs
-echo 'export HF_TOKEN="hf_xxx"' > ~/.config/localenvs/huggingface.local
+echo 'export MY_API_KEY="..."' > ~/.config/localenvs/myapp.local
 ```
+
+The two secret files — `~/.env` and `~/.config/localenvs/*.local` — are
+sourced from `~/.zshenv`, so **every** zsh (interactive, login, and
+non-interactive) exports them; `~/.zshrc.local` stays in `~/.zshrc` and
+remains interactive-only. Keep `~/.env` to literal values; never `$(...)`,
+which silently yields an empty token when the tool it calls is missing or not
+logged in.
+
+### OpenCode: persist env for the daemon (agents, do this)
+
+OpenCode's MCP servers and plugins run in the **background service**
+(`opencode serve --service`), which is typically started by launchd or the
+desktop app — not your shell — so it does **not** inherit shell-only exports.
+`{env:NAME}` in `opencode.jsonc` is resolved against that daemon.
+
+For credentials OpenCode needs (MCP headers, plugin keys):
+
+- **`github` uses a fine-grained PAT** (`GITHUB_PERSONAL_ACCESS_TOKEN`) —
+  GitHub's documented remote pattern. It is persisted for the daemon (below),
+  not stored in `~/.env`. Never use `GITHUB_TOKEN`: the gh CLI `gho_` token is
+  unsupported, expires, and a left-over `GITHUB_TOKEN` is a documented 401
+  cause.
+- **HuggingFace/Exa** pull their value from source. Persist everything for the
+  daemon:
+
+```bash
+opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN "<fine-grained PAT>"
+opencode service set env HF_TOKEN    "$(cat ~/.cache/huggingface/token)"
+opencode service set env EXA_API_KEY "$EXA_API_KEY"
+opencode service stop && opencode service start        # a set stops the service
+opencode api get /api/mcp                              # each server should read "connected"
+```
+
+`opencode service get env NAME` reads a value back; `opencode service unset env
+NAME` removes it. Persisted env lives in `~/.config/opencode/service.json`
+(`0600` runtime state) — manage it only through `opencode service ...`.
+
+A credential that exists only in the shell is the usual cause of a remote MCP
+failing with `HTTP 400 Authorization header is badly formatted` (an empty
+`Bearer `).
 
 ---
 

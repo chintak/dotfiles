@@ -22,9 +22,10 @@
         "url": "https://api.alphaxiv.org/mcp/v1"
       },
       // HuggingFace models/datasets/spaces search, model cards, HF daily
-      // papers. Authenticated via {env:HF_TOKEN} (exported in ~/.env from
-      // stored CLI credentials); oauth disabled — header auth avoids
-      // anonymous rate limits.
+      // papers. Authenticated via {env:HF_TOKEN}, persisted for the daemon from
+      // the hf CLI (`opencode service set env HF_TOKEN "$(cat
+      // ~/.cache/huggingface/token)"`), not from ~/.env. oauth disabled —
+      // header auth avoids anonymous rate limits.
       "huggingface": {
         "type": "remote",
         "url": "https://huggingface.co/mcp",
@@ -33,19 +34,23 @@
           "Authorization": "Bearer {env:HF_TOKEN}"
         }
       },
-      // GitHub repos/issues/PRs. Uses gh CLI credentials: GITHUB_TOKEN is
-      // exported in ~/.env as $(gh auth token); oauth disabled (Copilot MCP
-      // endpoint doesn't support OpenCode's OAuth flow).
+      // GitHub repos/issues/PRs. Personal access token (PAT) — GitHub's
+      // documented remote pattern (`oauth: false` + Authorization header).
+      // Use a fine-grained PAT in GITHUB_PERSONAL_ACCESS_TOKEN; persist it
+      // for the daemon with `opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN`.
+      // Do NOT use GITHUB_TOKEN (the gh CLI gho_ token): unsupported, expires,
+      // and a left-over GITHUB_TOKEN is a documented 401 cause.
       "github": {
         "type": "remote",
         "url": "https://api.githubcopilot.com/mcp/",
         "oauth": false,
         "headers": {
-          "Authorization": "Bearer {env:GITHUB_TOKEN}"
+          "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
         }
       },
       // Exa semantic web search for trend signals (blogs, launches, X
-      // threads). Needs EXA_API_KEY exported in the shell env.
+      // threads). EXA_API_KEY is static in ~/.env and persisted for the daemon
+      // with `opencode service set env EXA_API_KEY`.
       "exa": {
         "type": "local",
         "command": ["npx", "-y", "exa-mcp-server"],

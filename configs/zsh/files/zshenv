@@ -1,0 +1,11 @@
+# ~/.zshenv — managed by the dot CLI (config: zsh).
+# Sourced by EVERY zsh: interactive, login, and non-interactive shells.
+# Keep it cheap and side-effect free — it runs for every zsh invocation.
+. "$HOME/.cargo/env"
+
+# ── secrets / machine-local env (never committed) ──────────────────────
+# Kept in .zshenv (not .zshrc) so non-interactive processes — agent tools,
+# scripts, and daemons spawned from a shell — receive the same environment.
+[[ -r "$HOME/.env" ]] && source "$HOME/.env"
+for _f in "${XDG_CONFIG_HOME:-$HOME/.config}"/localenvs/*.local(N); do source "$_f"; done
+unset _f

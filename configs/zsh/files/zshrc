@@ -14,10 +14,8 @@ unset _brew
 # ── locale ─────────────────────────────────────────────────────────────
 export LANG=${LANG:-en_US.UTF-8} LC_ALL=${LC_ALL:-en_US.UTF-8}
 
-# ── secrets (never committed) ──────────────────────────────────────────
-[[ -r "$HOME/.env" ]] && source "$HOME/.env"
-for _f in "${XDG_CONFIG_HOME:-$HOME/.config}"/localenvs/*.local(N); do source "$_f"; done
-unset _f
+# secrets/env moved to ~/.zshenv (see files/zshenv) so
+# non-interactive shells inherit them too.
 
 # ── history ────────────────────────────────────────────────────────────
 HISTFILE=~/.zsh_history HISTSIZE=100000 SAVEHIST=100000

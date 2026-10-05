@@ -60,6 +60,45 @@ semver_ok() { printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; }
 mget()     { sed -n "s/^[[:space:]]*$2[[:space:]]*=[[:space:]]*//p" "$1" | head -1; }
 mget_all() { sed -n "s/^[[:space:]]*$2[[:space:]]*=[[:space:]]*//p" "$1"; }
 
+# manifest_files <manifest> [profile] — resolved `src|dst` file entries.
+# Plain `file =` lines are the defaults; when a profile is given, each
+# `file@<P> =` line for it replaces the default with the same src (else the
+# same dst), or appends a profile-only file. Without a profile (or when the
+# manifest has no variants for it) the defaults pass through unchanged.
+manifest_files() {
+  local mf="$1" prof="${2:-}"
+  local defaults=() dsrc=() ddst=() line src dst
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    src="${line%%|*}"; dst="${line#*|}"
+    defaults+=("$line"); dsrc+=("$src"); ddst+=("$dst")
+  done < <(mget_all "$mf" file)
+  if [[ -z "$prof" ]] || ! mget_all "$mf" "file@$prof" | grep -q .; then
+    (( ${#defaults[@]} )) && printf '%s\n' "${defaults[@]}"
+    return 0
+  fi
+  local v vsrc vdst i hit
+  while IFS= read -r v; do
+    [[ -z "$v" ]] && continue
+    vsrc="${v%%|*}"; vdst="${v#*|}"
+    hit=-1
+    for (( i = 0; i < ${#dsrc[@]}; i++ )); do
+      [[ "${dsrc[$i]}" == "$vsrc" ]] && { hit=$i; break; }
+    done
+    if (( hit < 0 )); then
+      for (( i = 0; i < ${#ddst[@]}; i++ )); do
+        [[ "${ddst[$i]}" == "$vdst" ]] && { hit=$i; break; }
+      done
+    fi
+    if (( hit >= 0 )); then
+      defaults[$hit]="$v"; dsrc[$hit]="$vsrc"; ddst[$hit]="$vdst"
+    else
+      defaults+=("$v"); dsrc+=("$vsrc"); ddst+=("$vdst")
+    fi
+  done < <(mget_all "$mf" "file@$prof")
+  (( ${#defaults[@]} )) && printf '%s\n' "${defaults[@]}"
+}
+
 config_dir()    { printf '%s/%s' "$CONFIGS_DIR" "$1"; }
 all_configs()   { ( cd "$CONFIGS_DIR" 2>/dev/null && for d in */; do [[ -f "$d/manifest" ]] && printf '%s\n' "${d%/}"; done ) | sort; }
 profile_configs() {
@@ -76,6 +115,20 @@ lock_get()  { lock_read | jq -c --arg n "$1" '.configs[$n] // empty' 2>/dev/null
 lock_set()  { lock_init; local tmp; tmp="$(mktemp)"; lock_read | jq --arg n "$1" --argjson v "$2" '.configs[$n]=$v' > "$tmp" && mv "$tmp" "$LOCKFILE"; }
 lock_del()  { lock_init; local tmp; tmp="$(mktemp)"; lock_read | jq --arg n "$1" 'del(.configs[$n])' > "$tmp" && mv "$tmp" "$LOCKFILE"; }
 lock_names() { lock_read | jq -r '.configs | keys[]' 2>/dev/null; }
+lock_set_profile() { # <profile> — set the lockfile's top-level "profile"
+  lock_init; local tmp; tmp="$(mktemp)"
+  lock_read | jq --arg p "$1" '.profile=$p' > "$tmp" && mv "$tmp" "$LOCKFILE"
+}
+
+# host_profile — the profile manifest resolution uses on this machine:
+# $DOT_PROFILE env wins, else the lockfile's top-level "profile" field
+# (set by `dot init --profile P` / `dot apply --profile P`), else empty
+# (defaults only). Read-only: never creates the lockfile.
+host_profile() {
+  if [[ -n "${DOT_PROFILE:-}" ]]; then printf '%s' "$DOT_PROFILE"; return; fi
+  [[ -f "$LOCKFILE" ]] || return 0
+  jq -r '.profile // empty' "$LOCKFILE" 2>/dev/null
+}
 
 need() { command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"; }
 
@@ -115,16 +168,21 @@ apply_config() {
     [[ -n "$(lock_get "$req")" ]] || { log "$name requires $req"; apply_config "$req" "$@"; }
   done
 
+  local prof; prof="$(host_profile)"
   local files=() entry
-  while IFS= read -r entry; do [[ -n "$entry" ]] && files+=("$entry"); done < <(mget_all "$mf" file)
+  while IFS= read -r entry; do [[ -n "$entry" ]] && files+=("$entry"); done < <(manifest_files "$mf" "$prof")
   [[ ${#files[@]} -gt 0 || -n "$post" ]] || die "$name: manifest declares neither file nor post_apply"
 
+  # A profile variant must not clobber the defaults' store dir (or its
+  # symlinks) when profiles alternate on one host — suffixed dir instead.
   local mode="${DOT_MODE:-symlink}"
-  local stage store_dir=""
+  local stage store_dir="" variant_store=0
+  if [[ -n "$prof" ]] && mget_all "$mf" "file@$prof" | grep -q .; then variant_store=1; fi
   if [[ "$mode" == copy ]]; then
     stage="$(mktemp -d)"
   else
     store_dir="$DOT_STORE/$name/$ver"
+    (( variant_store )) && store_dir="$DOT_STORE/$name/$ver@$prof"
     stage="$store_dir"
   fi
   if (( dry )); then
@@ -139,6 +197,15 @@ apply_config() {
     if [[ -d "$dir/files/$src" ]]; then
       mkdir -p "$stage/$src"; cp -R "$dir/files/$src/." "$stage/$src/"
     else
+      if [[ ! -f "$dir/files/$src" && -n "$prof" ]]; then
+        # was this src contributed by a file@<profile> variant?
+        local d is_default=0
+        while IFS= read -r d; do
+          [[ -z "$d" ]] && continue
+          [[ "${d%%|*}" == "$src" ]] && is_default=1
+        done < <(mget_all "$mf" file)
+        [[ "$is_default" == 0 ]] && die "$name: missing files/$src (from file@$prof)"
+      fi
       [[ -f "$dir/files/$src" ]] || die "$name: missing files/$src"
       mkdir -p "$stage/$(dirname "$src")"; cp "$dir/files/$src" "$stage/$src"
     fi
@@ -284,12 +351,24 @@ cmd_info() {
   printf '%s%s%s  %s\n' "$B" "$n" "$R" "$(mget "$mf" description)"
   printf '  version   %s\n  platform  %s\n  state     %s\n' \
     "$(mget "$mf" version)" "$(mget "$mf" platform)" "$(config_state "$n")"
+  local prof; prof="$(host_profile)"
+  [[ -n "$prof" ]] && printf '  profile   %s\n' "$prof"
   local r; r="$(mget "$mf" requires)"; [[ -n "$r" ]] && printf '  requires  %s\n' "$r"
   local p; p="$(mget "$mf" post_apply)"; [[ -n "$p" ]] && printf '  post_apply  %s\n' "$p"
   printf '  files:\n'
-  local entry; while IFS= read -r entry; do
-    [[ -n "$entry" ]] && printf '    %-28s -> %s\n' "${entry%%|*}" "${entry#*|}"
-  done < <(mget_all "$mf" file)
+  local entry mark src
+  local vsrcs; vsrcs="$(mget_all "$mf" "file@$prof" | sed 's/|.*//' 2>/dev/null)"
+  while IFS= read -r entry; do
+    [[ -n "$entry" ]] || continue
+    src="${entry%%|*}"; mark=""
+    if [[ -n "$vsrcs" ]]; then
+      local vs
+      while IFS= read -r vs; do
+        [[ "$vs" == "$src" ]] && mark="  [file@$prof]"
+      done <<< "$vsrcs"
+    fi
+    printf '    %-28s -> %s%s\n' "$src" "${entry#*|}" "$mark"
+  done < <(manifest_files "$mf" "$prof")
   printf '  path      %s\n' "$dir"
 }
 
@@ -311,6 +390,10 @@ cmd_apply() {
   (( dry )) || _refresh_completion
   if [[ -n "$profile" ]]; then
     [[ -f "$PROFILES_DIR/$profile.conf" ]] || die "no such profile: $profile"
+    # Self-recording: a whole-profile apply pins the host profile (so the
+    # next bare `dot apply` keeps resolving variants). --dry-run touches
+    # nothing, matching the _refresh_completion contract above.
+    (( dry )) || lock_set_profile "$profile"
     local c; while IFS= read -r c; do names+=("$c"); done < <(profile_configs "$profile")
   fi
   [[ ${#names[@]} -gt 0 ]] || { while IFS= read -r c; do names+=("$c"); done < <(all_configs); }
@@ -380,7 +463,7 @@ cmd_diff() {
     else
       diff -u "$store/$src" "$dir/files/$src" || rc=1
     fi
-  done < <(mget_all "$dir/manifest" file)
+  done < <(manifest_files "$dir/manifest" "$(host_profile)")
   (( rc )) || log "in sync"
 }
 
@@ -389,7 +472,7 @@ cmd_edit() {
   local n="$1" dir; dir="$(config_dir "$n")"
   [[ -d "$dir" ]] || die "unknown config: $n"
   local ed="${EDITOR:-vi}"
-  local first; first="$(mget_all "$dir/manifest" file | head -1)"
+  local first; first="$(manifest_files "$dir/manifest" "$(host_profile)" | head -1)"
   if [[ -n "$first" ]]; then exec "$ed" "$dir/files/${first%%|*}"; else exec "$ed" "$dir"; fi
 }
 
@@ -508,21 +591,33 @@ cmd_rollback() {
   [[ $# -ge 1 ]] || die "usage: dot rollback <config> [version]"
   local n="$1" want="${2:-}" rec store root cur versions target
   rec="$(lock_get "$n")"; [[ -n "$rec" ]] || die "$n: not installed"
+  # The active profile's store dir is version-suffixed (`1.6.0@mac-work`);
+  # restrict candidates to that profile so rollback never re-points at a
+  # dir holding another profile's file set.
+  local prof; prof="$(host_profile)"
+  local suffix=""
+  if [[ -n "$prof" ]] && mget_all "$(config_dir "$n")/manifest" "file@$prof" | grep -q .; then
+    suffix="@$prof"
+  fi
   root="$DOT_STORE/$n"
   [[ -d "$root" ]] || die "$n: no store versions"
   if [[ -z "$want" ]]; then
-    versions="$(ls -1 "$root" 2>/dev/null | sort -Vr)"
+    if [[ -n "$suffix" ]]; then
+      versions="$(ls -1 "$root" 2>/dev/null | grep -- "@$prof\$" | sed "s/@$prof\$//" | sort -Vr)"
+    else
+      versions="$(ls -1 "$root" 2>/dev/null | grep -v '@' | sort -Vr)"
+    fi
     cur="$(printf '%s' "$rec" | jq -r '.version')"
     want="$(printf '%s\n' "$versions" | grep -vx "$cur" | head -1)"
     [[ -n "$want" ]] || die "$n: no other version to roll back to"
   fi
-  target="$root/$want"
+  target="$root/$want$suffix"
   [[ -d "$target" ]] || die "$n: version $want not in store"
   local entry t
   while IFS= read -r entry; do
     [[ -n "$entry" ]] || continue
     t="$(expand "${entry#*|}")"; ln -sfn "$target/${entry%%|*}" "$t"; log "$t -> $target/${entry%%|*}"
-  done < <(mget_all "$(config_dir "$n")/manifest" file)
+  done < <(manifest_files "$(config_dir "$n")/manifest" "$prof")
   local h; h="$(hash_dir "$target")"
   lock_set "$n" "$(printf '%s' "$rec" | jq --arg v "$want" --arg s "$target" --arg h "$h" \
     '.version=$v | .store=$s | .hash=$h')"
@@ -669,6 +764,9 @@ cmd_init() {
 
   [[ -n "$profile" ]] || die "dot init requires --profile <name>"
   [[ -f "$PROFILES_DIR/$profile.conf" ]] || die "no such profile: $profile"
+  # Record the host profile before the first apply, so file@<profile>
+  # manifest variants resolve on the very first pass.
+  lock_set_profile "$profile"
   log "applying profile: $profile"
   local names=() c
   while IFS= read -r c; do names+=("$c"); done < <(profile_configs "$profile")
@@ -755,7 +853,7 @@ Runtime:
   dot name <type> <word>…         canonical task id
   dot up | task | review | web
 
-Env: DOT_REPO DOT_STORE DOT_STATE DOT_BIN_DIR DOT_REPO_URL DOT_REF
+Env: DOT_REPO DOT_STORE DOT_STATE DOT_BIN_DIR DOT_REPO_URL DOT_REF DOT_PROFILE
 EOF
 }
 

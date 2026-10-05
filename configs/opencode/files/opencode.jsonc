@@ -34,17 +34,13 @@
           "Authorization": "Bearer {env:HF_TOKEN}"
         }
       },
-      // GitHub repos/issues/PRs. Authenticated via {env:GITHUB_TOKEN}, persisted
-      // for the daemon from the gh CLI (`opencode service set env
-      // GITHUB_TOKEN "$(gh auth token)"`), not from ~/.env. oauth disabled
-      // (Copilot MCP endpoint doesn't support OpenCode's OAuth flow).
+      // GitHub repos/issues/PRs. OAuth — GitHub's recommended remote pattern
+      // (no token to manage; OpenCode refreshes it). Sign in once via `/mcps`.
+      // See github.com/github/github-mcp-server install-opencode. Do NOT feed
+      // this a GITHUB_TOKEN: a left-over env var breaks the OAuth flow (401).
       "github": {
         "type": "remote",
-        "url": "https://api.githubcopilot.com/mcp/",
-        "oauth": false,
-        "headers": {
-          "Authorization": "Bearer {env:GITHUB_TOKEN}"
-        }
+        "url": "https://api.githubcopilot.com/mcp/"
       },
       // Exa semantic web search for trend signals (blogs, launches, X
       // threads). Needs EXA_API_KEY exported in the shell env.

@@ -347,7 +347,9 @@ something:
 | **patch** | Comments, formatting, typo |
 
 `dot update` pulls with `git pull --rebase --autostash` (opt out with
-`--no-pull`) and re-links configs whose repo version is newer. To adopt an
+`--no-pull`) and re-links configs whose repo version is newer. It also
+refreshes the installed CLI binary (`$DOT_BIN_DIR/dot`, when present) and the
+zsh completion from the repo copy. To adopt an
 existing hand-edited file, `dot add <path>` copies it into the repo, creates
 or patches a manifest, and replaces the target with a symlink into the
 store.
@@ -364,7 +366,7 @@ chezmoi lacks.
 | `dot init [--profile P] [--repo URL] [--ref R] [--ephemeral]` | Clone repo, then apply |
 | `dot apply [<config>…] [--profile P] [--dry-run] [--lock]` | Install / reinstall |
 | `dot forget <config>…` | Remove symlinks + lockfile entries (store kept) |
-| `dot update [<config>…] [--no-pull] [--dry-run]` | Pull, then apply newer versions |
+| `dot update [<config>…] [--no-pull] [--dry-run]` | Pull, refresh CLI binary + zsh completion, then apply newer versions |
 | `dot rollback <config> [version]` | Re-point symlinks at an older store version |
 | `dot gc [--dry-run]` | Prune superseded store versions (stores of uninstalled configs are kept) |
 | `dot purge [--yes]` | Delete repo, store, lockfile, and the CLI |

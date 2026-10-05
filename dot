@@ -144,6 +144,23 @@ _refresh_completion() {
   mkdir -p "${dst%/*}" && cp "$src" "$dst" || warn "could not refresh zsh completion ($dst)"
 }
 
+# refresh_cli_binary — keep the installed CLI binary in sync with the repo
+# copy after a pull. Refreshes only when the binary is already installed
+# (bootstrap's job to install it; dot update must never conjure a phantom
+# one, so gc/purge semantics stay intact). Atomic: temp file + mv, so a
+# running dot process (bash reads scripts incrementally) can't be corrupted.
+refresh_cli_binary() {
+  local src="$REPO/dot" dst="$DOT_BIN_DIR/dot"
+  [[ -f "$src" ]] || return 0
+  [[ -f "$dst" ]] || return 0   # not installed — bootstrap's job, never create here
+  cmp -s "$src" "$dst" 2>/dev/null && return 0
+  mkdir -p "${dst%/*}"
+  local tmp; tmp="$(mktemp "${dst%/*}/.dot.XXXXXX")"
+  cp "$src" "$tmp" && chmod 755 "$tmp" && mv -f "$tmp" "$dst" \
+    || { warn "could not refresh dot CLI ($dst)"; rm -f "$tmp"; return 1; }
+  log "dot CLI refreshed ($dst)"
+}
+
 # ── apply ──────────────────────────────────────────────────────────────
 # apply_config <name> [--dry-run] [--force-post]
 apply_config() {
@@ -567,6 +584,7 @@ cmd_update() {
       warn "not a git clone; skipping pull"
     fi
   fi
+  refresh_cli_binary
   _refresh_completion
   local installed=(); local n
   if [[ ${#names[@]} -gt 0 ]]; then installed=("${names[@]}")

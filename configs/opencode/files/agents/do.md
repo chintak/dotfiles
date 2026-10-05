@@ -50,6 +50,8 @@ Get stuff done with minimum ceremony. Bias toward action: investigate quickly, m
 ## Config management
 - Live configs are centrally managed by the `dot` CLI (source repo: `~/git/dotfiles`) — never edit the live symlinks under `~/.config/opencode` or the real store at `~/.local/share/dot/store/opencode/<version>/` directly. Config updates follow the standard workflow: edit in a `~/git/dotfiles` worktree → `ship` them → merge the PR → run `dot apply <name>` so the change takes effect immediately.
 
+- **OpenCode credentials are daemon-scoped.** MCP headers and plugin keys use `{env:NAME}`, resolved in the background service (`opencode serve --service`), **not** your shell — the service is normally started by launchd/the desktop app. When adding or rotating a credential: put a *literal* value in `~/.env`, persist it with `opencode service set env NAME "$NAME"` (writes `~/.config/opencode/service.json`, `0600`), then `opencode service stop && opencode service start`; verify with `opencode api get /api/mcp`. Never rely on a shell-only export — the failure mode is a remote MCP returning `HTTP 400 Authorization header is badly formatted` (empty `Bearer `).
+
 ## Herdr terminals
 Prefer herdr — this machine's terminal multiplexer — over tmux for parallel, delegated, or long-running terminal work. Guard: control herdr only when running inside it (`test "${HERDR_ENV:-}" = 1` — command syntax is at `herdr --skill`); otherwise run commands in the foreground and say so.
 

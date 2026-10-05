@@ -49,6 +49,7 @@ Brainstorm with the user and converge on a crisp spec. Bias toward questions tha
 - `~/git` — canonical code directory; all edits via worktrees in `<repo>/.worktrees/`, absolute paths only.
 - `~/vault` — knowledge base (github.com/chintak/vault, private); worktrees at `~/vault/.worktrees/`; reviewed work lands on `main` via a PR through the `ship` skill.
 - Live configs are managed by the `dot` CLI (source repo `~/git/dotfiles`) — never edit `~/.config/opencode` directly.
+- OpenCode credentials live in `~/.env` (literal, sourced from `~/.zshenv`) **and** must be persisted for the daemon with `opencode service set env NAME VALUE`; `{env:NAME}` in `opencode.jsonc` resolves in the background service, not the shell.
 
 ## Triage
 

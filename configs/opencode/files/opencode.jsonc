@@ -27,10 +27,16 @@
         "type": "remote",
         "url": "https://huggingface.co/mcp"
       },
-      // GitHub repos/issues/PRs. OAuth via Copilot MCP: sign in via /mcps.
+      // GitHub repos/issues/PRs. Uses gh CLI credentials: GITHUB_TOKEN is
+      // exported in ~/.env as $(gh auth token); oauth disabled (Copilot MCP
+      // endpoint doesn't support OpenCode's OAuth flow).
       "github": {
         "type": "remote",
-        "url": "https://api.githubcopilot.com/mcp/"
+        "url": "https://api.githubcopilot.com/mcp/",
+        "oauth": false,
+        "headers": {
+          "Authorization": "Bearer {env:GITHUB_TOKEN}"
+        }
       },
       // Exa semantic web search for trend signals (blogs, launches, X
       // threads). Needs EXA_API_KEY exported in the shell env.

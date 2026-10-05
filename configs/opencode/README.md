@@ -7,9 +7,9 @@ owns and stays independent.
 - `files/opencode.jsonc` → `~/.config/opencode/opencode.jsonc` — agent
   settings: LSP + formatters on, `.worktrees/` worktree directory for the
   `do` agent, and the MCP servers wired here (not into Pi): Roblox Studio
-  (local), alphaxiv (remote, OAuth via `/mcps`), HuggingFace and GitHub
-  (remote, `oauth: false` + Bearer `{env:HF_TOKEN}` / `{env:GITHUB_TOKEN}`),
-  and Exa (local, `{env:EXA_API_KEY}`). See **Environment & secrets** below.
+  (local), alphaxiv and **github** (remote, OAuth via `/mcps`), HuggingFace
+  (remote, `oauth: false` + Bearer `{env:HF_TOKEN}`), and Exa (local,
+  `{env:EXA_API_KEY}`). See **Environment & secrets** below.
 - `files/tui.jsonc` → `~/.config/opencode/tui.jsonc` — loads the herdr
   TUI session plugin (`herdr-tui-session.js`), which the herdr opencode
   integration installs and keeps updated.
@@ -28,12 +28,13 @@ only sees variables persisted *for it*:
 
 - `~/.env` (sourced from `~/.zshenv`) holds **static** keys — `LANGFUSE_*`,
   `OPENCODE_ENABLE_EXA`, `EXA_API_KEY`.
-- **CLI-derived tokens are pulled from their CLI**, never frozen into `~/.env`
-  (a frozen copy shadows `gh`/`hf`'s own credential and expires). Persist them
-  into the daemon — this is what makes MCP auth work on a fresh machine:
+- **`github` uses OAuth** (GitHub's recommended remote pattern): sign in once
+  via `/mcps`; nothing to store. A left-over `GITHUB_TOKEN` env var breaks the
+  flow with a 401 — keep it unset.
+- **Header-auth servers** (HuggingFace, Exa) pull their token from source,
+  never frozen into `~/.env`, and persist it into the daemon:
 
   ```bash
-  opencode service set env GITHUB_TOKEN "$(gh auth token)"
   opencode service set env HF_TOKEN     "$(cat ~/.cache/huggingface/token)"
   opencode service set env EXA_API_KEY  "$EXA_API_KEY"
   opencode service stop && opencode service start

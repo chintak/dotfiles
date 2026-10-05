@@ -815,21 +815,20 @@ desktop app — not your shell — so it does **not** inherit shell-only exports
 
 For credentials OpenCode needs (MCP headers, plugin keys):
 
-- **`github` uses OAuth** — no token. Sign in once via `/mcps` (or
-  `opencode mcp auth github`); OpenCode stores and refreshes it.
-- **Header-auth servers** (HuggingFace, Exa) pull their value from source and
-  persist it for the daemon:
+- **`github` uses a fine-grained PAT** in `GITHUB_PERSONAL_ACCESS_TOKEN`
+  (`~/.env`) — GitHub's documented remote pattern. Never use `GITHUB_TOKEN`:
+  the gh CLI `gho_` token is unsupported, expires, and a left-over
+  `GITHUB_TOKEN` is a documented 401 cause.
+- **HuggingFace/Exa** pull their value from source. Persist everything for the
+  daemon:
 
 ```bash
+opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN "$GITHUB_PERSONAL_ACCESS_TOKEN"
 opencode service set env HF_TOKEN    "$(cat ~/.cache/huggingface/token)"
-opencode service set env EXA_API_KEY "$EXA_API_KEY"   # also in ~/.env
+opencode service set env EXA_API_KEY "$EXA_API_KEY"
 opencode service stop && opencode service start        # a set stops the service
 opencode api get /api/mcp                              # each server should read "connected"
 ```
-
-Never export `GITHUB_TOKEN` from `~/.env` or the shell: a left-over
-`GITHUB_TOKEN` is a documented cause of GitHub-MCP 401s (and it shadows `gh`'s
-own auth). `~/.env` holds only static keys.
 
 `opencode service get env NAME` reads a value back; `opencode service unset env
 NAME` removes it. Persisted env lives in `~/.config/opencode/service.json`

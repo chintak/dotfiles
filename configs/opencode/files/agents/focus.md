@@ -49,7 +49,7 @@ Brainstorm with the user and converge on a crisp spec. Bias toward questions tha
 - `~/git` — canonical code directory; all edits via worktrees in `<repo>/.worktrees/`, absolute paths only.
 - `~/vault` — knowledge base (github.com/chintak/vault, private); worktrees at `~/vault/.worktrees/`; reviewed work lands on `main` via a PR through the `ship` skill.
 - Live configs are managed by the `dot` CLI (source repo `~/git/dotfiles`) — never edit `~/.config/opencode` directly.
-- OpenCode credentials: `github` uses OAuth (sign in via `/mcps`); header-auth servers keep static keys in `~/.env` (sourced from `~/.zshenv`) and persist tokens for the daemon *from source*; `{env:NAME}` in `opencode.jsonc` resolves in the background service, not the shell. Never export `GITHUB_TOKEN`.
+- OpenCode credentials: `GITHUB_PERSONAL_ACCESS_TOKEN` (fine-grained PAT) and static keys live in `~/.env` (sourced from `~/.zshenv`); `HF_TOKEN` is pulled from source; persist each for the daemon with `opencode service set env NAME VALUE`; `{env:NAME}` in `opencode.jsonc` resolves in the background service, not the shell. Never export `GITHUB_TOKEN`.
 
 ## Triage
 

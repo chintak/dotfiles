@@ -7,9 +7,9 @@ owns and stays independent.
 - `files/opencode.jsonc` → `~/.config/opencode/opencode.jsonc` — agent
   settings: LSP + formatters on, `.worktrees/` worktree directory for the
   `do` agent, and the MCP servers wired here (not into Pi): Roblox Studio
-  (local), alphaxiv and **github** (remote, OAuth via `/mcps`), HuggingFace
-  (remote, `oauth: false` + Bearer `{env:HF_TOKEN}`), and Exa (local,
-  `{env:EXA_API_KEY}`). See **Environment & secrets** below.
+  (local), alphaxiv (remote, OAuth via `/mcps`), HuggingFace and **github**
+  (remote, `oauth: false` + Bearer `{env:HF_TOKEN}` /
+  `{env:GITHUB_PERSONAL_ACCESS_TOKEN}`), and Exa (local, `{env:EXA_API_KEY}`). See **Environment & secrets** below.
 - `files/tui.jsonc` → `~/.config/opencode/tui.jsonc` — loads the herdr
   TUI session plugin (`herdr-tui-session.js`), which the herdr opencode
   integration installs and keeps updated.
@@ -28,13 +28,15 @@ only sees variables persisted *for it*:
 
 - `~/.env` (sourced from `~/.zshenv`) holds **static** keys — `LANGFUSE_*`,
   `OPENCODE_ENABLE_EXA`, `EXA_API_KEY`.
-- **`github` uses OAuth** (GitHub's recommended remote pattern): sign in once
-  via `/mcps`; nothing to store. A left-over `GITHUB_TOKEN` env var breaks the
-  flow with a 401 — keep it unset.
-- **Header-auth servers** (HuggingFace, Exa) pull their token from source,
-  never frozen into `~/.env`, and persist it into the daemon:
+- **`github` uses a fine-grained PAT** (`GITHUB_PERSONAL_ACCESS_TOKEN` in
+  `~/.env`; GitHub's documented remote pattern). Never use `GITHUB_TOKEN` —
+  the gh CLI `gho_` token is unsupported, expires, and a left-over
+  `GITHUB_TOKEN` is a documented 401 cause.
+- **HuggingFace/Exa** pull their token from source, never frozen into `~/.env`,
+  and persist it into the daemon:
 
   ```bash
+  opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN "$GITHUB_PERSONAL_ACCESS_TOKEN"
   opencode service set env HF_TOKEN     "$(cat ~/.cache/huggingface/token)"
   opencode service set env EXA_API_KEY  "$EXA_API_KEY"
   opencode service stop && opencode service start

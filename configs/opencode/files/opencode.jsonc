@@ -34,13 +34,19 @@
           "Authorization": "Bearer {env:HF_TOKEN}"
         }
       },
-      // GitHub repos/issues/PRs. OAuth — GitHub's recommended remote pattern
-      // (no token to manage; OpenCode refreshes it). Sign in once via `/mcps`.
-      // See github.com/github/github-mcp-server install-opencode. Do NOT feed
-      // this a GITHUB_TOKEN: a left-over env var breaks the OAuth flow (401).
+      // GitHub repos/issues/PRs. Personal access token (PAT) — GitHub's
+      // documented remote pattern (`oauth: false` + Authorization header).
+      // Use a fine-grained PAT in GITHUB_PERSONAL_ACCESS_TOKEN; persist it
+      // for the daemon with `opencode service set env GITHUB_PERSONAL_ACCESS_TOKEN`.
+      // Do NOT use GITHUB_TOKEN (the gh CLI gho_ token): unsupported, expires,
+      // and a left-over GITHUB_TOKEN is a documented 401 cause.
       "github": {
         "type": "remote",
-        "url": "https://api.githubcopilot.com/mcp/"
+        "url": "https://api.githubcopilot.com/mcp/",
+        "oauth": false,
+        "headers": {
+          "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+        }
       },
       // Exa semantic web search for trend signals (blogs, launches, X
       // threads). Needs EXA_API_KEY exported in the shell env.

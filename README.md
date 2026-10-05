@@ -799,6 +799,43 @@ mkdir -p ~/.config/localenvs
 echo 'export HF_TOKEN="hf_xxx"' > ~/.config/localenvs/huggingface.local
 ```
 
+All three are sourced from `~/.zshenv`, so **every** zsh — interactive, login,
+and non-interactive — exports them. Keep `~/.env` to literal values; never
+`$(...)`, which silently yields an empty token when the tool it calls is
+missing or not logged in.
+
+### OpenCode: persist env for the daemon (agents, do this)
+
+OpenCode's MCP servers and plugins run in the **background service**
+(`opencode serve --service`), which is typically started by launchd or the
+desktop app — not your shell — so it does **not** inherit shell-only exports.
+`{env:NAME}` in `opencode.jsonc` is resolved against that daemon.
+
+For every credential OpenCode needs (MCP headers, plugin keys):
+
+1. Put it in `~/.env` as a literal, e.g. `export GITHUB_TOKEN="gho_xxx"`.
+2. Persist it into the daemon environment — the value comes from `~/.env`,
+   already exported by `~/.zshenv`:
+   ```bash
+   opencode service set env GITHUB_TOKEN "$GITHUB_TOKEN"
+   ```
+3. Apply it — a set **stops** the service:
+   ```bash
+   opencode service stop && opencode service start
+   ```
+4. Verify:
+   ```bash
+   opencode api get /api/mcp        # each server should read "connected"
+   ```
+
+`opencode service get env NAME` reads a value back; `opencode service unset env
+NAME` removes it. Persisted env lives in `~/.config/opencode/service.json`
+(`0600` runtime state) — manage it only through `opencode service ...`.
+
+A credential that exists only in the shell is the usual cause of a remote MCP
+failing with `HTTP 400 Authorization header is badly formatted` (an empty
+`Bearer `).
+
 ---
 
 ## Gotchas

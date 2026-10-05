@@ -815,10 +815,11 @@ desktop app — not your shell — so it does **not** inherit shell-only exports
 
 For credentials OpenCode needs (MCP headers, plugin keys):
 
-- **`github` uses a fine-grained PAT** in `GITHUB_PERSONAL_ACCESS_TOKEN`
-  (`~/.env`) — GitHub's documented remote pattern. Never use `GITHUB_TOKEN`:
-  the gh CLI `gho_` token is unsupported, expires, and a left-over
-  `GITHUB_TOKEN` is a documented 401 cause.
+- **`github` uses a fine-grained PAT** (`GITHUB_PERSONAL_ACCESS_TOKEN`) —
+  GitHub's documented remote pattern. It is persisted for the daemon (below),
+  not stored in `~/.env`. Never use `GITHUB_TOKEN`: the gh CLI `gho_` token is
+  unsupported, expires, and a left-over `GITHUB_TOKEN` is a documented 401
+  cause.
 - **HuggingFace/Exa** pull their value from source. Persist everything for the
   daemon:
 

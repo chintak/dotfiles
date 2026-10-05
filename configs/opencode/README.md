@@ -28,10 +28,10 @@ only sees variables persisted *for it*:
 
 - `~/.env` (sourced from `~/.zshenv`) holds **static** keys — `LANGFUSE_*`,
   `OPENCODE_ENABLE_EXA`, `EXA_API_KEY`.
-- **`github` uses a fine-grained PAT** (`GITHUB_PERSONAL_ACCESS_TOKEN` in
-  `~/.env`; GitHub's documented remote pattern). Never use `GITHUB_TOKEN` —
-  the gh CLI `gho_` token is unsupported, expires, and a left-over
-  `GITHUB_TOKEN` is a documented 401 cause.
+- **`github` uses a fine-grained PAT** (`GITHUB_PERSONAL_ACCESS_TOKEN`,
+  GitHub's documented remote pattern) persisted straight into the daemon — not
+  stored in `~/.env`. Never use `GITHUB_TOKEN`: the gh CLI `gho_` token is
+  unsupported, expires, and a left-over `GITHUB_TOKEN` is a documented 401 cause.
 - **HuggingFace/Exa** pull their token from source, never frozen into `~/.env`,
   and persist it into the daemon:
 

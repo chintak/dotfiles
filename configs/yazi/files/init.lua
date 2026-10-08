@@ -11,13 +11,10 @@ require("git"):setup {
 -- sync state (mode, column width, scroll position) that peek/entry rely on.
 require("duckdb"):setup {}
 
--- mux: cycles csv/tsv/json previews through duckdb → rich → code on `M`.
--- mux resolves each name via require(), so `rich` needs an alias pointing at
--- the rich-preview.yazi dir (the plugin dir is `rich-preview`, not `rich`);
--- `duckdb` resolves directly and `code` is yazi's builtin previewer.
+-- mux: cycles csv/tsv/json previews through duckdb → rich-preview → code on `M`.
+-- mux resolves each name via require() to the plugin dir, so `rich-preview`
+-- loads rich-preview.yazi directly; `duckdb` resolves to duckdb.yazi and `code`
+-- is yazi's builtin previewer.
 require("mux"):setup {
-	aliases = {
-		rich = { previewer = "rich-preview", args = {} },
-	},
 	notify_on_switch = true,
 }

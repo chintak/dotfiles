@@ -16,14 +16,13 @@ File manager with inline previews — useful for watching agents mutate files.
     `--theme=dracula` (upstream default was `ansi_dark`). Needs `nbpreview`
     (also via `uv-tools`).
   - Data files (`.csv`/`.tsv`/`.json`) → `mux.yazi` (peterfication) cycles
-    `duckdb → rich → code` on `M`. `duckdb.yazi` (wylie102) renders a table /
-    DuckDB `SUMMARIZE` summary; `rich` is a mux alias for `rich-preview.yazi`
-    (mux resolves each name via `require()` and the plugin dir is
-    `rich-preview`, not `rich` — the alias is set in `init.lua`); `code` is
-    yazi's builtin previewer. `duckdb.yazi` needs the `duckdb` CLI on PATH and
-    `require("duckdb"):setup {}` in `init.lua`; `yazi.toml` adds csv/tsv/json
-    preloaders (upstream's `name =` key is rejected by yazi 26.9.1, so `url =`
-    is used; only the duckdb-previewed types are preloaded).
+    `duckdb → rich-preview → code` on `M`. `duckdb.yazi` (wylie102) renders a
+    table / DuckDB `SUMMARIZE` summary; mux resolves each name via `require()`
+    to the plugin dir, so `rich-preview` loads `rich-preview.yazi` and `code`
+    is yazi's builtin previewer. `duckdb.yazi` needs the `duckdb` CLI on PATH
+    and `require("duckdb"):setup {}` in `init.lua`; `yazi.toml` adds
+    csv/tsv/json preloaders (upstream's `name =` key is rejected by yazi
+    26.9.1, so `url =` is used; only the duckdb-previewed types are preloaded).
   - Text/code (`text/*`) → `vscode-git-gutter.yazi` (ShikherVerma), a VS
     Code-style git change gutter (green added / blue modified / red deleted)
     drawn on top of a `bat`-highlighted preview with dim line numbers. Registered
@@ -40,7 +39,7 @@ File manager with inline previews — useful for watching agents mutate files.
     not refresh an already-previewed file until it is touched.
   - `piper.yazi` and `glow` are gone.
 - **Keys**:
-  - `M` — cycle the mux previewer for csv/tsv/json (duckdb → rich → code).
+  - `M` — cycle the mux previewer for csv/tsv/json (duckdb → rich-preview → code).
   - `H` / `L` — scroll the duckdb preview one column left/right. These shadow
     the preset `H`/`L` (`back`/`forward` directory history). Column scrolling is
     core to the wide-table duckdb preview and `h` still leaves to the parent

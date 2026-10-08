@@ -1,7 +1,9 @@
 # yazi — file manager with inline image/PDF previews.
 # PDF previews need `poppler` (pdftoppm); chafa is the fallback for
 # terminals without a graphics protocol.
-# Markdown previews use the vendored piper.yazi plugin + glow (see below).
+# Markdown previews use the vendored rich-preview.yazi plugin (rich-cli,
+# dracula theme); notebooks use nbpreview.yazi; csv/tsv/json data files use
+# duckdb.yazi, cycled with mux.yazi (see the previewer block below).
 
 # Openers use the `%s` shell formatting (yazi >=26 deprecated `$n`/`$@` —
 # unexpanded `$@` left hx launching with no file, i.e. a scratch buffer).
@@ -9,7 +11,7 @@
 [opener]
 edit     = [{ run = 'hx %s',   block = true }]
 text     = [{ run = 'hx %s',   block = true }]
-markdown = [{ run = 'glow %s', block = true }]
+markdown = [{ run = 'rich --pager --theme dracula %s', block = true }]
 pdf      = [{ run = 'open %s', orphan = true }]
 image    = [{ run = 'open %s', orphan = true }]
 
@@ -17,18 +19,54 @@ image    = [{ run = 'open %s', orphan = true }]
 max_width = 2000
 max_height = 2000
 
-# Markdown previews render through glow (glamour's built-in `dracula` style,
-# readable on the dark Ghostty terminal) via the official piper.yazi plugin
-# (vendored in this dir). Piper runs `sh -c` with a non-tty stdout, so the
-# command needs CLICOLOR_FORCE=1 to emit color, and the style passed via -s
-# explicitly — an env-set style alone doesn't mark glow's flag as changed and
-# glow falls back to notty.
-# The style is pinned here (not inherited) so the theme survives yazi being
-# launched from any env that lacks the zshrc export.
-# PAGER=cat bypasses the `pager: true` in glow.yml inside the preview.
+# Preview stack — plugins vendored in plugins/, declarative (never `ya pkg add`):
+# - markdown → rich-preview.yazi, shelling out to `rich` (rich-cli). The plugin's
+#   main.lua passes `--theme=dracula` (upstream sanctions editing the args).
+# - notebooks → nbpreview.yazi, `--theme=dracula` (upstream default was ansi_dark).
+# - csv/tsv/json → mux.yazi cycles duckdb → rich → code on `M`. duckdb is
+#   wylie102's table/summary preview; `rich` is a mux alias for rich-preview.yazi
+#   (set in init.lua, since mux resolves each name via require() and the plugin
+#   dir is `rich-preview`, not `rich`); `code` is yazi's builtin previewer.
+# This replaces the old `piper -- ... glow ...` markdown line (glow removed).
 [[plugin.prepend_previewers]]
 url = "*.{md,mdown,mkdn,mkd,markdown}"
-run = 'piper -- PAGER=cat CLICOLOR_FORCE=1 glow -w=$w -s dracula "$1"'
+run = "rich-preview"
+
+[[plugin.prepend_previewers]]
+url = "*.ipynb"
+run = "nbpreview"
+
+[[plugin.prepend_previewers]]
+url = "*.csv"
+run = "mux duckdb rich code"
+
+[[plugin.prepend_previewers]]
+url = "*.tsv"
+run = "mux duckdb rich code"
+
+[[plugin.prepend_previewers]]
+url = "*.json"
+run = "mux duckdb rich code"
+
+# duckdb.yazi preloaders warm the standard/summarized parquet caches so the first
+# peek is fast. Upstream's snippet writes `name =`, which yazi 26.9.1 rejects as
+# an unknown field — `url =` is the valid key. Only the types whose previewer is
+# duckdb are preloaded (csv/tsv/json); upstream's parquet/txt/xlsx rows are
+# omitted because nothing previews them through duckdb here.
+[[plugin.prepend_preloaders]]
+url = "*.csv"
+run = "duckdb"
+multi = false
+
+[[plugin.prepend_preloaders]]
+url = "*.tsv"
+run = "duckdb"
+multi = false
+
+[[plugin.prepend_preloaders]]
+url = "*.json"
+run = "duckdb"
+multi = false
 
 [mgr]
 ratio = [1, 3, 4]

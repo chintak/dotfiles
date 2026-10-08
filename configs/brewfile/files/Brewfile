@@ -17,7 +17,6 @@ brew "yazi"
 brew "chafa"
 brew "poppler"
 brew "tealdeer"
-brew "glow"
 brew "gum"
 
 # editors

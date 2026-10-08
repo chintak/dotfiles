@@ -40,8 +40,11 @@ File manager with inline previews — useful for watching agents mutate files.
   - `jump-to-char.yazi` (`f`) — vim-like `f<char>` jump to next file by
     first char. Shadows preset `f` (`filter --smart`); `/` find still
     available.
-  - `toggle-pane.yazi` (`T`) — `min-preview`: hide/show the preview pane
-    (upstream's key example; free in the preset).
+  - `toggle-pane.yazi` (`T`, `i`) — `min-preview` on `T` hides/shows the
+    preview pane (upstream's key example; free in the preset); `max-preview`
+    on `i` maximizes/restores it (both are actions of the one vendored
+    plugin). `[preview] max_width`/`max_height` are raised to `2000` so the
+    enlarged pane renders larger images/PDFs.
   - `diff.yazi` (`<C-p>`) — diff selected vs hovered, copy patch to
     clipboard. Upstream suggests `<C-d>`, but that's preset half-page-down,
     so `<C-p>` (patch mnemonic, free in `mgr`) instead.

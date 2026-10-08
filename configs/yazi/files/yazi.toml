@@ -23,10 +23,10 @@ max_height = 2000
 # - markdown → rich-preview.yazi, shelling out to `rich` (rich-cli). The plugin's
 #   main.lua passes `--theme=dracula` (upstream sanctions editing the args).
 # - notebooks → nbpreview.yazi, `--theme=dracula` (upstream default was ansi_dark).
-# - csv/tsv/json → mux.yazi cycles duckdb → rich → code on `M`. duckdb is
-#   wylie102's table/summary preview; `rich` is a mux alias for rich-preview.yazi
-#   (set in init.lua, since mux resolves each name via require() and the plugin
-#   dir is `rich-preview`, not `rich`); `code` is yazi's builtin previewer.
+# - csv/tsv/json → mux.yazi cycles duckdb → rich-preview → code on `M`. duckdb is
+#   wylie102's table/summary preview; mux resolves each name via require() to the
+#   plugin dir (so `rich-preview` → rich-preview.yazi); `code` is yazi's builtin
+#   previewer.
 # This replaces the old `piper -- ... glow ...` markdown line (glow removed).
 [[plugin.prepend_previewers]]
 url = "*.{md,mdown,mkdn,mkd,markdown}"
@@ -38,15 +38,15 @@ run = "nbpreview"
 
 [[plugin.prepend_previewers]]
 url = "*.csv"
-run = "mux duckdb rich code"
+run = "mux duckdb rich-preview code"
 
 [[plugin.prepend_previewers]]
 url = "*.tsv"
-run = "mux duckdb rich code"
+run = "mux duckdb rich-preview code"
 
 [[plugin.prepend_previewers]]
 url = "*.json"
-run = "mux duckdb rich code"
+run = "mux duckdb rich-preview code"
 
 # vscode-git-gutter.yazi (ShikherVerma) — VS Code-style git change gutter in
 # the syntax-highlighted text preview. This is the LAST prepend, so the

@@ -13,7 +13,7 @@ prepend_keymap = [
 	{ on = "i",          run = "plugin toggle-pane max-preview", desc = "Maximize or restore the preview pane" },
 	{ on = "<C-p>",      run = "plugin diff", desc = "Diff selected with hovered (copy patch)" },
 	# mux.yazi + duckdb.yazi (vendored in plugins/).
-	{ on = "M",          run = "plugin mux next", desc = "Cycle mux previewers (duckdb / rich / code)" },
+	{ on = "M",          run = "plugin mux next", desc = "Cycle mux previewers (duckdb / rich-preview / code)" },
 	# duckdb column scroll — shadows the preset H/L (back/forward history);
 	# see the README for the rationale.
 	{ on = "H",          run = "plugin duckdb -1", desc = "Preview: scroll one column left (shadows back)" },

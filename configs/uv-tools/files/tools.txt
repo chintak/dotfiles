@@ -2,3 +2,5 @@ ruff
 pytest
 nvitop
 huggingface_hub
+rich-cli
+nbpreview

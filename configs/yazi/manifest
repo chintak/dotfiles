@@ -1,4 +1,4 @@
-version     = 2.0.0
+version     = 2.1.0
 description = yazi — file manager with inline image/PDF previews
 file        = yazi.toml|~/.config/yazi/yazi.toml
 file        = keymap.toml|~/.config/yazi/keymap.toml
@@ -16,3 +16,4 @@ file        = plugins/rich-preview.yazi|~/.config/yazi/plugins/rich-preview.yazi
 file        = plugins/nbpreview.yazi|~/.config/yazi/plugins/nbpreview.yazi
 file        = plugins/duckdb.yazi|~/.config/yazi/plugins/duckdb.yazi
 file        = plugins/mux.yazi|~/.config/yazi/plugins/mux.yazi
+file        = plugins/vscode-git-gutter.yazi|~/.config/yazi/plugins/vscode-git-gutter.yazi

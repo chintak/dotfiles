@@ -48,6 +48,16 @@ run = "mux duckdb rich code"
 url = "*.json"
 run = "mux duckdb rich code"
 
+# vscode-git-gutter.yazi (ShikherVerma) — VS Code-style git change gutter in
+# the syntax-highlighted text preview. This is the LAST prepend, so the
+# url-specific entries above (md/ipynb/csv/tsv/json) keep precedence; for every
+# other `text/*` file it supersedes the built-in `{ mime = "text/*", run =
+# "code" }` previewer. Renders via `bat` (mac-only Brewfile dep; the `server`
+# profile falls back to plain text with the gutter still drawn from `git diff`).
+[[plugin.prepend_previewers]]
+mime = "text/*"
+run = "vscode-git-gutter"
+
 # duckdb.yazi preloaders warm the standard/summarized parquet caches so the first
 # peek is fast. Upstream's snippet writes `name =`, which yazi 26.9.1 rejects as
 # an unknown field — `url =` is the valid key. Only the types whose previewer is

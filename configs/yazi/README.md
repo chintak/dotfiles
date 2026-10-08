@@ -24,6 +24,20 @@ File manager with inline previews — useful for watching agents mutate files.
     `require("duckdb"):setup {}` in `init.lua`; `yazi.toml` adds csv/tsv/json
     preloaders (upstream's `name =` key is rejected by yazi 26.9.1, so `url =`
     is used; only the duckdb-previewed types are preloaded).
+  - Text/code (`text/*`) → `vscode-git-gutter.yazi` (ShikherVerma), a VS
+    Code-style git change gutter (green added / blue modified / red deleted)
+    drawn on top of a `bat`-highlighted preview with dim line numbers. Registered
+    as the **last** `[[plugin.prepend_previewers]]` (`mime = "text/*"`), so the
+    url-specific md/ipynb/csv/tsv/json entries above keep precedence and this
+    supersedes yazi's built-in `code` previewer for all other text files. Needs
+    `bat` (installed via the Brewfile — **mac-only**, so on the `server` profile
+    it falls back to plain text with the gutter still rendered from `git diff`).
+    No `setup()`. Built-in limits: files >10 MiB are refused with a "too large"
+    message, rendering truncates at 5000 lines (with a notice), lines are capped
+    at 4096 bytes, and the last 6 previewed files are cached in memory. It always
+    wraps to pane width (ignores `[preview] wrap`); the cache key is
+    path+mtime+size+width, so a git-state-only change (staging/committing) does
+    not refresh an already-previewed file until it is touched.
   - `piper.yazi` and `glow` are gone.
 - **Keys**:
   - `M` — cycle the mux previewer for csv/tsv/json (duckdb → rich → code).
@@ -81,6 +95,7 @@ Needs the terminal to expose a graphics protocol — Ghostty does
 | `nbpreview.yazi` | AnirudhG07/nbpreview.yazi | `b50459402c52cbfd8d9262ae91e353d3300f8a8c` |
 | `duckdb.yazi` | wylie102/duckdb.yazi | `3f8c8633d4b02d3099cddf9e892ca5469694ba22` |
 | `mux.yazi` | peterfication/mux.yazi | `e4e67713d5043fb7a25491cf4a29ee51e556f32e` |
+| `vscode-git-gutter.yazi` | ShikherVerma/yazi-plugins | `88bccaf7141362d8eec20df3531dd3caf06f8911` |
 
 > `rich-preview.yazi/main.lua` and `nbpreview.yazi/main.lua` are edited for the
 > dracula theme — re-apply the `--theme=dracula` edits when re-vendoring.

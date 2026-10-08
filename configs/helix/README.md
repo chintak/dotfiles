@@ -21,7 +21,6 @@ the LSP route.
 
 Preview: `space m p` runs `gh markdown-preview` (browser, live reloads on
 save); needs `gh extension install yusukebe/gh-markdown-preview`.
-`glow <file>` is the pane-rendered alternative. Theme: `dracula` (built-in).
 
 Word motion: `alt+left/right` (and `cmd+left/right` via Home/End) in insert
 and normal mode. `shift+alt+left/right` is owned by herdr (tab focus) and

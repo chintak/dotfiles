@@ -1,3 +1,0 @@
-version     = 1.2.0
-description = glow — rendered markdown in the terminal
-file        = glow.yml|~/.config/glow/glow.yml

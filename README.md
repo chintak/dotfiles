@@ -135,8 +135,7 @@ herdr                        tmux
 tmux                         git
 git                          helix
 helix                        yazi
-yazi                         glow
-glow                         uv-tools
+yazi                         uv-tools
 brewfile
 uv-tools
 opencode
@@ -146,7 +145,7 @@ opencode
 `requires` first and skipping any whose `platform` doesn't match this host
 (so `brewfile` — macOS casks — never lands on a headless box). Three
 profiles ship: `mac-personal` (the full daily driver), `mac-work` (same
-twelve configs, but opencode installs its `file@mac-work` variant without
+eleven configs, but opencode installs its `file@mac-work` variant without
 MCP servers), and `server` (headless).
 
 There is deliberately **no `ios` profile**: the phone (Termius) doesn't run
@@ -621,10 +620,6 @@ constantly to read herdr's `--json` output.
 **`tealdeer` (`tldr`)** — community examples for man pages, because man
 pages are too long ([docs](https://github.com/dbrgn/tealdeer)). `tldr tar`
 shows the 5 commands you actually want.
-
-**`glow`** — renders Markdown in the terminal
-([docs](https://github.com/charmbracelet/glow)). `glow README.md` — handy
-for reading docs and agent output.
 
 **`gum`** — a toolkit for pretty shell scripts: prompts, choices, spinners
 ([docs](https://github.com/charmbracelet/gum)). Use it when a script needs

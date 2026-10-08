@@ -14,8 +14,8 @@ pdf      = [{ run = 'open %s', orphan = true }]
 image    = [{ run = 'open %s', orphan = true }]
 
 [preview]
-max_width = 1000
-max_height = 1000
+max_width = 2000
+max_height = 2000
 
 # Markdown previews render through glow (glamour's built-in `dracula` style,
 # readable on the dark Ghostty terminal) via the official piper.yazi plugin

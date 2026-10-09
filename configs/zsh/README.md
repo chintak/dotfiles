@@ -9,6 +9,11 @@ Single shell config for macOS and Linux. Notable choices:
   valid on a box where zoxide/atuin/direnv/mise aren't installed.
 - **Plugin order matters**: zsh-autosuggestions, then zsh-syntax-highlighting
   **last**. Both are sourced through `_zsh_share` so the Linuxbrew path works.
+- **rich-cli defaults to dracula**: `RICH_THEME=dracula` is exported in the
+  color/readability section. rich-cli has no config file and this is its only
+  theme env var, so it's the whole default. It applies to **interactive**
+  shells only (the yazi preview pins `--theme=dracula` in the plugin, so it
+  doesn't depend on this export).
 - **herdr TERM fix**: inside herdr (`HERDR_ENV=1`), `TERM` is rewritten from
   `xterm-256color` to `tmux-256color` so TUI apps render correctly. herdr's
   default tab names are kept — no renaming on shell commands.

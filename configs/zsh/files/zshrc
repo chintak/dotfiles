@@ -57,6 +57,9 @@ export FZF_COMPLETION_TRIGGER='**'
 # LS_COLORS feeds the completion list-colors zstyle above and eza; without
 # it BSD ls and the zstyle both render uncolored.
 export LS_COLORS='rs=0:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;32;01:or=40;31;01:mi=00:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.zip=01;31:*.gz=01;31:*.jpg=01;35:*.jpeg=01;35:*.png=01;35:*.gif=01;35:*.mp3=00;36:*.mp4=00;36:*.log=00;90'
+# rich-cli has no config file; RICH_THEME is its only theme env var (it feeds
+# --theme). Interactive default — the yazi preview pins --theme=dracula itself.
+export RICH_THEME=dracula
 export GREP_COLORS='ms=01;32' GREP_OPTIONS=''
 export LESS='--RAW-CONTROL-CHARS'
 # pager colored only when the installed less supports it (macOS less 590+)

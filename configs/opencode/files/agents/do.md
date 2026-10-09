@@ -55,9 +55,9 @@ Get stuff done with minimum ceremony. Bias toward action: investigate quickly, m
 ## Herdr terminals
 Prefer herdr — this machine's terminal multiplexer — over tmux for parallel, delegated, or long-running terminal work. Guard: control herdr only when running inside it (`test "${HERDR_ENV:-}" = 1` — command syntax is at `herdr --skill`); otherwise run commands in the foreground and say so.
 
-- **Always use a new tab (`herdr tab create`), never split panes** — one tab per delegated task, monitoring mirror, or independent/long-running workstream; keep the user's focus with `--no-focus`. Use `pane run` / `pane read` / `pane wait-output` to drive commands *inside* a tab's pane; do not create sibling panes for delegated or monitored work.
+- **Pane vs tab by task nature and count** — sibling panes in the current tab for 1–2 short subagent tasks or quick test runs (`herdr pane split --current --direction right|down --cwd "$PWD" --no-focus`: wide pane → right, tall/narrow → down; avoid repeated same-direction splits). A new tab (`herdr tab create`) for 3+ parallel subagents, long-running or independent workstreams, or when splits would get cramped.
 - **Run and test commands in herdr panes, never tmux** — `herdr pane run <id> "<cmd>"`, wait with `herdr pane wait-output <id> --match <text> --timeout <ms>`, read with `herdr pane read <id> --source recent-unwrapped --lines N`. Parse pane IDs from JSON responses; use `--no-focus` to keep the user's focus; never close panes/tabs you didn't create.
-- **Subagent deployment** — provision a new tab up front and pass its root pane ID in the child prompt (children must be self-contained); a recognized agent starts with `herdr agent start <name> --kind opencode --pane <id>`.
+- **Subagent deployment** — provision the pane/tab up front and pass the pane ID in the child prompt (children must be self-contained); a recognized agent starts with `herdr agent start <name> --kind opencode --pane <id>`.
 
 ## Running as a subagent
 

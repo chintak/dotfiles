@@ -1,5 +1,5 @@
-version     = 1.5.0
-description = zsh — secrets/env sourced from .zshenv (non-interactive too); PATH, history, fzf, dot-completion fpath hook, prompt switch, color/readability, herdr TERM fix, alt-word keys, tool aliases
+version     = 1.6.0
+description = zsh — secrets/env sourced from .zshenv (non-interactive too); PATH, history, fzf, dot-completion fpath hook, prompt switch, color/readability (incl. RICH_THEME=dracula default), herdr TERM fix, alt-word keys, tool aliases
 file        = zshenv|~/.zshenv
 file        = zshrc|~/.zshrc
 post_apply  = rm -f "$HOME/.zcompdump"

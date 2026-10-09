@@ -57,17 +57,9 @@ Prefer herdr — this machine's terminal multiplexer — over tmux for parallel,
 
 - **Always use a new tab (`herdr tab create`), never split panes** — one tab per delegated task, monitoring mirror, or independent/long-running workstream; keep the user's focus with `--no-focus`. Use `pane run` / `pane read` / `pane wait-output` to drive commands *inside* a tab's pane; do not create sibling panes for delegated or monitored work.
 - **Run and test commands in herdr panes, never tmux** — `herdr pane run <id> "<cmd>"`, wait with `herdr pane wait-output <id> --match <text> --timeout <ms>`, read with `herdr pane read <id> --source recent-unwrapped --lines N`. Parse pane IDs from JSON responses; use `--no-focus` to keep the user's focus; never close panes/tabs you didn't create.
-- **Subagent deployment** — for workstreams other than `do`, provision a new tab up front and pass its root pane ID in the child prompt (children must be self-contained); a recognized agent starts with `herdr agent start <name> --kind opencode --pane <id>`. Do NOT pre-provision a tab for a `do` child — it opens its own monitoring tab (see §Running as a subagent), so pre-creating one yields a duplicate.
+- **Subagent deployment** — provision a new tab up front and pass its root pane ID in the child prompt (children must be self-contained); a recognized agent starts with `herdr agent start <name> --kind opencode --pane <id>`.
 
 ## Running as a subagent
-### Spawn-time monitoring tab (herdr)
-As your FIRST action — before investigation or worktree work — open a live monitoring tab so the user can watch the run:
-1. Guard: only inside herdr and only with a real session id — `test "${HERDR_ENV:-}" = 1 && test -n "${OPENCODE_SESSION_ID:-}"`; otherwise skip and note it in your report.
-2. Create the tab (background): `herdr tab create --label "do: ${OPENCODE_SESSION_ID##*_}" --cwd "$PWD" --no-focus`. From its JSON response read `TAB = .result.tab.tab_id` and `PANE = .result.root_pane.pane_id`.
-3. **Carry the ids by value, not by variable**: shell variables do not survive between tool calls — copy the literal `TAB` / `PANE` strings into your message and paste them into the commands below.
-4. Attach the viewer: `herdr pane run <PANE> "opencode --session <SESSION_ID>"`, substituting the literal id from `OPENCODE_SESSION_ID`.
-5. On report-back (success or failure), close exactly the tab you created: `herdr tab close <TAB>`, with the literal `TAB` from step 2.
-Never `--focus`; close only the `TAB` you parsed in step 2; if any step fails, continue the task and note it — monitoring is best-effort and must never block the work.
 
 When spawned as a subagent: skip Vault lookup and Planning — the parent owns context and plan. Do only: follow the Style rules; create your own worktree per the Worktree protocol (absolute paths); commit all changes; then SHIP the assigned task — push the feature branch and open a PR (`gh pr create`) — and report back worktree path, branch name, PR URL, and a bulleted change summary. Never merge a PR yourself: `focus` routes it to `review` and merges only on a `ship` verdict.
 

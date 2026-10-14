@@ -8,13 +8,13 @@ permissions:
   - action: edit
     resource: "*"
     effect: deny
-  # /var is read-only; macOS /var symlinks to /private/var, so guard both spellings.
+  # /var is editable; macOS /var symlinks to /private/var, so spell both.
   - action: edit
     resource: "/var/*"
-    effect: deny
+    effect: allow
   - action: edit
     resource: "/private/var/*"
-    effect: deny
+    effect: allow
   - action: edit
     resource: "**.worktrees/**"
     effect: allow

@@ -1,13 +1,22 @@
 ---
 description: Minimal get-stuff-done agent. Works in .worktrees/, writes knowledge to ~/vault, responds in concise bullets.
 mode: subagent
-# Array-form permissions verified on opencode v2.0.18. Newer hosted schema uses object form keyed bash/task — migrate on upgrade.
+# Array-form permissions verified on opencode v2.0.18. Newer hosted schema uses object form keyed bash/task — migrate on upgrade; the /var denies below migrate too.
 permissions:
   - action: external_directory
     resource: "*"
     effect: allow
   - action: edit
     resource: "*"
+    effect: deny
+  # /var is read-only; macOS /var symlinks to /private/var, so guard both
+  # spellings. Ordered BEFORE the scratch-dir allow below, which is do's one
+  # intentional /private/var write carve-out and must remain the last match.
+  - action: edit
+    resource: "/var/*"
+    effect: deny
+  - action: edit
+    resource: "/private/var/*"
     effect: deny
   - action: edit
     resource: "/private/tmp/*"

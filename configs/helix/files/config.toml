@@ -33,7 +33,10 @@ normal = "block"
 
 # Auto-save (helix 25.07). Writes every modified buffer ~1s after the last
 # change and never mid-insert — a timer that fires while inserting defers and
-# flushes on Esc (auto_save.rs:36-72); focus-lost writes from any mode.
+# flushes on Esc (auto_save.rs:52-79); focus-lost writes from any mode.
+# Mode exit is after-delay-only: Esc just flushes the save a fired timer
+# queued, gated on after-delay.enable (auto_save.rs:105) — so with after-delay
+# off, Esc alone writes nothing while focus-lost still does.
 # Auto-format is skipped on autosave (auto_save.rs:93), so prettier still
 # only runs on a manual :w. An agent's on-disk edit is NOT silently
 # clobbered: the save fails with "file modified by an external process, use

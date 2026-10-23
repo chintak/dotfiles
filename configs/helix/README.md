@@ -10,10 +10,10 @@ on `PATH`.
 ## Auto-save
 
 Every modified buffer is written ~1s after the last change and on focus loss,
-never mid-insert (a firing timer defers to Esc). Formatting is skipped, so
-`prettier` runs on a manual `:w` only. An agent's on-disk edit makes the save
-fail loudly (`file modified by an external process, use :w!`) — F5 reloads,
-`:w!` is the trap. `hx` is `$EDITOR`: abort a commit or `rebase -i` todo with
+never mid-insert (Esc only flushes a queued timer save; `after-delay`-only).
+Formatting is skipped; `prettier` runs on a manual `:w` only. An agent's edit
+fails the save loudly (`file modified by an external process, use :w!`) — F5
+reloads, `:w!` the trap. `hx` is `$EDITOR`: abort a commit or `rebase -i` with
 `:cq!`, never `:q!`. herdr focus forwarding is unverified; the timer covers it.
 
 ## Markdown writing

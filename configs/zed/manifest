@@ -1,4 +1,4 @@
-version     = 1.0.0
+version     = 1.0.1
 description = Zed — GUI editor and agent surface: Helix mode, Nordfox/Dayfox themes, opencode agent
 platform    = mac
 file        = settings.json|~/.config/zed/settings.json

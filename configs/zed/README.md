@@ -16,8 +16,10 @@ package is installed on `mac-personal` only (same guard as `ghostty` and
 
 ## Why these settings
 
-`settings.json` is a **verbatim copy of the live file** (byte-identical on
-first apply — no reordering, no reformatting), keys in Zed's own order.
+`settings.json` is a **verbatim capture of the live file** — copied without
+hand-merging or reformatting, never reordered by hand. Keys are in Zed's own
+order: Zed rewrites this file itself (see *The reconcile loop*), so "its
+order" is whatever Zed last wrote.
 
 | Setting | Why |
 |---------|-----|
@@ -27,7 +29,10 @@ first apply — no reordering, no reformatting), keys in Zed's own order.
 | `format_on_save: modifications_if_available` | Formats on save only when the language server can format *changed* regions, so saving a large file doesn't reflow unrelated lines (keeps agent diffs reviewable). |
 | `autosave: on_focus_change` | Writes a buffer when the window loses focus rather than on every keystroke or on a timer — the least intrusive policy when an agent is also touching files. |
 | `focus_follows_mouse: { enabled: true }` | Clicking into a pane focuses it without a second click — matches herdr pane behaviour. |
-| `buffer_font_family` / `agent_buffer_font_family` = `JetBrainsMono Nerd Font Mono` | The Nerd Font from the Brewfile cask; glyphs are PUA-only (see the root README), so the font must be explicit. Agent buffers are one point smaller to fit more tool output. |
+| `buffer_font_family` / `agent_buffer_font_family` = `JetBrainsMono Nerd Font Mono`, both `15.0` | The Nerd Font from the Brewfile cask; glyphs are PUA-only (see the root README), so the font must be explicit. Agent buffers were one point smaller (`13` vs `14`) until the 2026-10-23 UI capture equalized both at `15`. |
+| `ui_font_family` / `ui_font_size` = `Source Serif 4`, `16.0` | Panel labels, tabs, and menus in a serif face, so chrome reads as a different layer from the monospace editor. Set in the Zed UI, captured back into the repo. |
+| `agent_ui_font_size: 18.0` | Agent-panel chrome (`agent_ui_font_family` also `Source Serif 4`) two points above the `16` UI size — the agent surface is read at a glance, not line by line. Captured from the UI. |
+| `markdown_preview.code_font_family` = `JetBrainsMono Nerd Font Mono` | Fenced code in the markdown preview keeps the Nerd Font's glyph coverage instead of falling back to Zed's preview default. Captured from the UI. |
 | `agent_servers.*` | Registry entries for the external agent backends Zed can drive: `opencode-v2` (pinned `effort: high`, `model: opencode-go/deepseek-v4.1-flash`), plus `codex-acp` and `claude-acp` as `type: registry`. `agent.default_model` sets the default thread to `opencode` / `go/deepseek-v4.1-flash` with thinking and `effort: high`, so a new thread starts on the same model the opencode CLI uses. |
 | `language_models.opencode.show_zen_models: false` | Trims the "Zen" model list from the picker — only the models actually used are offered. |
 | `context_servers.Roblox_Studio.command` | Points Zed's agent at the Roblox Studio MCP binary (`/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP`), the same server the opencode `mcp` block uses. **Absolute path by design** — it breaks if Studio moves; acceptable for a mac-personal-only package. |
@@ -65,7 +70,7 @@ It ships one binding:
   `AgentPanel` block would be noise, not a fix.
 - **Quoting a selection into a thread is two steps, not one chord.**
   `cmd->` in the editor runs `agent::AddSelectionToThread`
-  (`default-macos.json:155-166`, context `Editor && mode == full` — full mode,
+  (`default-macos.json:166`, context `Editor && mode == full` — full mode,
   so Helix mode's normal mode does not have it), then `cmd-n` runs
   `agent::NewThread` from the agent panel (`default-macos.json:258`, context
   `AgentPanel`; also `AcpThread`, line 286). **No stock action combines
@@ -117,19 +122,22 @@ dot apply zed
   `settings.json` (`dot:492-493`). Keymap and tasks have no edit shortcut
   (`$EDITOR configs/zed/files/keymap.json`).
 
-### Write-through, not symlink pinning
+### Write-through, not symlink pinning (observed)
 
 Zed canonicalizes paths before writing; the fix for "Zed deletes a symlinked
 `settings.json`" ([zed#4469](https://github.com/zed-industries/zed/issues/4469))
-landed in `v0.123.1-pre`. On a version carrying that fix, a UI edit **writes
-through the symlink into `store/zed/1.0.0/`**:
+landed in `v0.123.1-pre`, and the installed cask (`1.21.0`) carries it. A UI
+edit **writes through the symlink into `store/zed/<ver>/`** — observed here on
+2026-10-23, not inferred:
 
-- `dot status` reports **`modified`** (store content no longer matches the
-  recorded hash), and the store stops pinning anything — `dot diff`,
-  `dot rollback`, and the hash all read the mutated content.
-- On a build that instead does temp+rename, the symlink is replaced and
-  `dot status` reports **`drifted`** (never `broken` — that state means the
-  store directory is missing).
+- `~/.config/zed/settings.json` is **still a symlink** pointing into
+  `store/zed/1.0.0/`, and Zed rewrote the file behind it (mtime `00:18`).
+- `dot status` reports **`modified`** — store content no longer matches the
+  recorded hash. The store stops pinning anything: `dot diff`, `dot rollback`,
+  and the hash all read the mutated content.
+- The temp+rename branch is **not** what 1.21.0 does here. On a build that
+  replaced the symlink, `dot status` would report **`drifted`** (never
+  `broken` — that state means the store directory is missing).
 
 Expected and accepted: this is the house doctrine of *drift detected, not
 prevented*, applied to a config whose tool rewrites it.
@@ -142,22 +150,35 @@ prevented*, applied to a config whose tool rewrites it.
   the keymap editor is written straight back to `keymap.json` — check
   `dot diff zed` after remapping, not just after a settings toggle.
 
-### Pending user step: the drift probe
+### The drift probe: observed
 
-Not automatable, and **not yet run** — the branch above (`modified` vs
-`drifted`) is inferred, not observed on the installed cask. Run once in the
-Zed UI and record which one happens here:
+The probe ran on its own: seven settings were changed through the Zed UI on
+2026-10-23 and landed in `store/zed/1.0.0/settings.json` (symlink intact,
+`dot status` → `modified`). The captured diff was exactly the expected UI
+keys — `ui_font_family`/`ui_font_size` (`Source Serif 4`, `16`),
+`agent_ui_font_family`/`agent_ui_font_size` (`Source Serif 4`, `18`),
+`markdown_preview.code_font_family` (`JetBrainsMono Nerd Font Mono`), and
+`buffer_font_size`/`agent_buffer_font_size` raised `14`/`13` → `15`/`15`.
+
+**The loop is now demonstrated end to end, and this package is its output:**
+`dot diff zed` → copy the store file into `files/settings.json` verbatim →
+`dot bump zed patch` (1.0.0 → 1.0.1) → `dot apply zed`. The order matters
+because the first `apply` after drift discards it.
+
+Still unprobed, because the session above touched only `settings.json`:
+
+- `keymap.json` in the keymap editor — its store copy still has the
+  apply-time mtime, so "the keymap editor writes `keymap.json`" is documented
+  upstream but unobserved here.
+- `tasks.json` acceptance — `task: spawn` has not been run against the empty
+  array. `zed: open keymap file` and `task: spawn` must open without an error
+  toast before "Zed accepts the scaffolds" is anything but an assumption.
 
 ```bash
-# 1. In Zed: toggle any setting, add one keybinding in the keymap editor, spawn a task once
-readlink ~/.config/zed/settings.json     # still a symlink → wrote through into the store
+readlink ~/.config/zed/settings.json     # a symlink → Zed wrote through into the store
 ./dot diff zed                           # capture the UI edit BEFORE applying
-./dot status --json | jq '.[] | select(.name=="zed") | .state'
-./dot apply zed                          # re-pins; destroys the store edit unless it was copied first
+./dot status --json | jq '.[] | select(.name=="zed") | .state'   # modified
 ```
-
-Acceptance for the empty scaffolds is a UI probe too: `zed: open keymap file`
-and `task: spawn` must open without an error toast.
 
 ## Deferred: extensions
 

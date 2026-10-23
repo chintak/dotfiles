@@ -48,7 +48,8 @@ Three rules hold the whole thing together:
    Edit the repo → commit → `dot update`, and every machine re-links.
 
 3. **One theme.** [TokyoNight](https://github.com/tokyo-night/tokyo-night-vscode-theme) across Ghostty and
-   Starship, so the terminal looks coherent. (helix, herdr, yazi, rich-cli, and tmux use Dracula.)
+   Starship, so the terminal looks coherent. (helix, herdr, yazi, rich-cli, and tmux use Dracula;
+   Zed pairs **Nordfox - blurred** on dark with **Dayfox - opaque** on light.)
 
 The goal is an environment that is **low-latency, glyph-safe, and
 identical on every client** — including a 43-column iPhone screen on a
@@ -139,14 +140,15 @@ yazi                         uv-tools
 brewfile
 uv-tools
 opencode
+zed
 ```
 
 `dot init --profile mac-personal` installs them in order, expanding each config's
 `requires` first and skipping any whose `platform` doesn't match this host
 (so `brewfile` — macOS casks — never lands on a headless box). Three
-profiles ship: `mac-personal` (the full daily driver), `mac-work` (same
-eleven configs, but opencode installs its `file@mac-work` variant without
-MCP servers), and `server` (headless).
+profiles ship: `mac-personal` (the full daily driver, 12 configs), `mac-work`
+(the same environment minus `zed` — 11 configs — where opencode installs its
+`file@mac-work` variant without MCP servers), and `server` (headless).
 
 There is deliberately **no `ios` profile**: the phone (Termius) doesn't run
 `dot`; it SSHes into a host that already has a profile. The glyph-free

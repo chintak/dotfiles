@@ -53,13 +53,13 @@ block with an editor — do not accept the output.
 | `autosave: on_focus_change` | Writes a buffer when the window loses focus rather than on every keystroke or on a timer — the least intrusive policy when an agent is also touching files. |
 | `focus_follows_mouse: { enabled: true }` | Clicking into a pane focuses it without a second click — matches herdr pane behaviour. |
 | `preferred_line_length: 100` + `soft_wrap: "editor_width"` | Per [all-settings](https://zed.dev/docs/reference/all-settings): `editor_width` wraps at lines that overflow the **editor width**, while the `100` is only the preference value Zed's UI wrote and caps nothing. `soft_wrap: "bounded"` is the option that wraps at the minimum of `editor_width` and `preferred_line_length` — i.e. what would enforce the 100-column cap. Also a genuine non-default choice: Zed's default `preferred_line_length` is `80`. Whether a 100-cap was intended is an open question, not a documented fact. |
-| `disable_ai: true` | Zed's own AI is off: [AI Quick Start](https://zed.dev/docs/ai/configuration) states that "when AI is turned off, all AI features are disabled … the Threads Sidebar, Agent Panel, Edit Prediction, and Inline Assistant", and [all-settings](https://zed.dev/docs/reference/all-settings) defines the key as "whether to disable all AI features in Zed". Agents run in opencode + herdr instead. It makes the keys below **dormant** and the keymap binding inert. |
+| `disable_ai: true` | Zed's own AI is off as a **standing, deliberate choice (confirmed by the owner 2026-10-23), not drift**: [AI Quick Start](https://zed.dev/docs/ai/configuration) states that "when AI is turned off, all AI features are disabled … the Threads Sidebar, Agent Panel, Edit Prediction, and Inline Assistant", and [all-settings](https://zed.dev/docs/reference/all-settings) defines the key as "whether to disable all AI features in Zed". Zed is the editor surface and agents run in opencode + herdr, so the Threads Sidebar, Agent Panel, Edit Prediction, and Inline Assistant are redundant. It makes the keys below **dormant** and the keymap binding inert. |
 | `buffer_font_family` / `agent_buffer_font_family` = `JetBrainsMono Nerd Font Mono`, `13.0` / `15.0` | The Nerd Font from the Brewfile cask; glyphs are PUA-only (see the root README), so the font must be explicit. 1.0.1 equalized both at `15` (agent buffers had been one point smaller); the 2026-10-23 UI capture then took the *editor* buffer to `13` and left the agent buffer at `15` — the agent value is dormant with the panel. |
 | `ui_font_family` / `ui_font_size` = `Source Serif 4`, `16.0` | Panel labels, tabs, and menus in a serif face, so chrome reads as a different layer from the monospace editor. Set in the Zed UI, captured back into the repo. |
 | `agent_ui_font_size: 18.0` | **Dormant** with the rest of the agent surface (`agent_ui_font_family` is also `Source Serif 4`): the panel never opens while `disable_ai` is `true`, so this is a retained value, not active chrome. Captured from the UI. |
 | `markdown_preview.code_font_family` = `JetBrainsMono Nerd Font Mono` | Fenced code in the markdown preview keeps the Nerd Font's glyph coverage instead of falling back to Zed's preview default. Captured from the UI. |
-| `agent.default_model` (provider `opencode`, `go/deepseek-v4.1-flash`, thinking, `effort: high`) | **Dormant** — parsed and retained, but unused while `disable_ai` is `true`. It points a new thread at the same model the opencode CLI uses, so re-enabling AI needs no model hunting. |
-| `agent.tool_permissions` / `agent.sandbox_permissions` | **Dormant** permission profile: default-allow tool calls with all network hosts allowed, because Zed's prompt-per-call is the slow path for an agent that was expected to run builds and fetch. Retained so re-enabling AI is a one-key change. |
+| `agent.default_model` (provider `opencode`, `go/deepseek-v4.1-flash`, thinking, `effort: high`) | **Dormant** — parsed and retained, but unused while `disable_ai` is `true`. It points a new thread at the same model the opencode CLI uses, so a future change of mind needs no model hunting. |
+| `agent.tool_permissions` / `agent.sandbox_permissions` | **Dormant** permission profile: default-allow tool calls with all network hosts allowed, because Zed's prompt-per-call is the slow path for an agent that was expected to run builds and fetch. Retained as contingency, not as a plan — a future `disable_ai: false` would want this profile back. |
 | `context_servers.Roblox_Studio.command` | **Dormant** alongside the `agent` block: points Zed's agent at the Roblox Studio MCP binary (`/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP`), the same server the opencode `mcp` block uses. **Absolute path by design** — it breaks if Studio moves; acceptable for a mac-personal-only package. |
 | `auto_install_extensions` (10 IDs) | Pins *which* extensions a fresh Mac installs: `dockerfile`, `html`, `jetbrains-themes`, `just`, `latex`, `material-icon-theme`, `nvim-nightfox`, `one-dark-pro`, `toml`, `tsgo`. The schema is `{ "<id>": true \| false }` — `true` installs, `false` never installs ([all-settings](https://zed.dev/docs/reference/all-settings)). This pins the **set**, not the versions — see *Extensions* below. |
 | `search.regex: true`, `search.center_on_match: true`, scroll margins `99` | Search opens in regex mode (the `rg` habit); matches are centred and the viewport keeps a wide scroll margin so the cursor never sits at the screen edge. |
@@ -75,14 +75,17 @@ those surfaces off, so the entries configure nothing. Neither observed UI write
 touched them.
 
 Dormant ≠ deleted: the `agent` block, `context_servers.Roblox_Studio`, and the
-four `agent_ui_font_*` / `agent_buffer_font_*` keys stay in the file, so
-re-enabling AI is `disable_ai: false` plus a fresh capture, not a `git revert`.
+four `agent_ui_font_*` / `agent_buffer_font_*` keys stay in the file as
+contingency, not as a plan — retained so a future change of mind costs one
+setting (`disable_ai: false`) plus a fresh capture, not a `git revert`.
 
 ## Keymap
 
 **The binding below is inert while `disable_ai` is `true`** — `agent::ToggleNewThreadMenu`
-opens nothing when Zed's AI is off. It is retained at zero cost so it works
-again the moment AI is re-enabled.
+opens nothing when Zed's AI is off. It stays as contingency, not as a plan:
+removing it would be churn for no gain, it is what a future `disable_ai: false`
+would want, and stock binds the chord `AgentPanel`-only (see below), so the
+rebind would have to come back anyway if it were dropped.
 
 `keymap.json` is a JSON array of `{ "context": …, "bindings": { "chord": "action" } }`
 objects ([key-bindings docs](https://zed.dev/docs/key-bindings); the stock
@@ -183,6 +186,13 @@ dot apply zed
   in-memory model. That is a **recurring** tax, not a one-time decision: every
   settings write can resurrect the retired keys, and each resurrection is a
   re-prune — not a bug to chase.
+- **A store capture showing `disable_ai: false` is a regression, not drift.**
+  The intent is standing (see *Why these settings*), so a `false` in the store
+  means AI got switched back on — a UI toggle, a live window re-serializing
+  held state (*Quit Zed before `dot apply`*), or a rollback to a pre-1.1.0
+  store. Flag it and keep `disable_ai: true` in the pruned file — the action is
+  the same under every cause, and it is a regression to surface, not a drift to
+  accept.
 - **The bump is load-bearing.** `dot update` re-applies only when the repo
   version is newer (`dot:599`), so a content-only edit would not reach other
   machines. This deliberately differs from the content-only convention used

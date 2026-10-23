@@ -53,7 +53,7 @@ block with an editor — do not accept the output.
 | `autosave: on_focus_change` | Writes a buffer when the window loses focus rather than on every keystroke or on a timer — the least intrusive policy when an agent is also touching files. |
 | `focus_follows_mouse: { enabled: true }` | Clicking into a pane focuses it without a second click — matches herdr pane behaviour. |
 | `preferred_line_length: 100` + `soft_wrap: "editor_width"` | Per [all-settings](https://zed.dev/docs/reference/all-settings): `editor_width` wraps at lines that overflow the **editor width**, while the `100` is only the preference value Zed's UI wrote and caps nothing. `soft_wrap: "bounded"` is the option that wraps at the minimum of `editor_width` and `preferred_line_length` — i.e. what would enforce the 100-column cap. Also a genuine non-default choice: Zed's default `preferred_line_length` is `80`. Whether a 100-cap was intended is an open question, not a documented fact. |
-| `disable_ai: true` | Zed's own AI is off: [AI configuration](https://zed.dev/docs/ai/configuration) states that "when AI is turned off, all AI features are disabled … the Threads Sidebar, Agent Panel, Edit Prediction, and Inline Assistant", and [all-settings](https://zed.dev/docs/reference/all-settings) defines the key as "whether to disable all AI features in Zed". Agents run in opencode + herdr instead. It makes the keys below **dormant** and the keymap binding inert. |
+| `disable_ai: true` | Zed's own AI is off: [AI Quick Start](https://zed.dev/docs/ai/configuration) states that "when AI is turned off, all AI features are disabled … the Threads Sidebar, Agent Panel, Edit Prediction, and Inline Assistant", and [all-settings](https://zed.dev/docs/reference/all-settings) defines the key as "whether to disable all AI features in Zed". Agents run in opencode + herdr instead. It makes the keys below **dormant** and the keymap binding inert. |
 | `buffer_font_family` / `agent_buffer_font_family` = `JetBrainsMono Nerd Font Mono`, `13.0` / `15.0` | The Nerd Font from the Brewfile cask; glyphs are PUA-only (see the root README), so the font must be explicit. 1.0.1 equalized both at `15` (agent buffers had been one point smaller); the 2026-10-23 UI capture then took the *editor* buffer to `13` and left the agent buffer at `15` — the agent value is dormant with the panel. |
 | `ui_font_family` / `ui_font_size` = `Source Serif 4`, `16.0` | Panel labels, tabs, and menus in a serif face, so chrome reads as a different layer from the monospace editor. Set in the Zed UI, captured back into the repo. |
 | `agent_ui_font_size: 18.0` | **Dormant** with the rest of the agent surface (`agent_ui_font_family` is also `Source Serif 4`): the panel never opens while `disable_ai` is `true`, so this is a retained value, not active chrome. Captured from the UI. |
@@ -67,11 +67,12 @@ block with an editor — do not accept the output.
 Retired in 1.1.0, with the keys they described: `agent_servers.*` (the
 `opencode-v2` / `codex-acp` / `claude-acp` registry entries) and
 `language_models.opencode.show_zen_models` — both only configure Zed's own
-agent surface, which `disable_ai` shuts down. `agent_servers` is user-authored
-config for external ACP agents that are started from the Agent Panel
-([External Agents](https://zed.dev/docs/ai/external-agents)); while
-`disable_ai: true` that panel never opens, so the entries configure nothing and
-were retired as dead config. Neither observed UI write touched them.
+agent surface, which `disable_ai` shuts down. `agent_servers` is settings-file
+config for external ACP agents, started from the Agent Panel or the Threads
+Sidebar ([External Agents](https://zed.dev/docs/ai/external-agents)); the
+retired entries were `type: registry` installs, and `disable_ai: true` turns
+those surfaces off, so the entries configure nothing. Neither observed UI write
+touched them.
 
 Dormant ≠ deleted: the `agent` block, `context_servers.Roblox_Studio`, and the
 four `agent_ui_font_*` / `agent_buffer_font_*` keys stay in the file, so
@@ -171,8 +172,11 @@ dot apply zed
 - **Quit Zed before `dot apply`.** A live window holds the settings it was
   started with and re-serializes that held state over the fresh store on its
   next write — which silently reverts `disable_ai: true` and puts
-  `agent_servers` back. Use a graceful quit (`osascript -e 'quit app "Zed"'`),
-  wait for the process to exit, apply, then relaunch (`open -a Zed`).
+  `agent_servers` back. Quit it (`osascript -e 'quit app "Zed"'`), wait for the
+  process to exit, apply, then relaunch (`open -a Zed`). Never `kill -9`; note
+  the quit path can log `ERROR [gpui::app] timed out waiting on
+  app_will_quit` — as it did at `12:21:32` and `12:23:30` — so confirm with
+  `pgrep` that the process is gone rather than trusting the log alone.
 - **The divergence is from what Zed would serialize, not from the repo.**
   Post-apply the store *is* the repo (`dot:211-215` copies repo → store), so
   "in sync" means the store matches the repo, while the real gap is Zed's own
@@ -226,7 +230,9 @@ prevented*, applied to a config whose tool rewrites it.
   pick the file up — which is also why the loop now quits Zed before applying.
 - **`keymap.json` is the highest-drift file of the three.** Anything done in
   the keymap editor is written straight back to `keymap.json` — check
-  `dot diff zed` after remapping, not just after a settings toggle.
+  `dot diff zed` after remapping, not just after a settings toggle
+  ([key-bindings](https://zed.dev/docs/key-bindings): "anything that you end up
+  doing on the keymap editor also gets reflected on the `keymap.json` file").
 
 ### Which version? Four artifacts, none interchangeable
 
@@ -239,7 +245,7 @@ different questions:
 |---|---|---|
 | Cask **receipt** | `brew list --cask --versions zed` | `1.21.0` — what Homebrew installed on 2026-09-23 |
 | Tap **formula** | `brew info --cask zed` | `1.25.2 (auto_updates)` — what the tap advertises; the cask self-updates past it |
-| **Bundle on disk** | `defaults read /Applications/Zed.app/Contents/Info.plist CFBundleShortVersionString` | `1.25.3` — `Info.plist` written 06:14, first launched `12:23:38` |
+| **Bundle on disk** | `defaults read /Applications/Zed.app/Contents/Info.plist CFBundleShortVersionString` | `1.25.3` — `Info.plist` written 06:14; first launched `12:23:15` (`Zed.log:2602`), relaunched `12:23:38` (`:2683`, pid 15309) |
 | **Running process** | `ps -o pid,lstart`, `Zed.log` startup line | **at the `11:40` probe:** `1.25.2`, pid 46794, started 2026-10-22 14:53 (`Zed.log:60`). **now:** `1.25.3`, pid 15309, started `Fri Oct 23 12:23:38 2026` (`Zed.log:2683`) |
 
 So the cask receipt `1.21.0` is *not* the version that behaved: **both** drift
@@ -247,13 +253,15 @@ probes — the `00:18` write-through and the `11:40` rewrite — were `1.25.2`,
 and the `1.21.0` build had not been running since 2026-09-23 (the same day it
 was installed). Earlier notes crediting `1.21.0` were reading the receipt.
 
-The current process is `1.25.3` (pid 15309), not `1.25.2`: the relaunch that
-followed the 1.1.0 apply is the **first run of that bundle** (`Zed.log:2683`,
-`ps -p 15309 -o pid,lstart`). Everything in *The drift probes* below is
-therefore a `1.25.2` observation of a build that is no longer running — the
-retired keys and the captured values were not re-observed on `1.25.3` except
-as "not rewritten" (store sha256 and mtime unchanged across the `12:23` launch
-and a graceful quit).
+The current process is `1.25.3` (pid 15309), not `1.25.2`. The launch that
+followed the 1.1.0 apply (`12:23:15`, `Zed.log:2602`) is the **first run of
+that bundle**; the quit that followed timed out (`12:23:30`, `ERROR [gpui::app]
+timed out waiting on app_will_quit`), and the process running now is the
+`12:23:38` relaunch (`Zed.log:2683`, `ps -p 15309 -o pid,lstart`). Everything
+in *The drift probes* below is therefore a `1.25.2` observation of a build that
+is no longer running — the retired keys and the captured values were not
+re-observed on `1.25.3` except as "not rewritten" (store sha256 and mtime
+unchanged across both `1.25.3` starts and the quit between them).
 
 ### The drift probes: observed
 
@@ -271,10 +279,14 @@ prune existed.
 1.0.1 landed: `preferred_line_length: 100` + `soft_wrap: "editor_width"`,
 `buffer_font_size` `15 → 13`, and `disable_ai: false → true`. Reconciled as
 **1.1.0**, this time capture → prune → bump → apply, with Zed quit first. The
-relaunch that followed was the **first run of the `1.25.3` bundle on disk**
-(`Zed.log:2683`) — so the `11:40` write itself is a `1.25.2` observation, and
-`1.25.3` is only observed as *not* rewriting: the store file's sha256 and
-mtime were unchanged across the `12:23` launch and a graceful quit.
+launch that followed was the **first run of the `1.25.3` bundle on disk**
+(`12:23:15`, `Zed.log:2602`), and the running process is its `12:23:38`
+relaunch (`:2683`) after the quit at `12:23:30` timed out. So the `11:40` write
+itself is a `1.25.2` observation, and `1.25.3` is only observed as *not*
+rewriting: the store file's sha256 and mtime were unchanged across both
+`1.25.3` starts and the quit between them — the quit path ran and the process
+exited, while the log records `ERROR [gpui::app] timed out waiting on
+app_will_quit` at `12:23:30` (and at `12:21:32` for the quit before the apply).
 
 Still unprobed, because both probes touched only `settings.json`:
 

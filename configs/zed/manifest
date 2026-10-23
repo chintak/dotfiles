@@ -1,4 +1,4 @@
-version     = 1.0.1
+version     = 1.1.0
 description = Zed — GUI editor: Helix mode, Nordfox/Dayfox themes, 10 extensions pinned, Zed AI disabled
 platform    = mac
 file        = settings.json|~/.config/zed/settings.json

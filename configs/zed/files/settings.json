@@ -1,0 +1,97 @@
+{
+  "buffer_line_height": "comfortable",
+  "buffer_font_size": 14.0,
+  "buffer_font_family": "JetBrainsMono Nerd Font Mono",
+  "agent_buffer_font_size": 13.0,
+  "agent_buffer_font_family": "JetBrainsMono Nerd Font Mono",
+  "focus_follows_mouse": {
+    "enabled": true
+  },
+  "helix_mode": true,
+  "disable_ai": false,
+  "cli_default_open_behavior": "existing_window",
+  "completion_menu_item_kind": "symbol",
+  "format_on_save": "modifications_if_available",
+  "gutter": {
+    "min_line_number_digits": 2
+  },
+  "horizontal_scroll_margin": 99.0,
+  "vertical_scroll_margin": 99.0,
+  "language_models": {
+    "opencode": {
+      "show_zen_models": false
+    }
+  },
+  "cursor_shape": "block",
+  "cursor_blink": false,
+  "agent_servers": {
+    "codex-acp": {
+      "type": "registry"
+    },
+    "claude-acp": {
+      "type": "registry"
+    },
+    "opencode-v2": {
+      "favorite_config_option_values": {
+        "effort": [
+          "high"
+        ]
+      },
+      "default_config_options": {
+        "effort": "high",
+        "model": "opencode-go/deepseek-v4.1-flash"
+      },
+      "type": "registry"
+    }
+  },
+  "search": {
+    "regex": true,
+    "center_on_match": true
+  },
+  "autosave": "on_focus_change",
+  "icon_theme": {
+    "mode": "system",
+    "light": "Material Icon Theme",
+    "dark": "Material Icon Theme"
+  },
+  "theme": {
+    "mode": "system",
+    "light": "Dayfox - opaque",
+    "dark": "Nordfox - blurred"
+  },
+  "agent": {
+    "thinking_display": "preview",
+    "show_turn_stats": true,
+    "use_modifier_to_send": true,
+    "tool_permissions": {
+      "default": "allow",
+      "tools": {}
+    },
+    "sandbox_permissions": {
+      "allow_all_hosts": true
+    },
+    "single_file_review": true,
+    "default_profile": "auto",
+    "default_model": {
+      "provider": "opencode",
+      "model": "go/deepseek-v4.1-flash",
+      "enable_thinking": true,
+      "effort": "high"
+    },
+    "favorite_models": [],
+    "profiles": {
+      "auto": {
+        "name": "Auto",
+        "tools": {},
+        "enable_all_context_servers": false,
+        "context_servers": {}
+      }
+    },
+    "model_parameters": []
+  },
+  "context_servers": {
+    "Roblox_Studio": {
+      "command": "/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP"
+    }
+  }
+}

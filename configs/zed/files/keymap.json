@@ -1,0 +1,8 @@
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      "cmd-alt-shift-n": "agent::ToggleNewThreadMenu"
+    }
+  }
+]

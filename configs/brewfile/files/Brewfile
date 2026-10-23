@@ -58,6 +58,7 @@ brew "duf"
 brew "bottom"
 
 cask "font-jetbrains-mono-nerd-font"
+cask "zed"
 
 # Ghostty is intentionally not listed: it is the terminal you are already using,
 # and a cask entry conflicts with a manual install. Fresh machines: brew install --cask ghostty

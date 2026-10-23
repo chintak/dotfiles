@@ -7,6 +7,15 @@ on `PATH`.
 `languages.toml` only pins what auto-detection gets wrong (Python, Lua).
 `$EDITOR=hx` is set in `zshrc`; `git config` uses `core.editor = hx`.
 
+## Auto-save
+
+Every modified buffer is written ~1s after the last change and on focus loss,
+never mid-insert (a firing timer defers to Esc). Formatting is skipped, so
+`prettier` runs on a manual `:w` only. An agent's on-disk edit makes the save
+fail loudly (`file modified by an external process, use :w!`) — F5 reloads,
+`:w!` is the trap. `hx` is `$EDITOR`: abort a commit or `rebase -i` todo with
+`:cq!`, never `:q!`. herdr focus forwarding is unverified; the timer covers it.
+
 ## Markdown writing
 
 `soft-wrap` fills the pane width with full indent retention; Enter continues
@@ -15,7 +24,8 @@ increment to `2.`, and `space c` line-comments with `-` in markdown).
 
 Tooling (see `Brewfile`): `marksman` (LSP), `harper-ls` (offline spell +
 grammar; code actions on `space a` add words to
-`~/.config/harper-ls/dictionary.txt`), `prettier` (format on save).
+`~/.config/harper-ls/dictionary.txt`), `prettier` (format on a manual `:w`;
+autosave skips formatting).
 Helix has no built-in spell checker yet (spellbook PR pending) — harper is
 the LSP route.
 

@@ -52,23 +52,26 @@ block with an editor — do not accept the output.
 | `format_on_save: modifications_if_available` | Formats on save only when the language server can format *changed* regions, so saving a large file doesn't reflow unrelated lines (keeps agent diffs reviewable). |
 | `autosave: on_focus_change` | Writes a buffer when the window loses focus rather than on every keystroke or on a timer — the least intrusive policy when an agent is also touching files. |
 | `focus_follows_mouse: { enabled: true }` | Clicking into a pane focuses it without a second click — matches herdr pane behaviour. |
-| `preferred_line_length: 100` + `soft_wrap: "editor_width"` | `editor_width` wraps at the **editor width**; the `100` is only the preference value Zed's UI wrote and caps nothing. `soft_wrap: "bounded"` is the setting that would wrap at `min(editor width, preferred_line_length)` — i.e. enforce the 100-column cap. Also a genuine non-default choice: Zed's default `preferred_line_length` is `80`. Whether a 100-cap was intended is an open question, not a documented fact. |
-| `disable_ai: true` | Zed's own AI — agent panel, threads sidebar, edit prediction, inline assistant — is off. Agents run in opencode + herdr instead. It makes the keys below **dormant** and the keymap binding inert. |
+| `preferred_line_length: 100` + `soft_wrap: "editor_width"` | Per [all-settings](https://zed.dev/docs/reference/all-settings): `editor_width` wraps at lines that overflow the **editor width**, while the `100` is only the preference value Zed's UI wrote and caps nothing. `soft_wrap: "bounded"` is the option that wraps at the minimum of `editor_width` and `preferred_line_length` — i.e. what would enforce the 100-column cap. Also a genuine non-default choice: Zed's default `preferred_line_length` is `80`. Whether a 100-cap was intended is an open question, not a documented fact. |
+| `disable_ai: true` | Zed's own AI is off: [AI configuration](https://zed.dev/docs/ai/configuration) states that "when AI is turned off, all AI features are disabled … the Threads Sidebar, Agent Panel, Edit Prediction, and Inline Assistant", and [all-settings](https://zed.dev/docs/reference/all-settings) defines the key as "whether to disable all AI features in Zed". Agents run in opencode + herdr instead. It makes the keys below **dormant** and the keymap binding inert. |
 | `buffer_font_family` / `agent_buffer_font_family` = `JetBrainsMono Nerd Font Mono`, `13.0` / `15.0` | The Nerd Font from the Brewfile cask; glyphs are PUA-only (see the root README), so the font must be explicit. 1.0.1 equalized both at `15` (agent buffers had been one point smaller); the 2026-10-23 UI capture then took the *editor* buffer to `13` and left the agent buffer at `15` — the agent value is dormant with the panel. |
 | `ui_font_family` / `ui_font_size` = `Source Serif 4`, `16.0` | Panel labels, tabs, and menus in a serif face, so chrome reads as a different layer from the monospace editor. Set in the Zed UI, captured back into the repo. |
 | `agent_ui_font_size: 18.0` | **Dormant** with the rest of the agent surface (`agent_ui_font_family` is also `Source Serif 4`): the panel never opens while `disable_ai` is `true`, so this is a retained value, not active chrome. Captured from the UI. |
 | `markdown_preview.code_font_family` = `JetBrainsMono Nerd Font Mono` | Fenced code in the markdown preview keeps the Nerd Font's glyph coverage instead of falling back to Zed's preview default. Captured from the UI. |
 | `agent.default_model` (provider `opencode`, `go/deepseek-v4.1-flash`, thinking, `effort: high`) | **Dormant** — parsed and retained, but unused while `disable_ai` is `true`. It points a new thread at the same model the opencode CLI uses, so re-enabling AI needs no model hunting. |
-| `agent.tool_permissions` / `agent.sandbox_permissions` | **Dormant** permission profile: default-allow tool calls with all network hosts allowed, because Zed's prompt-per-call is the slow path for an agent expected to run builds and fetch. Retained so re-enabling AI is a one-key change. |
+| `agent.tool_permissions` / `agent.sandbox_permissions` | **Dormant** permission profile: default-allow tool calls with all network hosts allowed, because Zed's prompt-per-call is the slow path for an agent that was expected to run builds and fetch. Retained so re-enabling AI is a one-key change. |
 | `context_servers.Roblox_Studio.command` | **Dormant** alongside the `agent` block: points Zed's agent at the Roblox Studio MCP binary (`/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP`), the same server the opencode `mcp` block uses. **Absolute path by design** — it breaks if Studio moves; acceptable for a mac-personal-only package. |
-| `auto_install_extensions` (10 IDs) | Pins *which* extensions a fresh Mac installs: `dockerfile`, `html`, `jetbrains-themes`, `just`, `latex`, `material-icon-theme`, `nvim-nightfox`, `one-dark-pro`, `toml`, `tsgo`. Schema is `{ "<id>": true \| false }`. This pins the **set**, not the versions — see *Extensions* below. |
+| `auto_install_extensions` (10 IDs) | Pins *which* extensions a fresh Mac installs: `dockerfile`, `html`, `jetbrains-themes`, `just`, `latex`, `material-icon-theme`, `nvim-nightfox`, `one-dark-pro`, `toml`, `tsgo`. The schema is `{ "<id>": true \| false }` — `true` installs, `false` never installs ([all-settings](https://zed.dev/docs/reference/all-settings)). This pins the **set**, not the versions — see *Extensions* below. |
 | `search.regex: true`, `search.center_on_match: true`, scroll margins `99` | Search opens in regex mode (the `rg` habit); matches are centred and the viewport keeps a wide scroll margin so the cursor never sits at the screen edge. |
 
 Retired in 1.1.0, with the keys they described: `agent_servers.*` (the
 `opencode-v2` / `codex-acp` / `claude-acp` registry entries) and
 `language_models.opencode.show_zen_models` — both only configure Zed's own
-agent surface, which `disable_ai` shuts down. `agent_servers` is a *runtime*
-backends map re-written by Zed's UI; keeping it invited drift for no function.
+agent surface, which `disable_ai` shuts down. `agent_servers` is user-authored
+config for external ACP agents that are started from the Agent Panel
+([External Agents](https://zed.dev/docs/ai/external-agents)); while
+`disable_ai: true` that panel never opens, so the entries configure nothing and
+were retired as dead config. Neither observed UI write touched them.
 
 Dormant ≠ deleted: the `agent` block, `context_servers.Roblox_Studio`, and the
 four `agent_ui_font_*` / `agent_buffer_font_*` keys stay in the file, so
@@ -152,8 +155,8 @@ retires.
 
 ```bash
 dot diff zed                  # what the UI changed vs the repo — do this BEFORE apply
-# 1. quit Zed (see below), then capture:
-cp ~/.local/share/dot/store/zed/1.1.0/settings.json configs/zed/files/settings.json
+# 1. quit Zed (see below), then capture (<ver> = the applied version, `dot status`):
+cp ~/.local/share/dot/store/zed/<ver>/settings.json configs/zed/files/settings.json
 # 2. prune — the expression from "Why these settings", verbatim:
 jq 'del(.agent_servers, .language_models)
     | .auto_install_extensions = {dockerfile: true, html: true, "jetbrains-themes": true,
@@ -186,10 +189,11 @@ dot apply zed
   made by hand.
 - **The two ordering hazards are `apply`-before-`bump` and
   `apply`-before-`capture`.** `dot apply` starts with `rm -rf` on
-  `$stage = $DOT_STORE/<name>/<version>` (`dot:201-203`, `:211`): applying
-  before bumping wipes the *same-version* directory, and applying before
-  capturing re-points the symlink at a fresh store and orphans the mutated
-  one, after which `dot diff` / `dot status` no longer see the drift at all.
+  `$stage = $DOT_STORE/<name>/<version>` and then copies repo → store
+  (`dot:201-203`, `:211-215`): applying before bumping wipes the
+  *same-version* directory, and applying before capturing clobbers the mutated
+  content that was supposed to be captured, after which `dot diff` /
+  `dot status` see no drift at all.
 - `dot edit zed` opens **only the first file** in the manifest —
   `settings.json` (`dot:492-493`). Keymap and tasks have no edit shortcut
   (`$EDITOR configs/zed/files/keymap.json`).
@@ -227,19 +231,29 @@ prevented*, applied to a config whose tool rewrites it.
 ### Which version? Four artifacts, none interchangeable
 
 Every behavioural claim below names the **running** version, and only `ps` /
-`Zed.log` prove that. The other three answer different questions:
+`Zed.log` prove that — which is why this table is re-derived, not copied: the
+process changed under the package at `12:23`. The other three artifacts answer
+different questions:
 
-| Artifact | How to read it | Value (2026-10-23) |
+| Artifact | How to read it | Value (2026-10-23, re-checked `12:32`) |
 |---|---|---|
 | Cask **receipt** | `brew list --cask --versions zed` | `1.21.0` — what Homebrew installed on 2026-09-23 |
 | Tap **formula** | `brew info --cask zed` | `1.25.2 (auto_updates)` — what the tap advertises; the cask self-updates past it |
-| **Bundle on disk** | `defaults read /Applications/Zed.app/Contents/Info.plist CFBundleShortVersionString` | `1.25.3` — written 06:14, never launched as of the 1.1.0 apply |
-| **Running process** | `ps`, `Zed.log` startup line | `1.25.2` (pid 46794, started 2026-10-22 14:53) |
+| **Bundle on disk** | `defaults read /Applications/Zed.app/Contents/Info.plist CFBundleShortVersionString` | `1.25.3` — `Info.plist` written 06:14, first launched `12:23:38` |
+| **Running process** | `ps -o pid,lstart`, `Zed.log` startup line | **at the `11:40` probe:** `1.25.2`, pid 46794, started 2026-10-22 14:53 (`Zed.log:60`). **now:** `1.25.3`, pid 15309, started `Fri Oct 23 12:23:38 2026` (`Zed.log:2683`) |
 
 So the cask receipt `1.21.0` is *not* the version that behaved: **both** drift
 probes — the `00:18` write-through and the `11:40` rewrite — were `1.25.2`,
 and the `1.21.0` build had not been running since 2026-09-23 (the same day it
 was installed). Earlier notes crediting `1.21.0` were reading the receipt.
+
+The current process is `1.25.3` (pid 15309), not `1.25.2`: the relaunch that
+followed the 1.1.0 apply is the **first run of that bundle** (`Zed.log:2683`,
+`ps -p 15309 -o pid,lstart`). Everything in *The drift probes* below is
+therefore a `1.25.2` observation of a build that is no longer running — the
+retired keys and the captured values were not re-observed on `1.25.3` except
+as "not rewritten" (store sha256 and mtime unchanged across the `12:23` launch
+and a graceful quit).
 
 ### The drift probes: observed
 
@@ -257,14 +271,18 @@ prune existed.
 1.0.1 landed: `preferred_line_length: 100` + `soft_wrap: "editor_width"`,
 `buffer_font_size` `15 → 13`, and `disable_ai: false → true`. Reconciled as
 **1.1.0**, this time capture → prune → bump → apply, with Zed quit first. The
-relaunch that followed was the **first run of the `1.25.3` bundle on disk** —
-recorded as such, not as a `1.25.3` observation.
+relaunch that followed was the **first run of the `1.25.3` bundle on disk**
+(`Zed.log:2683`) — so the `11:40` write itself is a `1.25.2` observation, and
+`1.25.3` is only observed as *not* rewriting: the store file's sha256 and
+mtime were unchanged across the `12:23` launch and a graceful quit.
 
 Still unprobed, because both probes touched only `settings.json`:
 
 - `keymap.json` in the keymap editor — its store copy still has the
   apply-time mtime, so "the keymap editor writes `keymap.json`" is documented
-  upstream but unobserved here.
+  upstream ([key-bindings](https://zed.dev/docs/key-bindings): "anything that
+  you end up doing on the keymap editor also gets reflected on the
+  `keymap.json` file") but unobserved here.
 - `tasks.json` acceptance — `task: spawn` has not been run against the empty
   array. `zed: open keymap file` and `task: spawn` must open without an error
   toast before "Zed accepts the scaffolds" is anything but an assumption.
@@ -284,9 +302,11 @@ should install (`{ "<id>": true }` per ID): `dockerfile`, `html`,
 machine, so `ls ~/Library/Application Support/Zed/extensions/installed`
 and the map's keys are the same ten.
 
-It pins *which* extensions, **not which versions**: every installed extension
-auto-updates at start by default, and `auto_update_extensions: { "<id>": false }`
-is the key that would pin a version. Deliberately not set — the extensions are
+It pins *which* extensions, **not which versions**: per
+[all-settings](https://zed.dev/docs/reference/all-settings), every installed
+extension is auto-updated when Zed starts by default, and
+`auto_update_extensions: { "<id>": false }` is the key that pins it to the
+currently installed version. Deliberately not set — the extensions are
 theme/syntax/tooling packages where tracking upstream is the point. The
 downloaded payload stays machine state (see *What is deliberately not
 tracked*); only the selection is config.

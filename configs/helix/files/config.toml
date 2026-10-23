@@ -31,6 +31,20 @@ render = true
 insert = "bar"
 normal = "block"
 
+# Auto-save (helix 25.07). Writes every modified buffer ~1s after the last
+# change and never mid-insert — a timer that fires while inserting defers and
+# flushes on Esc (auto_save.rs:36-72); focus-lost writes from any mode.
+# Auto-format is skipped on autosave (auto_save.rs:93), so prettier still
+# only runs on a manual :w. An agent's on-disk edit is NOT silently
+# clobbered: the save fails with "file modified by an external process, use
+# :w! to overwrite" and the buffer stays modified, retrying on each change
+# (document.rs:1003-1012) — so F5 first, and :w! is the trap.
+# hx is $EDITOR and git core.editor: abort a commit message or rebase -i todo
+# with `:cq!` (forced cquit, exit 1), never `:q!` — the text is already saved.
+[editor.auto-save]
+focus-lost = true
+after-delay = { enable = true, timeout = 1000 }
+
 # ── macOS-style word/line motion ──────────────────────────────────────
 # Ghostty sends xterm CSI for alt+arrows and Home/End for cmd+arrows
 # (see ghostty/config); herdr forwards both untouched to the pane.

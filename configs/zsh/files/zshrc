@@ -138,6 +138,9 @@ export NEBULA_GRAPH_PORT=9669
 alias nebula-console-login="nebula-console -addr $NEBULA_GRAPH_ADDRESS -port $NEBULA_GRAPH_PORT -u root -p nebula"
 
 [[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+# Profile-scoped fragments shipped by dot (zshrc.d/pnpm.zsh on mac-personal).
+for _zsh_frag in "$HOME"/.zshrc.d/*.zsh(N); do source "$_zsh_frag"; done
+unset _zsh_frag
 
 # ── plugins (syntax-highlighting must be sourced last) ─────────────────
 _zsh_share() {

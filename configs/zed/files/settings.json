@@ -1,4 +1,7 @@
 {
+  "terminal": {
+    "copy_on_select": true
+  },
   "preferred_line_length": 100,
   "soft_wrap": "editor_width",
   "markdown_preview": {

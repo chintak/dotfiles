@@ -152,6 +152,8 @@ daemon (`opencode service set env …`, see the root README).
 
 ## The reconcile loop
 
+- **2026-10-27 capture (1.2.0):** `dot diff zed` showed only `terminal.copy_on_select: true` in `~/.local/share/dot/store/zed/1.1.0/settings.json:2–4`; captured that three-line block in `files/settings.json:2–4`, preserving every other byte. This task does not apply the config, quit, or restart Zed.
+
 Zed's UI **writes its config files**, so unlike every other config here, the
 store copy is mutable. The loop is always: **capture → prune → re-pin** — a
 bare capture is no longer sufficient, because it puts back the keys 1.1.0

@@ -1,0 +1,12 @@
+version     = 1.0.0
+description = Claude Code — CLAUDE.md (imports shared AGENTS.md), agents, shared skills, user-scope MCP servers rendered from shared/mcp.json
+file        = CLAUDE.md|~/.claude/CLAUDE.md
+file        = AGENTS.md|~/.claude/AGENTS.md
+file        = agents|~/.claude/agents
+file        = skills/atomic-commit|~/.claude/skills/atomic-commit
+file        = skills/hf-cli|~/.claude/skills/hf-cli
+file        = skills/ship|~/.claude/skills/ship
+file        = mcp.json|~/.config/dot/claude/mcp.json
+file@mac-work = mcp-work.json|~/.config/dot/claude/mcp.json
+file        = bin|~/.config/dot/claude/bin
+post_apply  = ~/.config/dot/claude/bin/sync.sh

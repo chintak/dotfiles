@@ -140,15 +140,16 @@ yazi                         uv-tools
 brewfile
 uv-tools
 opencode
+claude
 zed
 ```
 
 `dot init --profile mac-personal` installs them in order, expanding each config's
 `requires` first and skipping any whose `platform` doesn't match this host
 (so `brewfile` — macOS casks — never lands on a headless box). Three
-profiles ship: `mac-personal` (the full daily driver, 12 configs), `mac-work`
-(the same environment minus `zed` — 11 configs — where opencode installs its
-`file@mac-work` variant without MCP servers), and `server` (headless).
+profiles ship: `mac-personal` (the full daily driver, 13 configs), `mac-work`
+(the same environment minus `zed` — 12 configs — where opencode and claude install
+their `file@mac-work` variants without MCP servers), and `server` (headless).
 
 There is deliberately **no `ios` profile**: the phone (Termius) doesn't run
 `dot`; it SSHes into a host that already has a profile. The glyph-free
@@ -165,6 +166,7 @@ dotfiles/
 ├── README.md
 ├── completions/_dot     # zsh tab-completion
 ├── profiles/            # mac-personal.conf, mac-work.conf, server.conf, …
+├── shared/              # agent config written once: AGENTS.md, skills/, mcp.json
 └── configs/<tool>/      # one folder per config: README.md, manifest, files/
 ```
 
@@ -179,6 +181,10 @@ Each `configs/<tool>/` is a package:
 | `manifest` | version, description, platform, `file` mappings, optional `requires` / `post_apply` |
 | `files/` | what gets installed, paths relative to here |
 | `README.md` | why this tool is configured the way it is |
+
+A package can pull from `shared/` with a git symlink under `files/`, as `opencode` and
+`claude` do for `AGENTS.md` and `skills/`. `dot apply` copies through the link, so the
+store always holds real files and every package still installs on its own.
 
 > The repo lives under `~/.local/share/dot/repo` when `dot` clones it (not
 > `~/Documents/…`) because code and dotfiles belong outside iCloud Drive —
@@ -663,6 +669,16 @@ tools with READMEs ("skills") or extensions.
 (herdr TUI plugin loader), plus the `agents/` and `skills/` definitions;
 runtime state (`cli.json`, `service.json`, `node_modules/`, `plugins/`)
 stays out of the store.
+
+**`Claude Code`** — Anthropic's coding agent
+([docs](https://code.claude.com/docs)). The `claude` config stands alone
+(no dependency on `opencode`). It ships `CLAUDE.md` (a one-line `@AGENTS.md`
+import), ports of the same four agents, and the shared skills. It also
+registers user-scope MCP servers into `~/.claude.json` with a post_apply,
+because that file is runtime state and can't be symlinked.
+
+Both agents get `AGENTS.md`, skills, and MCP servers from one source in
+`shared/` (see `shared/README.md`). `test/shared-sync.zsh` fails on drift.
 
 ### Roblox
 

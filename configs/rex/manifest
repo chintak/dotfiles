@@ -1,8 +1,10 @@
-version     = 1.1.0
-description = Rex — Ghostty look & feel (TokyoNight Night, JetBrainsMono 16, block cursor, option-as-alt) + herdr chords
+version     = 1.2.0
+description = Rex — Ghostty look & feel (TokyoNight Night, JetBrainsMono 16, block cursor, option-as-alt) + herdr chords + agent switcher
 platform    = mac
 file        = shortcuts.json|~/Library/Application Support/com.superlogical.rex/Shortcuts/shortcuts.json
 file        = init.lua|~/.config/rex/init.lua
 file        = settings.json|~/.config/dot/rex-settings.json
 file        = rex-settings|~/.config/dot/rex-settings
+file        = rex-agents|~/.config/dot/rex-agents
+file        = pi-rex-status.ts|~/.pi/agent/extensions/rex-status.ts
 post_apply  = bash ~/.config/dot/rex-settings apply && { rex config reload || true; }

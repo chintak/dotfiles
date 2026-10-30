@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# rex-agents — fzf switcher over every agent pane in every Rex session.
+#
+#   rex-agents [--client ID]        the switcher (cmd+shift+a opens it in a float)
+#   rex-agents list                 print the entries (fzf reload)
+#   rex-agents preview N            the Nth agent's screen (fzf preview)
+#   rex-agents goto N               jump to the Nth agent
+#
+# The agent list comes from the `agents` action in init.lua. Each run caches
+# it so entry numbers, the preview, and the jump all see the same snapshot.
+set -euo pipefail
+
+# Rex starts the switcher through a login shell, which on this setup lacks
+# Homebrew (fzf, jq): it is added in .zshrc, not the profile.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+CACHE="${TMPDIR:-/tmp}/rex-agents.$UID.json"
+CLIENT_FILE="${TMPDIR:-/tmp}/rex-agents.$UID.client"
+
+rexc() {
+  local client; client="$(cat "$CLIENT_FILE" 2>/dev/null || true)"
+  if [[ -n "$client" ]]; then rex -C "$client" "$@"; else rex "$@"; fi
+}
+
+list() {
+  rexc do agents > "$CACHE.tmp" && mv "$CACHE.tmp" "$CACHE"
+  jq -j --arg home "$HOME" '
+    # TokyoNight Night, as truecolor SGR.
+    {red: "247;118;142", green: "158;206;106", yellow: "224;175;104", blue: "122;162;247",
+     magenta: "187;154;247", cyan: "125;207;255", orange: "255;158;100", fg: "169;177;214",
+     dim: "86;95;137"} as $rgb
+    | def c($name; $s): "\u001b[38;2;\($rgb[$name])m" + $s + "\u001b[0m";
+    def pad($n): . + (" " * ([$n - length, 0] | max));
+    {blocked: ["red", "●", "needs you"], error: ["red", "✕", "error"],
+     done: ["green", "✓", "done"], working: ["yellow", "◐", "working"],
+     idle: ["blue", "○", "idle"], unknown: ["dim", "·", "running"]} as $style
+    | if length == 0 then
+        c("dim"; "  No agent panes. Start claude, pi, or opencode in a Rex pane.") + "\u0000"
+      else
+        to_entries[] | .key as $i | .value as $a
+        | ($style[$a.state] // $style.unknown) as $s
+        | ($a.msg // "" | gsub("[\u0000-\u001f]+"; " ")) as $msg
+        | (if $msg != "" then $msg elif $a.title != "" then $a.title else "" end) as $line
+        | (($a.cwd // "") | sub("^" + $home; "~")) as $cwd
+        | c("dim"; (if $i < 9 then "\($i + 1)" else " " end)) + "  "
+          + c($s[0]; $s[1] + " " + ($s[2] | pad(10)))
+          + c("magenta"; $a.app | pad(12))
+          + c("cyan"; $a.session) + c("dim"; " › tab \($a.tab)")
+          + (if $a.kind then c("orange"; "  [\($a.kind)]") else "" end)
+          + "\n   " + c("fg"; $line | .[0:110]) + "\n   " + c("dim"; $cwd)
+          + "\u0000"
+      end
+  ' "$CACHE"
+}
+
+# The pane's screen with colors. fzf renders SGR only, so cursor-forward
+# (CSI n C) becomes spaces and every other non-SGR sequence is dropped.
+preview() {
+  local a; a="$(jq -c --argjson n "$1" '.[$n] // empty' "$CACHE")"
+  [[ -n "$a" ]] || exit 0
+  local sid bid; sid="$(jq -r .session_id <<<"$a")"; bid="$(jq -r .block_id <<<"$a")"
+  rexc capture -s "$sid" -b "$bid" --format vt --trim 2>/dev/null \
+    | perl -pe 's/\e\[(\d*)C/" " x ($1 || 1)/ge; s/\e\[[0-9;:?]*[A-BD-Zabd-z]//g; s/\r//g' \
+    | tail -n "${FZF_PREVIEW_LINES:-40}"
+}
+
+goto_n() {
+  local a; a="$(jq -c --argjson n "$1" '.[$n] // empty' "$CACHE")"
+  [[ -n "$a" ]] || exit 0
+  rexc do goto_agent \
+    "session_id=$(jq -r .session_id <<<"$a")" \
+    "window_id=$(jq -r .window_id <<<"$a")" \
+    "block_id=$(jq -r .block_id <<<"$a")" >/dev/null
+}
+
+pick() {
+  local self; self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+  list | fzf --read0 --ansi --gap --highlight-line --layout=reverse \
+    --no-sort --cycle --info=inline-right --no-scrollbar \
+    --border=rounded --border-label=' 󰚩 agents ' --border-label-pos=3 \
+    --padding=1,2 --prompt='  ' --pointer='▌' --gutter=' ' --separator='─' \
+    --header='enter jump · ctrl-r refresh · esc close' --header-first \
+    --preview="$self preview {n}" \
+    --preview-window='right,58%,border-left,nowrap,<110(down,55%,border-top,nowrap)' \
+    --preview-label=' screen ' \
+    --bind="enter:become($self goto {n})" \
+    --bind="ctrl-r:reload($self list)" \
+    --color='bg+:#283457,fg:#c0caf5,fg+:#c0caf5,hl:#ff9e64,hl+:#ff9e64' \
+    --color='border:#27a1b9,label:#7aa2f7,preview-border:#3b4261,preview-label:#565f89' \
+    --color='prompt:#7dcfff,pointer:#ff007c,info:#545c7e,header:#565f89,gutter:-1,separator:#3b4261' \
+    || true
+}
+
+case "${1:-}" in
+  list)    list ;;
+  preview) preview "$2" ;;
+  goto)    goto_n "$2" ;;
+  --client) printf '%s' "$2" > "$CLIENT_FILE"; pick ;;
+  "")      pick ;;
+  *)       echo "usage: rex-agents [--client ID] | list | preview N | goto N" >&2; exit 2 ;;
+esac

@@ -12,7 +12,11 @@ owns and stays independent.
   `{env:GITHUB_PERSONAL_ACCESS_TOKEN}`), and Exa (local, `{env:EXA_API_KEY}`). See **Environment & secrets** below.
 - `files/tui.jsonc` → `~/.config/opencode/tui.jsonc` — loads the herdr
   TUI session plugin (`herdr-tui-session.js`), which the herdr opencode
-  integration installs and keeps updated.
+  integration installs and keeps updated, and the Rex status plugin.
+- `files/rex-tui-status.js` → `~/.config/opencode/rex-tui-status.js` — reports
+  this pane's agent state (working / blocked / done) to Rex over OSC 7501, so
+  Rex tab headers and the `rex` package's agent switcher see opencode. No-op
+  outside Rex.
 - `files/agents/` → `~/.config/opencode/agents/` — agent definitions
   (`do.md`). Edit in the repo; new panes read them at startup.
 - `files/skills/` → `~/.config/opencode/skills/` — reusable skills

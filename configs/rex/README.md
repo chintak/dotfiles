@@ -13,6 +13,12 @@ set up to feel like the Ghostty + herdr setup:
 - **Helix:** `alt+left/right` send real alt+arrows and `cmd+left/right` send
   Home/End, like the Ghostty overrides.
 
+- **Agents:** herdr's agent jumping, across every session. `alt+tab` /
+  `shift+alt+tab` cycle agent panes, `shift+alt+1..9` jump to the Nth, and
+  `cmd+shift+a` opens the **agent switcher**: a floating fzf list of every
+  agent pane with its state (needs you / working / done / idle), latest
+  message, directory, and a live preview of its screen. Enter jumps.
+
 Not carried over: Ghostty's quick terminal (global hotkey), window padding
 and hidden titlebar (Rex has no equivalent setting), cursor thickness, and
 herdr's agent chords (`alt+tab`, `shift+alt+1..9`).
@@ -24,6 +30,8 @@ herdr's agent chords (`alt+tab`, `shift+alt+1..9`).
 | `init.lua` | `~/.config/rex/init.lua` | symlink; `post_apply` runs `rex config reload` |
 | `shortcuts.json` | `~/Library/Application Support/com.superlogical.rex/Shortcuts/shortcuts.json` | symlink |
 | `settings.json` | `~/.config/dot/rex-settings.json` | symlink, then written into preferences by `post_apply` |
+| `rex-agents` | `~/.config/dot/rex-agents` | the switcher (`cmd+shift+a`); also `list`, `preview N`, `goto N` |
+| `pi-rex-status.ts` | `~/.pi/agent/extensions/rex-status.ts` | pi extension: reports state to Rex |
 | `rex-settings` | `~/.config/dot/rex-settings` | helper script (`apply` / `capture`) |
 
 Rex keeps its settings in macOS preferences (`com.superlogical.rex`), next
@@ -32,6 +40,22 @@ can't be symlinked. `settings.json` is a typed snapshot of just the
 `Workspace.*` settings; `post_apply` writes each key with `defaults write`.
 The custom theme lives in `data["Workspace.customThemes"]` as readable JSON.
 Session state (`lastFocusedSession`, `programActivitySeen`) is never captured.
+
+## How agents are found
+
+A pane is an agent when a known agent (`claude-code`, `pi`, `opencode`,
+`codex`) reports its state with the Program Status Protocol (OSC 7501), or
+when one runs as the pane's foreground program. Claude Code reports natively;
+pi via `pi-rex-status.ts` here; opencode via `rex-tui-status.js` in the
+`opencode` package (a TUI plugin, since opencode V2's server is shared and only
+the TUI knows which pane it's in). Both plugins write to `/dev/tty` and do
+nothing outside Rex. pi has no permission prompts of its own, so it's
+`blocked` only when an extension emits `rex:blocked` (or herdr's
+`herdr:blocked`) on `pi.events` with `{ active, label }`.
+
+The actions behind the keys live in `init.lua` (`agents`, `goto_agent`,
+`next_agent`, `previous_agent`, `focus_agent`, `agent_switcher`) and show up in
+the command palette under **Agents**. `rex do agents` prints the list as JSON.
 
 ## Changing settings
 

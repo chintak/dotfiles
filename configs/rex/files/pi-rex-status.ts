@@ -6,11 +6,16 @@
 // working while the agent runs, done when it settles, blocked while any
 // extension signals one (herdr's `herdr:blocked` bus event or `rex:blocked`,
 // both { active, label }). Outside Rex (no REX_BLOCK) it does nothing.
+//
+// Rex drops a pane's status when the program marks a new prompt (OSC 133;A),
+// and pi does that on every turn, so the report is resent every second.
 // @ts-nocheck
 
 import { closeSync, openSync, writeSync } from "node:fs";
 
 type State = "idle" | "working" | "done" | "blocked" | "clear";
+
+const RESEND_MS = 1000;
 
 // Reports go to the controlling terminal, not stdout, so they never mix
 // into pi's own rendering.
@@ -64,12 +69,15 @@ export default function (pi) {
   pi.events.on("herdr:blocked", onBlocked);
   pi.events.on("rex:blocked", onBlocked);
 
+  let resend;
   pi.on("session_start", (_event, ctx) => {
     // Headless modes (rpc, json, print) have no pane to report for.
     if (ctx?.mode !== "tui") return;
     tui = true;
     active = ctx?.isIdle?.() === false;
     publish();
+    resend ??= setInterval(publish, RESEND_MS);
+    resend.unref?.();
   });
 
   pi.on("before_agent_start", (event) => {
@@ -90,6 +98,8 @@ export default function (pi) {
 
   pi.on("session_shutdown", () => {
     if (!tui) return;
+    clearInterval(resend);
+    resend = undefined;
     report("clear");
     if (tty !== undefined && tty >= 0) closeSync(tty);
     tty = undefined;

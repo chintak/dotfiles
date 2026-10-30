@@ -45,11 +45,14 @@ Session state (`lastFocusedSession`, `programActivitySeen`) is never captured.
 
 A pane is an agent when a known agent (`claude-code`, `pi`, `opencode`,
 `codex`) reports its state with the Program Status Protocol (OSC 7501), or
-when one runs as the pane's foreground program. Claude Code reports natively;
-pi via `pi-rex-status.ts` here; opencode via `rex-tui-status.js` in the
-`opencode` package (a TUI plugin, since opencode V2's server is shared and only
-the TUI knows which pane it's in). Both plugins write to `/dev/tty` and do
-nothing outside Rex. pi has no permission prompts of its own, so it's
+when one runs as the pane's foreground program. Claude Code and opencode
+(2.2+) report natively; pi reports via `pi-rex-status.ts` here, which writes
+to `/dev/tty` and does nothing outside Rex. opencode has no `done` state:
+it goes back to `idle` when a run ends.
+
+Rex drops a pane's status whenever the program marks a new prompt
+(OSC 133;A), which pi does on every turn, so the pi extension resends its
+state every second. pi has no permission prompts of its own, so it's
 `blocked` only when an extension emits `rex:blocked` (or herdr's
 `herdr:blocked`) on `pi.events` with `{ active, label }`.
 

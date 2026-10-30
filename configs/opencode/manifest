@@ -1,9 +1,8 @@
-version     = 1.7.0
-description = opencode — agent settings, Roblox MCP, herdr + Rex TUI plugins, agents, skills, AGENTS.md
+version     = 1.6.9
+description = opencode — agent settings, Roblox MCP, herdr TUI loader, agents, skills, AGENTS.md
 file        = AGENTS.md|~/.config/opencode/AGENTS.md
 file        = opencode.jsonc|~/.config/opencode/opencode.jsonc
 file@mac-work = opencode-work.jsonc|~/.config/opencode/opencode.jsonc
 file        = tui.jsonc|~/.config/opencode/tui.jsonc
-file        = rex-tui-status.js|~/.config/opencode/rex-tui-status.js
 file        = agents|~/.config/opencode/agents
 file        = skills|~/.config/opencode/skills

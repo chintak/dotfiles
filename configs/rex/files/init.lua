@@ -85,7 +85,7 @@ end
 -- herdr's agent jumping, across every session: alt+tab / shift+alt+tab
 -- cycle, shift+alt+1..9 jump to the Nth, cmd+shift+a opens the switcher.
 -- A pane is an agent when a known agent reports its status (OSC 7501:
--- Claude Code natively, pi and opencode via the plugins in this repo) or
+-- Claude Code and opencode natively, pi via pi-rex-status.ts) or
 -- runs as the pane's foreground program.
 local TERM = "com.superlogical.terminal"
 local AGENT_APPS = { ["claude-code"] = true, pi = true, opencode = true, codex = true }
@@ -152,10 +152,19 @@ local function list_agents()
   return agents
 end
 
-local function goto_agent(a)
+-- From a key, the app runs the action and the queued select shows the pane.
+-- The switcher runs it through the CLI, whose queue no window follows, so it
+-- passes the app's client and that client is asked to select instead.
+local function goto_agent(a, client_id)
   rex.call("session.attach", { session_id = a.session_id })
   rex.session.focus_block{ session_id = a.session_id, block_id = a.block_id }
-  rex.client.queue("session.select", { session_id = a.session_id, window_id = a.window_id })
+  local select = { session_id = a.session_id, window_id = a.window_id }
+  if client_id then
+    local _, err = rex.call("client.perform", { client_id = client_id, action = "session.select", args = select })
+    if err ~= nil then error(err, 0) end
+  else
+    rex.client.queue("session.select", select)
+  end
 end
 
 -- Step through the agents from the focused pane, wrapping around.
@@ -176,8 +185,8 @@ rex.action{
 }
 rex.action{
   name = "goto_agent", title = "Go to Agent Pane", category = "Agents",
-  args = { session_id = "string", window_id = "string", block_id = "string" },
-  run = function(_, args) goto_agent(args) end,
+  args = { session_id = "string", window_id = "string", block_id = "string", client_id = "string?" },
+  run = function(_, args) goto_agent(args, args.client_id) end,
 }
 rex.action{
   name = "next_agent", title = "Next Agent", category = "Agents",

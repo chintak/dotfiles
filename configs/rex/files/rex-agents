@@ -67,7 +67,8 @@ preview() {
 goto_n() {
   local a; a="$(jq -c --argjson n "$1" '.[$n] // empty' "$CACHE")"
   [[ -n "$a" ]] || exit 0
-  rexc do goto_agent \
+  local client; client="$(cat "$CLIENT_FILE" 2>/dev/null || true)"
+  rexc do goto_agent ${client:+"client_id=$client"} \
     "session_id=$(jq -r .session_id <<<"$a")" \
     "window_id=$(jq -r .window_id <<<"$a")" \
     "block_id=$(jq -r .block_id <<<"$a")" >/dev/null
@@ -81,7 +82,7 @@ pick() {
     --padding=1,2 --prompt='  ' --pointer='▌' --gutter=' ' --separator='─' \
     --header='enter jump · ctrl-r refresh · esc close' --header-first \
     --preview="$self preview {n}" \
-    --preview-window='right,58%,border-left,nowrap,<110(down,55%,border-top,nowrap)' \
+    --preview-window='right,58%,border-left,nowrap,<110(down,45%,border-top,nowrap)' \
     --preview-label=' screen ' \
     --bind="enter:become($self goto {n})" \
     --bind="ctrl-r:reload($self list)" \

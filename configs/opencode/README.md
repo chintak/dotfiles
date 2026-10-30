@@ -4,21 +4,24 @@ Versions the **hand-authored** parts of `~/.config/opencode/`; everything
 else in that directory is runtime state the app or the herdr integration
 owns and stays independent.
 
-- `files/opencode.jsonc` → `~/.config/opencode/opencode.jsonc` — agent
-  settings: LSP + formatters on, `.worktrees/` worktree directory for the
-  `do` agent, and the MCP servers wired here (not into Pi): Roblox Studio
-  (local), alphaxiv (remote, OAuth via `/mcps`), HuggingFace and **github**
-  (remote, `oauth: false` + Bearer `{env:HF_TOKEN}` /
-  `{env:GITHUB_PERSONAL_ACCESS_TOKEN}`), and Exa (local, `{env:EXA_API_KEY}`). See **Environment & secrets** below.
-- `files/tui.jsonc` → `~/.config/opencode/tui.jsonc` — loads the herdr
-  TUI session plugin (`herdr-tui-session.js`), which the herdr opencode
+- `files/opencode.jsonc` → `~/.config/opencode/opencode.jsonc`: agent
+  settings. LSP + formatters are on, and the `do` agent's worktrees go in
+  `.worktrees/`. The `mcp` block between the BEGIN/END markers is
+  **generated** from `shared/mcp.json` by `shared/render-mcp.py`. It
+  contains Roblox Studio (local), alphaxiv (remote, OAuth via `/mcps`),
+  HuggingFace and **github** (remote, `oauth: false` + Bearer
+  `{env:HF_TOKEN}` / `{env:GITHUB_PERSONAL_ACCESS_TOKEN}`), and Exa (local,
+  `{env:EXA_API_KEY}`). See **Environment & secrets** below.
+- `files/tui.jsonc` → `~/.config/opencode/tui.jsonc`: loads the herdr TUI
+  session plugin (`herdr-tui-session.js`), which the herdr opencode
   integration installs and keeps updated.
-- `files/agents/` → `~/.config/opencode/agents/` — agent definitions
-  (`do.md`). Edit in the repo; new panes read them at startup.
-- `files/skills/` → `~/.config/opencode/skills/` — reusable skills
-  (`ship/SKILL.md`). Edit in the repo and re-apply.
-- `files/AGENTS.md` → `~/.config/opencode/AGENTS.md` — one-line pointer so
-  agents edit the repo + `dot apply opencode` instead of the live symlinks.
+- `files/agents/` → `~/.config/opencode/agents/`: agent definitions. Edit
+  them in the repo; new panes read them at startup. Claude ports live in
+  `configs/claude/files/agents/`.
+- `files/skills` → `~/.config/opencode/skills/`: git symlink to
+  `shared/skills`, shared with Claude Code.
+- `files/AGENTS.md` → `~/.config/opencode/AGENTS.md`: git symlink to
+  `shared/AGENTS.md`, shared with Claude Code (its `CLAUDE.md` imports it).
 
 ## Environment & secrets
 

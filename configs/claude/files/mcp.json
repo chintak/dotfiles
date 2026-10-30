@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "roblox-studio": {
+      "type": "stdio",
+      "command": "/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP",
+      "args": []
+    },
+    "alphaxiv": {
+      "type": "http",
+      "url": "https://api.alphaxiv.org/mcp/v1"
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headersHelper": "$HOME/.config/dot/claude/bin/mcp-bearer.sh GITHUB_PERSONAL_ACCESS_TOKEN"
+    }
+  }
+}

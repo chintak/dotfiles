@@ -13,15 +13,19 @@ set up to feel like the Ghostty + herdr setup:
 - **Helix:** `alt+left/right` send real alt+arrows and `cmd+left/right` send
   Home/End, like the Ghostty overrides.
 
-- **Agents:** herdr's agent jumping, across every session. `alt+tab` /
-  `shift+alt+tab` cycle agent panes, `shift+alt+1..9` jump to the Nth, and
+- **Agents:** herdr's agent jumping, across every session.
   `cmd+shift+a` opens the **agent switcher**: a floating fzf list of every
   agent pane with its state (needs you / working / done / idle), latest
-  message, directory, and a live preview of its screen. Enter jumps.
+  message, directory, and a live preview of its screen. Enter jumps; it
+  stays open until then (or esc).
+  `alt+tab` works like macOS cmd+tab: the first press opens the switcher on
+  the agent after the focused pane, each further `alt+tab` (or
+  `shift+alt+tab`) moves the selection while alt is held, and releasing alt
+  jumps there. A quick tap jumps straight to the next agent.
+  `shift+alt+1..9` jump to the Nth agent.
 
 Not carried over: Ghostty's quick terminal (global hotkey), window padding
-and hidden titlebar (Rex has no equivalent setting), cursor thickness, and
-herdr's agent chords (`alt+tab`, `shift+alt+1..9`).
+and hidden titlebar (Rex has no equivalent setting), and cursor thickness.
 
 ## What's captured
 
@@ -56,8 +60,8 @@ state every second. pi has no permission prompts of its own, so it's
 `blocked` only when an extension emits `rex:blocked` (or herdr's
 `herdr:blocked`) on `pi.events` with `{ active, label }`.
 
-In the switcher, **ctrl-s** cycles the sort order, and the choice persists in
-`~/.local/state/rex-agents/sort`:
+Both switchers open sorted by activity; **ctrl-s** cycles the order while one
+is open:
 
 - **activity** (default): needs you, error, done, working, idle; most recent
   first within each.
@@ -68,8 +72,14 @@ Each entry keeps its layout number, the N of shift+alt+N. Recency is the
 status record's `updated_at`, so the pi extension resends only while it
 runs; a resend refreshes that time.
 
+Hold-to-switch finds out when alt comes up by polling macOS's modifier state
+(`NSEvent.modifierFlags` through `osascript`), which needs no permission, and
+then accepts through fzf's `--listen` socket. A further `alt+tab` reaches the
+open switcher as a tab key (`block.event`): `agent_cycle` recognizes it by its
+pane title, `󰚩 agents`.
+
 The actions behind the keys live in `init.lua` (`agents`, `goto_agent`,
-`next_agent`, `previous_agent`, `focus_agent`, `agent_switcher`) and show up in
+`next_agent`, `previous_agent`, `focus_agent`, `agent_switcher`, `agent_cycle`) and show up in
 the command palette under **Agents**. `rex do agents` prints the list as JSON.
 
 ## Changing settings

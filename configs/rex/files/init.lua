@@ -83,7 +83,8 @@ end
 
 -- ── agents ─────────────────────────────────────────────────────────────
 -- herdr's agent jumping, across every session: alt+tab / shift+alt+tab
--- cycle, shift+alt+1..9 jump to the Nth, cmd+shift+a opens the switcher.
+-- hold-to-switch (release alt to jump), shift+alt+1..9 jump to the Nth,
+-- cmd+shift+a opens the switcher and keeps it open.
 -- A pane is an agent when a known agent reports its status (OSC 7501:
 -- Claude Code and opencode natively, pi via pi-rex-status.ts) or
 -- runs as the pane's foreground program.
@@ -204,36 +205,64 @@ rex.action{
     if a then goto_agent(a) end
   end,
 }
+-- The switcher's pane title: how the cycle key recognizes an open switcher.
+local SWITCHER_TITLE = "󰚩 agents"
+
+-- Opens rex-agents in a float over the active tab, passing ARGS through.
+local function open_switcher(ctx, args)
+  -- Jumps select in the window the switcher was opened from. Opened by a
+  -- script or the CLI, that's the session's app window instead.
+  local client_id = ctx.client_id
+  local me = rex.call("client.inspect", { client_id = client_id })
+  if not (me and me.client and me.client.info and me.client.info.kind == "app") then
+    local att = rex.call("session.list_clients", { session_id = ctx.session_id })
+    for _, c in ipairs(att and att.clients or {}) do
+      if c.info and c.info.kind == "app" then client_id = c.client_id; break end
+    end
+  end
+  local command = { os.getenv("HOME") .. "/.config/dot/rex-agents", "--client", client_id }
+  for _, a in ipairs(args or {}) do command[#command + 1] = a end
+  local view = rex.session.view{}
+  local _, err = rex.session.new_layer{
+    window_id = view and view.active_window_id,
+    bounds = { 0.1, 0.08, 0.8, 0.84 },
+    focus = true,
+    layout = rex.layout.block{ flavor = TERM .. ".shell", options = { command = command } },
+  }
+  if err ~= nil then error(err, 0) end
+end
+
 rex.action{
   name = "agent_switcher", title = "Agent Switcher…", category = "Agents",
   keywords = "agents claude pi opencode codex switch jump",
-  run = function(ctx)
-    -- Jumps select in the window the switcher was opened from. Opened by a
-    -- script or the CLI, that's the session's app window instead.
-    local client_id = ctx.client_id
-    local me = rex.call("client.inspect", { client_id = client_id })
-    if not (me and me.client and me.client.info and me.client.info.kind == "app") then
-      local att = rex.call("session.list_clients", { session_id = ctx.session_id })
-      for _, c in ipairs(att and att.clients or {}) do
-        if c.info and c.info.kind == "app" then client_id = c.client_id; break end
-      end
+  run = function(ctx) open_switcher(ctx) end,
+}
+
+-- alt+tab, like cmd+tab: the first press opens the switcher on the agent
+-- after the focused one (activity order); each further press while it's
+-- open moves the selection. Releasing alt jumps to the selection.
+rex.action{
+  name = "agent_cycle", title = "Cycle Agents", category = "Agents",
+  args = { direction = "string?" },
+  run = function(ctx, args)
+    local back = args.direction == "previous"
+    local title = ctx.block_id and rex.block.call(TERM, "title",
+      { session_id = ctx.session_id, block_id = ctx.block_id })
+    if title and title.title == SWITCHER_TITLE then
+      -- The switcher binds tab / shift-tab to next / previous.
+      local _, err = rex.call("block.event", {
+        session_id = ctx.session_id, block_id = ctx.block_id,
+        event = { type = "key", payload = { key = "tab", modifiers = back and { "shift" } or nil } },
+      })
+      if err ~= nil then error(err, 0) end
+      return
     end
-    local view = rex.session.view{}
-    local _, err = rex.session.new_layer{
-      window_id = view and view.active_window_id,
-      bounds = { 0.1, 0.08, 0.8, 0.84 },
-      focus = true,
-      layout = rex.layout.block{
-        flavor = TERM .. ".shell",
-        options = { command = { os.getenv("HOME") .. "/.config/dot/rex-agents", "--client", client_id } },
-      },
-    }
-    if err ~= nil then error(err, 0) end
+    open_switcher(ctx, { "--hold", back and "previous" or "next", "--from", ctx.block_id or "" })
   end,
 }
 
-rex.bind("alt+tab", "next_agent")
-rex.bind("shift+alt+tab", "previous_agent")
+rex.bind("alt+tab", "agent_cycle")
+rex.bind("shift+alt+tab", "agent_cycle", { direction = "previous" })
 for i = 1, 9 do
   rex.bind("shift+alt+" .. i, "focus_agent", { index = i })
 end

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# rex-settings — sync Rex.app's preferences with a typed JSON snapshot.
+#
+#   rex-settings apply [file]   write the snapshot's keys into the Rex domain
+#   rex-settings capture        print the live settings as a snapshot (stdout)
+#
+# Rex keeps its settings in macOS preferences (com.superlogical.rex), next to
+# window frames and session state that churn constantly, so the plist can't
+# be symlinked. The snapshot holds only the Workspace.* settings, grouped by
+# defaults type so floats stay floats. `data` values are JSON blobs Rex
+# stores as bytes (custom themes) and are kept as readable JSON here.
+set -euo pipefail
+
+DOMAIN=com.superlogical.rex
+# Runtime state, not settings: never captured.
+SKIP='^Workspace\.(lastFocusedSession|programActivitySeen)$'
+
+apply() {
+  local snap="${1:-$HOME/.config/dot/rex-settings.json}" t k v
+  [[ -f "$snap" ]] || { echo "rex-settings: no snapshot at $snap" >&2; exit 1; }
+  for t in bool int float string; do
+    while IFS=$'\t' read -r k v; do
+      [[ -n "$k" ]] && defaults write "$DOMAIN" "$k" "-$t" "$v"
+    done < <(jq -r --arg t "$t" '.[$t] // {} | to_entries[] | "\(.key)\t\(.value)"' "$snap")
+  done
+  while IFS= read -r k; do
+    [[ -n "$k" ]] || continue
+    v="$(jq -cj --arg k "$k" '.data[$k]' "$snap" | xxd -p | tr -d '\n')"
+    defaults write "$DOMAIN" "$k" -data "$v"
+  done < <(jq -r '.data // {} | keys[]' "$snap")
+}
+
+capture() {
+  local tmp out k ek type raw
+  tmp="$(mktemp)"; trap 'rm -f "$tmp"' RETURN
+  defaults export "$DOMAIN" "$tmp"
+  out='{"bool":{},"data":{},"float":{},"int":{},"string":{}}'
+  # Top-level keys sit at one tab of indent in the XML form.
+  while IFS= read -r k; do
+    ek="${k//./\\.}"
+    type="$(plutil -type "$ek" "$tmp")"
+    raw="$(plutil -extract "$ek" raw -o - "$tmp")"
+    case "$type" in
+      bool)    out="$(jq --arg k "$k" --argjson v "$raw" '.bool[$k]=$v' <<<"$out")" ;;
+      integer) out="$(jq --arg k "$k" --argjson v "$raw" '.int[$k]=$v' <<<"$out")" ;;
+      float)   out="$(jq --arg k "$k" --argjson v "$raw" '.float[$k]=$v' <<<"$out")" ;;
+      string)  out="$(jq --arg k "$k" --arg v "$raw" '.string[$k]=$v' <<<"$out")" ;;
+      data)    out="$(jq --arg k "$k" --argjson v "$(base64 -d <<<"$raw")" '.data[$k]=$v' <<<"$out")" ;;
+      *)       echo "rex-settings: skipping $k (type $type)" >&2 ;;
+    esac
+  done < <(plutil -convert xml1 -o - "$tmp" | sed -n $'s|^\t<key>\\(Workspace\\.[^<]*\\)</key>$|\\1|p' | grep -Ev "$SKIP")
+  jq -S . <<<"$out"
+}
+
+case "${1:-}" in
+  apply)   shift; apply "$@" ;;
+  capture) capture ;;
+  *)       echo "usage: rex-settings apply [file] | capture" >&2; exit 2 ;;
+esac

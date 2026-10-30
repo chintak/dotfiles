@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+# rex-agents — fzf switcher over every agent pane in every Rex session.
+#
+#   rex-agents [--client ID]        the switcher (cmd+shift+a opens it in a float)
+#   rex-agents --client ID --hold next|previous --from BLOCK
+#                                   hold-to-switch (alt+tab): starts on the
+#                                   agent after/before BLOCK and jumps when
+#                                   alt is released
+#   rex-agents list                 print the entries (fzf reload)
+#   rex-agents sort [next]          print the sort order, or advance it
+#   rex-agents preview N            the Nth agent's screen (fzf preview)
+#   rex-agents goto N               jump to the Nth agent
+#
+# The agent list comes from the `agents` action in init.lua, in layout order.
+# Each run sorts it and caches the result, so fzf's entry index, the preview,
+# and the jump all see the same snapshot. An entry keeps its layout number,
+# the N of shift+alt+N, whatever the order.
+#
+# Sort orders (each switcher opens on activity; ctrl-s cycles while it's open):
+#   activity  needs you, error, done, working, idle; most recent first within
+#   recent    latest status change first
+#   layout    session, then tab, then pane
+set -euo pipefail
+
+# Rex starts the switcher through a login shell, which on this setup lacks
+# Homebrew (fzf, jq): it is added in .zshrc, not the profile.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+CACHE="${TMPDIR:-/tmp}/rex-agents.$UID.json"
+CLIENT_FILE="${TMPDIR:-/tmp}/rex-agents.$UID.client"
+SORT_FILE="${TMPDIR:-/tmp}/rex-agents.$UID.sort"
+# The pane title agent_cycle in init.lua looks for.
+TITLE="󰚩 agents"
+SORTS=(activity recent layout)
+
+rexc() {
+  local client; client="$(cat "$CLIENT_FILE" 2>/dev/null || true)"
+  if [[ -n "$client" ]]; then rex -C "$client" "$@"; else rex "$@"; fi
+}
+
+sort_mode() {
+  local mode; mode="$(cat "$SORT_FILE" 2>/dev/null || true)"
+  [[ " ${SORTS[*]} " == *" $mode "* ]] || mode=activity
+  printf '%s' "$mode"
+}
+
+next_sort() {
+  local mode i; mode="$(sort_mode)"
+  for i in "${!SORTS[@]}"; do [[ "${SORTS[$i]}" == "$mode" ]] && break; done
+  printf '%s' "${SORTS[$(( (i + 1) % ${#SORTS[@]} ))]}" > "$SORT_FILE"
+}
+
+# Recency is the status record's updated_at (RFC 3339 with an offset and
+# fractional seconds, which jq's date parser rejects), as epoch seconds.
+list() {
+  rexc do agents | jq --arg sort "$(sort_mode)" '
+    def epoch:
+      capture("^(?<t>[0-9-]+T[0-9:]+)(?<f>\\.[0-9]+)?(?<z>Z|(?<sign>[+-])(?<h>[0-9]{2}):(?<m>[0-9]{2}))$")
+      | (.t + "Z" | fromdateiso8601) + ("0" + (.f // "") | tonumber)
+        - (if .z == "Z" then 0 else (.sign + "1" | tonumber) * ((.h | tonumber) * 3600 + (.m | tonumber) * 60) end);
+    to_entries | map(.value + {key: (.key + 1), at: ((.value.updated_at // empty | epoch) // 0)})
+    | {blocked: 0, error: 1, done: 2, working: 3, idle: 4} as $rank
+    | if $sort == "layout" then .
+      elif $sort == "recent" then sort_by(.at) | reverse
+      else sort_by([($rank[.state] // 5), .at])
+        | group_by($rank[.state] // 5) | map(reverse) | add // []
+      end
+  ' > "$CACHE.tmp" && mv "$CACHE.tmp" "$CACHE"
+  jq -j --arg home "$HOME" '
+    # TokyoNight Night, as truecolor SGR.
+    {red: "247;118;142", green: "158;206;106", yellow: "224;175;104", blue: "122;162;247",
+     magenta: "187;154;247", cyan: "125;207;255", orange: "255;158;100", fg: "169;177;214",
+     dim: "86;95;137"} as $rgb
+    | def c($name; $s): "\u001b[38;2;\($rgb[$name])m" + $s + "\u001b[0m";
+    def pad($n): . + (" " * ([$n - length, 0] | max));
+    {blocked: ["red", "●", "needs you"], error: ["red", "✕", "error"],
+     done: ["green", "✓", "done"], working: ["yellow", "◐", "working"],
+     idle: ["blue", "○", "idle"], unknown: ["dim", "·", "running"]} as $style
+    | if length == 0 then
+        c("dim"; "  No agent panes. Start claude, pi, or opencode in a Rex pane.") + "\u0000"
+      else
+        .[] as $a
+        | ($style[$a.state] // $style.unknown) as $s
+        | ($a.msg // "" | gsub("[\u0000-\u001f]+"; " ")) as $msg
+        | (if $msg != "" then $msg elif $a.title != "" then $a.title else "" end) as $line
+        | (($a.cwd // "") | sub("^" + $home; "~")) as $cwd
+        | c("dim"; (if $a.key <= 9 then "\($a.key)" else " " end)) + "  "
+          + c($s[0]; $s[1] + " " + ($s[2] | pad(10)))
+          + c("magenta"; $a.app | pad(12))
+          + c("cyan"; $a.session) + c("dim"; " › tab \($a.tab)")
+          + (if $a.kind then c("orange"; "  [\($a.kind)]") else "" end)
+          + "\n   " + c("fg"; $line | .[0:110]) + "\n   " + c("dim"; $cwd)
+          + "\u0000"
+      end
+  ' "$CACHE"
+}
+
+# The pane's screen with colors. fzf renders SGR only, so cursor-forward
+# (CSI n C) becomes spaces and every other non-SGR sequence is dropped.
+preview() {
+  local a; a="$(jq -c --argjson n "$1" '.[$n] // empty' "$CACHE")"
+  [[ -n "$a" ]] || exit 0
+  local sid bid; sid="$(jq -r .session_id <<<"$a")"; bid="$(jq -r .block_id <<<"$a")"
+  rexc capture -s "$sid" -b "$bid" --format vt --trim 2>/dev/null \
+    | perl -pe 's/\e\[(\d*)C/" " x ($1 || 1)/ge; s/\e\[[0-9;:?]*[A-BD-Zabd-z]//g; s/\r//g' \
+    | tail -n "${FZF_PREVIEW_LINES:-40}"
+}
+
+goto_n() {
+  local a; a="$(jq -c --argjson n "$1" '.[$n] // empty' "$CACHE")"
+  [[ -n "$a" ]] || exit 0
+  local client; client="$(cat "$CLIENT_FILE" 2>/dev/null || true)"
+  rexc do goto_agent ${client:+"client_id=$client"} \
+    "session_id=$(jq -r .session_id <<<"$a")" \
+    "window_id=$(jq -r .window_id <<<"$a")" \
+    "block_id=$(jq -r .block_id <<<"$a")" >/dev/null
+}
+
+# Blocks until the option (alt) key is up. NSEvent reads the live modifier
+# state without any permission; if it ever can't, the key reads as up and
+# alt+tab simply jumps straight to the next agent.
+wait_alt_up() {
+  osascript -l JavaScript -e '
+    ObjC.import("AppKit");
+    while ($.NSEvent.modifierFlags & 0x80000) delay(0.02);
+    ""' >/dev/null 2>&1 || true
+}
+
+# pick [HOLD_DIRECTION FROM_BLOCK]
+pick() {
+  local self; self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+  local hold="${1:-}" from="${2:-}"
+  printf '\e]2;%s\a' "$TITLE" > /dev/tty
+  printf activity > "$SORT_FILE"
+
+  local jump="become($self goto {n})"
+  local header='enter jump · tab/↓ next · ctrl-s sort · ctrl-r refresh · esc close'
+  local extra=()
+  local entries; entries="$(list | base64)"
+  if [[ -n "$hold" ]]; then
+    # Start on the agent after (or before) the focused pane in activity
+    # order, or the first (last) if that pane isn't an agent.
+    local pos; pos="$(jq --arg from "$from" --arg dir "$hold" '
+      length as $n | (map(.block_id) | index($from)) as $i
+      | if $n == 0 then 1
+        elif $i == null then (if $dir == "previous" then $n else 1 end)
+        elif $dir == "previous" then ($i - 1 + $n) % $n + 1
+        else ($i + 1) % $n + 1 end' "$CACHE")"
+    local dir; dir="$(mktemp -d "${TMPDIR:-/tmp}/rex-agents.XXXXXX")"
+    trap 'rm -rf "$dir"; kill $(jobs -p) 2>/dev/null' EXIT
+    header='release alt to jump · alt+tab next · shift+alt+tab back · esc cancel'
+    # The watcher waits for the list to be positioned, then for alt to come
+    # up, then performs the same jump as enter through fzf's socket.
+    extra=(--listen-unsafe="$dir/fzf.sock" --bind="load:pos($pos)+execute-silent(touch $dir/ready)")
+    {
+      until [[ -e "$dir/ready" ]]; do sleep 0.02; done
+      wait_alt_up
+      curl -s --unix-socket "$dir/fzf.sock" -X POST http://localhost -d "$jump" >/dev/null || true
+    } &
+  fi
+
+  base64 -d <<<"$entries" | fzf --read0 --ansi --gap --highlight-line --layout=reverse \
+    --no-sort --cycle --info=inline-right --no-scrollbar \
+    --border=rounded --border-label=" $TITLE · $(sort_mode) " --border-label-pos=3 \
+    --padding=1,2 --prompt='  ' --pointer='▌' --gutter=' ' --separator='─' \
+    --header="$header" --header-first \
+    --preview="$self preview {n}" \
+    --preview-window='right,58%,border-left,nowrap,<110(down,45%,border-top,nowrap)' \
+    --preview-label=' screen ' \
+    --bind="enter:$jump" \
+    --bind='tab:down,shift-tab:up' \
+    --bind="ctrl-r:reload($self list)" \
+    --bind="ctrl-s:execute-silent($self sort next)+reload($self list)+transform-border-label(echo \" $TITLE · \$($self sort) \")" \
+    --color='bg+:#283457,fg:#c0caf5,fg+:#c0caf5,hl:#ff9e64,hl+:#ff9e64' \
+    --color='border:#27a1b9,label:#7aa2f7,preview-border:#3b4261,preview-label:#565f89' \
+    --color='prompt:#7dcfff,pointer:#ff007c,info:#545c7e,header:#565f89,gutter:-1,separator:#3b4261' \
+    "${extra[@]}" || true
+}
+
+case "${1:-}" in
+  list)    list ;;
+  sort)    if [[ "${2:-}" == next ]]; then next_sort; else sort_mode; fi ;;
+  preview) preview "$2" ;;
+  goto)    goto_n "$2" ;;
+  --client)
+    printf '%s' "$2" > "$CLIENT_FILE"
+    if [[ "${3:-}" == --hold ]]; then pick "$4" "${6:-}"; else pick; fi ;;
+  "")      pick ;;
+  *)       echo "usage: rex-agents [--client ID [--hold next|previous --from BLOCK]] | list | sort [next] | preview N | goto N" >&2; exit 2 ;;
+esac

@@ -1,0 +1,18 @@
+{
+  "layer" : {
+    "bindings" : [
+      {
+        "action" : "client.window.fullscreen.toggle",
+        "keys" : [
+          "ctrl+cmd+f"
+        ],
+        "source" : "settings"
+      }
+    ],
+    "name" : "settings"
+  },
+  "migrations" : [
+    "bracket-characters"
+  ],
+  "version" : 1
+}

@@ -208,6 +208,16 @@ rex.action{
   name = "agent_switcher", title = "Agent Switcher…", category = "Agents",
   keywords = "agents claude pi opencode codex switch jump",
   run = function(ctx)
+    -- Jumps select in the window the switcher was opened from. Opened by a
+    -- script or the CLI, that's the session's app window instead.
+    local client_id = ctx.client_id
+    local me = rex.call("client.inspect", { client_id = client_id })
+    if not (me and me.client and me.client.info and me.client.info.kind == "app") then
+      local att = rex.call("session.list_clients", { session_id = ctx.session_id })
+      for _, c in ipairs(att and att.clients or {}) do
+        if c.info and c.info.kind == "app" then client_id = c.client_id; break end
+      end
+    end
     local view = rex.session.view{}
     local _, err = rex.session.new_layer{
       window_id = view and view.active_window_id,
@@ -215,7 +225,7 @@ rex.action{
       focus = true,
       layout = rex.layout.block{
         flavor = TERM .. ".shell",
-        options = { command = { os.getenv("HOME") .. "/.config/dot/rex-agents", "--client", ctx.client_id } },
+        options = { command = { os.getenv("HOME") .. "/.config/dot/rex-agents", "--client", client_id } },
       },
     }
     if err ~= nil then error(err, 0) end

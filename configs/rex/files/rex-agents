@@ -3,11 +3,19 @@
 #
 #   rex-agents [--client ID]        the switcher (cmd+shift+a opens it in a float)
 #   rex-agents list                 print the entries (fzf reload)
+#   rex-agents sort [next]          print the sort order, or advance it
 #   rex-agents preview N            the Nth agent's screen (fzf preview)
 #   rex-agents goto N               jump to the Nth agent
 #
-# The agent list comes from the `agents` action in init.lua. Each run caches
-# it so entry numbers, the preview, and the jump all see the same snapshot.
+# The agent list comes from the `agents` action in init.lua, in layout order.
+# Each run sorts it and caches the result, so fzf's entry index, the preview,
+# and the jump all see the same snapshot. An entry keeps its layout number,
+# the N of shift+alt+N, whatever the order.
+#
+# Sort orders (ctrl-s cycles them; the choice persists):
+#   activity  needs you, error, done, working, idle; most recent first within
+#   recent    latest status change first
+#   layout    session, then tab, then pane
 set -euo pipefail
 
 # Rex starts the switcher through a login shell, which on this setup lacks
@@ -16,14 +24,43 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 CACHE="${TMPDIR:-/tmp}/rex-agents.$UID.json"
 CLIENT_FILE="${TMPDIR:-/tmp}/rex-agents.$UID.client"
+SORT_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/rex-agents/sort"
+SORTS=(activity recent layout)
 
 rexc() {
   local client; client="$(cat "$CLIENT_FILE" 2>/dev/null || true)"
   if [[ -n "$client" ]]; then rex -C "$client" "$@"; else rex "$@"; fi
 }
 
+sort_mode() {
+  local mode; mode="$(cat "$SORT_FILE" 2>/dev/null || true)"
+  [[ " ${SORTS[*]} " == *" $mode "* ]] || mode=activity
+  printf '%s' "$mode"
+}
+
+next_sort() {
+  local mode i; mode="$(sort_mode)"
+  for i in "${!SORTS[@]}"; do [[ "${SORTS[$i]}" == "$mode" ]] && break; done
+  mkdir -p "$(dirname "$SORT_FILE")"
+  printf '%s' "${SORTS[$(( (i + 1) % ${#SORTS[@]} ))]}" > "$SORT_FILE"
+}
+
+# Recency is the status record's updated_at (RFC 3339 with an offset and
+# fractional seconds, which jq's date parser rejects), as epoch seconds.
 list() {
-  rexc do agents > "$CACHE.tmp" && mv "$CACHE.tmp" "$CACHE"
+  rexc do agents | jq --arg sort "$(sort_mode)" '
+    def epoch:
+      capture("^(?<t>[0-9-]+T[0-9:]+)(?<f>\\.[0-9]+)?(?<z>Z|(?<sign>[+-])(?<h>[0-9]{2}):(?<m>[0-9]{2}))$")
+      | (.t + "Z" | fromdateiso8601) + ("0" + (.f // "") | tonumber)
+        - (if .z == "Z" then 0 else (.sign + "1" | tonumber) * ((.h | tonumber) * 3600 + (.m | tonumber) * 60) end);
+    to_entries | map(.value + {key: (.key + 1), at: ((.value.updated_at // empty | epoch) // 0)})
+    | {blocked: 0, error: 1, done: 2, working: 3, idle: 4} as $rank
+    | if $sort == "layout" then .
+      elif $sort == "recent" then sort_by(.at) | reverse
+      else sort_by([($rank[.state] // 5), .at])
+        | group_by($rank[.state] // 5) | map(reverse) | add // []
+      end
+  ' > "$CACHE.tmp" && mv "$CACHE.tmp" "$CACHE"
   jq -j --arg home "$HOME" '
     # TokyoNight Night, as truecolor SGR.
     {red: "247;118;142", green: "158;206;106", yellow: "224;175;104", blue: "122;162;247",
@@ -37,12 +74,12 @@ list() {
     | if length == 0 then
         c("dim"; "  No agent panes. Start claude, pi, or opencode in a Rex pane.") + "\u0000"
       else
-        to_entries[] | .key as $i | .value as $a
+        .[] as $a
         | ($style[$a.state] // $style.unknown) as $s
         | ($a.msg // "" | gsub("[\u0000-\u001f]+"; " ")) as $msg
         | (if $msg != "" then $msg elif $a.title != "" then $a.title else "" end) as $line
         | (($a.cwd // "") | sub("^" + $home; "~")) as $cwd
-        | c("dim"; (if $i < 9 then "\($i + 1)" else " " end)) + "  "
+        | c("dim"; (if $a.key <= 9 then "\($a.key)" else " " end)) + "  "
           + c($s[0]; $s[1] + " " + ($s[2] | pad(10)))
           + c("magenta"; $a.app | pad(12))
           + c("cyan"; $a.session) + c("dim"; " › tab \($a.tab)")
@@ -78,14 +115,15 @@ pick() {
   local self; self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
   list | fzf --read0 --ansi --gap --highlight-line --layout=reverse \
     --no-sort --cycle --info=inline-right --no-scrollbar \
-    --border=rounded --border-label=' 󰚩 agents ' --border-label-pos=3 \
+    --border=rounded --border-label=" 󰚩 agents · $(sort_mode) " --border-label-pos=3 \
     --padding=1,2 --prompt='  ' --pointer='▌' --gutter=' ' --separator='─' \
-    --header='enter jump · ctrl-r refresh · esc close' --header-first \
+    --header='enter jump · ctrl-s sort · ctrl-r refresh · esc close' --header-first \
     --preview="$self preview {n}" \
     --preview-window='right,58%,border-left,nowrap,<110(down,45%,border-top,nowrap)' \
     --preview-label=' screen ' \
     --bind="enter:become($self goto {n})" \
     --bind="ctrl-r:reload($self list)" \
+    --bind="ctrl-s:execute-silent($self sort next)+reload($self list)+transform-border-label(echo \" 󰚩 agents · \$($self sort) \")" \
     --color='bg+:#283457,fg:#c0caf5,fg+:#c0caf5,hl:#ff9e64,hl+:#ff9e64' \
     --color='border:#27a1b9,label:#7aa2f7,preview-border:#3b4261,preview-label:#565f89' \
     --color='prompt:#7dcfff,pointer:#ff007c,info:#545c7e,header:#565f89,gutter:-1,separator:#3b4261' \
@@ -94,9 +132,10 @@ pick() {
 
 case "${1:-}" in
   list)    list ;;
+  sort)    if [[ "${2:-}" == next ]]; then next_sort; else sort_mode; fi ;;
   preview) preview "$2" ;;
   goto)    goto_n "$2" ;;
   --client) printf '%s' "$2" > "$CLIENT_FILE"; pick ;;
   "")      pick ;;
-  *)       echo "usage: rex-agents [--client ID] | list | preview N | goto N" >&2; exit 2 ;;
+  *)       echo "usage: rex-agents [--client ID] | list | sort [next] | preview N | goto N" >&2; exit 2 ;;
 esac

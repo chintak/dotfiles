@@ -56,6 +56,18 @@ state every second. pi has no permission prompts of its own, so it's
 `blocked` only when an extension emits `rex:blocked` (or herdr's
 `herdr:blocked`) on `pi.events` with `{ active, label }`.
 
+In the switcher, **ctrl-s** cycles the sort order, and the choice persists in
+`~/.local/state/rex-agents/sort`:
+
+- **activity** (default): needs you, error, done, working, idle; most recent
+  first within each.
+- **recent**: the latest status change first.
+- **layout**: session, then tab, then pane.
+
+Each entry keeps its layout number, the N of shift+alt+N. Recency is the
+status record's `updated_at`, so the pi extension resends only while it
+runs; a resend refreshes that time.
+
 The actions behind the keys live in `init.lua` (`agents`, `goto_agent`,
 `next_agent`, `previous_agent`, `focus_agent`, `agent_switcher`) and show up in
 the command palette under **Agents**. `rex do agents` prints the list as JSON.

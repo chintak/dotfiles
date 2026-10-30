@@ -8,7 +8,9 @@
 // both { active, label }). Outside Rex (no REX_BLOCK) it does nothing.
 //
 // Rex drops a pane's status when the program marks a new prompt (OSC 133;A),
-// and pi does that on every turn, so the report is resent every second.
+// and pi does that on every turn, so the report is resent every second
+// while the agent runs. Only then: each resend refreshes the record's
+// updated_at, which the switcher sorts by recency.
 // @ts-nocheck
 
 import { closeSync, openSync, writeSync } from "node:fs";
@@ -76,7 +78,7 @@ export default function (pi) {
     tui = true;
     active = ctx?.isIdle?.() === false;
     publish();
-    resend ??= setInterval(publish, RESEND_MS);
+    resend ??= setInterval(() => active && publish(), RESEND_MS);
     resend.unref?.();
   });
 

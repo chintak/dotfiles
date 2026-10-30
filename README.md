@@ -47,7 +47,7 @@ Three rules hold the whole thing together:
    an immutable, versioned store and symlinks the target at that copy.
    Edit the repo → commit → `dot update`, and every machine re-links.
 
-3. **One theme.** [TokyoNight](https://github.com/tokyo-night/tokyo-night-vscode-theme) across Ghostty and
+3. **One theme.** [TokyoNight](https://github.com/tokyo-night/tokyo-night-vscode-theme) across Ghostty, Rex, and
    Starship, so the terminal looks coherent. (helix, herdr, yazi, rich-cli, and tmux use Dracula;
    Zed pairs **Nordfox - blurred** on dark with **Dayfox - opaque** on light.)
 
@@ -442,6 +442,12 @@ and **how** to use it. Start with the ones marked ⭐ if you're new.
 dropping frames and restores your tabs/splits on relaunch. Here it's the
 *renderer only* — it hands its chords to herdr. Inspect the live config
 with `ghostty +show-config | grep -E 'font-family|theme'`.
+
+**`Rex`** — a terminal multiplexer app
+([docs](https://www.superlogical.com/rex/docs)). Themed to match Ghostty
+(TokyoNight Night, JetBrainsMono). Its settings live in macOS preferences,
+so the `rex` package keeps a typed snapshot and writes it with `defaults`;
+see `configs/rex/README.md` for the capture → commit loop.
 
 **⭐ `herdr`** — a terminal multiplexer built for coding agents
 ([docs](https://herdr.dev/docs) · [concepts](https://herdr.dev/docs/concepts/)).

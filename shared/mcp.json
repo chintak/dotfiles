@@ -1,0 +1,29 @@
+{
+  "//": "Single source for MCP servers. Run shared/render-mcp.py after editing; it rewrites the generated block in configs/opencode/files/opencode.jsonc and configs/claude/files/mcp.json. Fields: command (stdio argv) | url (remote); bearer = env var holding an Authorization Bearer token; env = {VAR: VAR} passed through; only = [opencode|claude] to restrict targets; comment = rendered above the opencode entry.",
+  "servers": {
+    "roblox-studio": {
+      "command": ["/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP"]
+    },
+    "alphaxiv": {
+      "comment": "arXiv paper search/reading, PDF Q&A, researcher lookup. OAuth 2.1: sign in via /mcps (OpenCode) or /mcp (Claude Code) on first use.",
+      "url": "https://api.alphaxiv.org/mcp/v1"
+    },
+    "huggingface": {
+      "comment": "HuggingFace models/datasets/spaces search, model cards, HF daily papers. Bearer HF_TOKEN, persisted for the daemon from the hf CLI, not from ~/.env. Header auth avoids anonymous rate limits. Claude Code gets this as a claude.ai connector.",
+      "url": "https://huggingface.co/mcp",
+      "bearer": "HF_TOKEN",
+      "only": ["opencode"]
+    },
+    "github": {
+      "comment": "GitHub repos/issues/PRs. Fine-grained PAT in GITHUB_PERSONAL_ACCESS_TOKEN, GitHub's documented remote pattern. Do NOT use GITHUB_TOKEN (the gh CLI gho_ token): unsupported, expires, and a documented 401 cause.",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "bearer": "GITHUB_PERSONAL_ACCESS_TOKEN"
+    },
+    "exa": {
+      "comment": "Exa semantic web search for trend signals (blogs, launches, X threads). EXA_API_KEY is static in ~/.env. Claude Code gets this as a claude.ai connector.",
+      "command": ["npx", "-y", "exa-mcp-server"],
+      "env": {"EXA_API_KEY": "EXA_API_KEY"},
+      "only": ["opencode"]
+    }
+  }
+}

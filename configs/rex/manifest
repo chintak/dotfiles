@@ -1,7 +1,8 @@
-version     = 1.0.0
-description = Rex — terminal multiplexer app: TokyoNight Night (Ghostty's theme), JetBrainsMono, app settings + shortcuts
+version     = 1.1.0
+description = Rex — Ghostty look & feel (TokyoNight Night, JetBrainsMono 16, block cursor, option-as-alt) + herdr chords
 platform    = mac
 file        = shortcuts.json|~/Library/Application Support/com.superlogical.rex/Shortcuts/shortcuts.json
+file        = init.lua|~/.config/rex/init.lua
 file        = settings.json|~/.config/dot/rex-settings.json
 file        = rex-settings|~/.config/dot/rex-settings
-post_apply  = bash ~/.config/dot/rex-settings apply
+post_apply  = bash ~/.config/dot/rex-settings apply && { rex config reload || true; }

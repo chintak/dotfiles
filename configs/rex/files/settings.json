@@ -7,6 +7,7 @@
     "Workspace.tabsFillAvailableSpace": true,
     "Workspace.terminalCopyOnSelect": true,
     "Workspace.terminalCursorBlinkUsesCustomInterval": false,
+    "Workspace.terminalCursorStyleForced": false,
     "Workspace.terminalImproveTextContrast": true,
     "Workspace.terminalSmoothScrolling": true,
     "Workspace.terminalUseThemePalette": false,
@@ -1874,7 +1875,7 @@
   },
   "float": {
     "Workspace.activePaneBorderOpacity": 0.504712,
-    "Workspace.terminalFontPointSize": 13.000000
+    "Workspace.terminalFontPointSize": 16
   },
   "int": {
     "Workspace.terminalCursorBlinkIntervalMilliseconds": 0
@@ -1893,7 +1894,9 @@
     "Workspace.sidebarPosition": "left",
     "Workspace.tabIconTintMode": "off",
     "Workspace.tabStyle": "horizontal",
+    "Workspace.terminalCursorStyle": "block",
     "Workspace.terminalCustomSchemeLinks": "ask",
-    "Workspace.terminalFontName": "JetBrainsMono Nerd Font Mono"
+    "Workspace.terminalFontName": "JetBrainsMono Nerd Font Mono",
+    "Workspace.terminalOptionKeyBehavior": "actsAsAlt"
   }
 }

@@ -1,5 +1,8 @@
 # Helix — LSP and file editing inside panes. Auto-detects servers on PATH.
-theme = "dracula"
+# Duskfox, matched to Zed and Rex (themes/duskfox.toml). Helix 25.07 has no
+# light/dark switching (the `[theme] light/dark` table is unreleased), so it
+# stays dark.
+theme = "duskfox"
 
 [editor]
 line-number = "relative"

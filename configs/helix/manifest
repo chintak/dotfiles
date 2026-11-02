@@ -1,4 +1,5 @@
-version     = 1.4.1
+version     = 1.5.0
 description = Helix — LSP editor for panes and code browsing
 file        = config.toml|~/.config/helix/config.toml
 file        = languages.toml|~/.config/helix/languages.toml
+file        = themes/duskfox.toml|~/.config/helix/themes/duskfox.toml

@@ -3,9 +3,9 @@
 [Rex](https://www.superlogical.com/rex/docs) — a terminal multiplexer app,
 set up to feel like the Ghostty + herdr setup:
 
-- **Look:** appearance follows the system. Dark is TokyoNight Night imported
-  from Ghostty's own theme file (exact colors, selection included); light is
-  Dayfox, matched to Zed's light theme (see below). JetBrainsMono Nerd Font
+- **Look:** appearance follows the system. Dark is Duskfox and light is
+  Dayfox, both matched to Zed's nightfox themes (see below). The earlier
+  TokyoNight Night theme, imported from Ghostty, is still installed but unused. JetBrainsMono Nerd Font
   Mono 16, block cursor with no blink. Programs can still change the cursor (Helix's insert bar).
 - **Keys:** Option acts as Alt, and `init.lua` binds herdr's direct chords to
   Rex's native actions: herdr tab → Rex tab, pane → pane, workspace →
@@ -108,7 +108,9 @@ Relaunch Rex after `dot apply rex` on a machine where it was already running.
   `client.appearance.switch_mode` action only takes `light`/`dark`/`toggle`,
   and using it pins Rex to that mode until it's set back to system.
 
-## Light theme: Dayfox (matches Zed)
+## Themes matched to Zed
+
+### Light: Dayfox
 
 Zed's light theme is `Dayfox - opaque` from the nvim-nightfox extension
 (`configs/zed/files/settings.json`). The Rex theme takes its colors from
@@ -122,6 +124,25 @@ and ANSI 0–15. There are three deliberate differences:
 - **`palette-generate`** derives colors 16–255 from the theme, so 256-color
   output fits the light background.
 
-It was made by importing a Ghostty-format theme file with
+### Dark: Duskfox
+
+Zed's `Duskfox - blurred` and `Duskfox - opaque` share every `terminal.*`
+color: background `#232136`, foreground `#e0def4`, and ANSI 0–15. The
+blurred variant differs only in translucency: the window is `#232136E3` and
+the terminal background is transparent. Rex can't reproduce that per theme.
+Its importer ignores Ghostty's `background-opacity`, and the only
+translucency setting, `Workspace.usesPaneGlass`, applies to every theme.
+Pane glass is on, for the nearest match to Zed's blurred look, so Dayfox
+gets it too. Other differences from Zed:
+
+- **ANSI 8 (bright black)** is upstream Duskfox's `#544d8a`, not Zed's
+  `#47407d`, which is too dim on `#232136`.
+- **Cursor** is Zed's player green `#a3be8c`. **Selection** is Duskfox's
+  `#433c59`.
+- **`palette-generate`** is on, as in Dayfox.
+
+### Re-importing
+
+Both themes were made by importing a Ghostty-format theme file with
 `rex do -C <app> client.theme.import path=…/Dayfox` and then captured. To
-change it, edit the theme file, re-import it, and capture again.
+change one, edit its theme file, re-import it, and capture again.

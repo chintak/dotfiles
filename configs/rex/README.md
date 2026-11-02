@@ -3,9 +3,10 @@
 [Rex](https://www.superlogical.com/rex/docs) — a terminal multiplexer app,
 set up to feel like the Ghostty + herdr setup:
 
-- **Look:** TokyoNight Night imported from Ghostty's own theme file (exact
-  colors, selection included), JetBrainsMono Nerd Font Mono 16, block cursor
-  with no blink. Programs can still change the cursor (Helix's insert bar).
+- **Look:** appearance follows the system. Dark is TokyoNight Night imported
+  from Ghostty's own theme file (exact colors, selection included); light is
+  Dayfox, matched to Zed's light theme (see below). JetBrainsMono Nerd Font
+  Mono 16, block cursor with no blink. Programs can still change the cursor (Helix's insert bar).
 - **Keys:** Option acts as Alt, and `init.lua` binds herdr's direct chords to
   Rex's native actions: herdr tab → Rex tab, pane → pane, workspace →
   session. `cmd+1..9` jumps to the Nth session via a small `goto_session`
@@ -103,5 +104,24 @@ Relaunch Rex after `dot apply rex` on a machine where it was already running.
 - If Rex rewrites `shortcuts.json` (editing shortcuts in its Settings), it can
   replace the symlink with a plain file and `dot status` shows `modified`.
   Copy the file back into `files/` and bump.
-- The light theme is Rex's built-in `buttercream-diner`; only dark mode
-  uses TokyoNight Night.
+- `Workspace.appearance` is `system`, Rex's follow-macOS mode. The app's
+  `client.appearance.switch_mode` action only takes `light`/`dark`/`toggle`,
+  and using it pins Rex to that mode until it's set back to system.
+
+## Light theme: Dayfox (matches Zed)
+
+Zed's light theme is `Dayfox - opaque` from the nvim-nightfox extension
+(`configs/zed/files/settings.json`). The Rex theme takes its colors from
+that theme's `terminal.*` keys: background `#f6f2ee`, foreground `#3d2b5a`,
+and ANSI 0–15. There are three deliberate differences:
+
+- **ANSI 7 (white)** is upstream Dayfox's `#bfb6ae`, not Zed's `#f2e9e1`,
+  which is nearly invisible on the `#f6f2ee` background.
+- **Cursor** is Zed's local-player green `#396847`. **Selection** is
+  Dayfox's warm sand `#e7d2be`.
+- **`palette-generate`** derives colors 16–255 from the theme, so 256-color
+  output fits the light background.
+
+It was made by importing a Ghostty-format theme file with
+`rex do -C <app> client.theme.import path=…/Dayfox` and then captured. To
+change it, edit the theme file, re-import it, and capture again.

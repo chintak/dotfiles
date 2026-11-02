@@ -13,7 +13,7 @@
     "Workspace.terminalSmoothScrolling": true,
     "Workspace.terminalUseThemePalette": false,
     "Workspace.tintsPanesWithProgramBackground": true,
-    "Workspace.usesPaneGlass": false,
+    "Workspace.usesPaneGlass": true,
     "Workspace.usesStandardInactiveWindowPaneStyles": true
   },
   "data": {

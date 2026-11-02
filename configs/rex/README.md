@@ -132,7 +132,8 @@ blurred variant differs only in translucency: the window is `#232136E3` and
 the terminal background is transparent. Rex can't reproduce that per theme.
 Its importer ignores Ghostty's `background-opacity`, and the only
 translucency setting, `Workspace.usesPaneGlass`, applies to every theme.
-So Duskfox is opaque here, with these differences from Zed:
+Pane glass is on, for the nearest match to Zed's blurred look, so Dayfox
+gets it too. Other differences from Zed:
 
 - **ANSI 8 (bright black)** is upstream Duskfox's `#544d8a`, not Zed's
   `#47407d`, which is too dim on `#232136`.

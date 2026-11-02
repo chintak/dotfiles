@@ -16,7 +16,7 @@ function M:peek(job)
 
 			-- SPECIAL CUSTOMIZATIONS --
 			"--color-system=standard",
-			"--theme=dracula",
+			"--theme=ansi_dark",
 			tostring(job.file.url),
 		})
 		:stdout(Command.PIPED)

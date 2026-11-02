@@ -5,15 +5,15 @@ File manager with inline previews — useful for watching agents mutate files.
 - Previews images and PDFs inline. PDFs need `poppler`'s `pdftoppm`; `chafa` is
   the fallback for terminals without a graphics protocol (Ghostty has one).
 - `Enter` opens with the right opener: `hx` for code, `rich` for markdown
-  (dracula), the system viewer for PDFs/images.
+  (`ansi_dark`), the system viewer for PDFs/images.
 - **Preview stack** — plugins vendored under `files/plugins/`, declarative
   (never `ya pkg add`), each pinned at its upstream HEAD (see the table below):
   - Markdown → `rich-preview.yazi` (AnirudhG07), shelling out to `rich`
-    (rich-cli). Its `main.lua` is edited to add `--theme=dracula` to the `rich`
+    (rich-cli). Its `main.lua` is edited to add `--theme=ansi_dark` to the `rich`
     args (upstream sanctions editing the args). Needs `rich-cli` (installed via
     the `uv-tools` config).
   - Notebooks (`.ipynb`) → `nbpreview.yazi` (AnirudhG07), edited to
-    `--theme=dracula` (upstream default was `ansi_dark`). Needs `nbpreview`
+    `--theme=ansi_dark` (also the upstream default). Needs `nbpreview`
     (also via `uv-tools`).
   - Data files (`.csv`/`.tsv`/`.json`) → `mux.yazi` (peterfication) cycles
     `duckdb → rich-preview → code` on `M`. `duckdb.yazi` (wylie102) renders a
@@ -48,20 +48,26 @@ File manager with inline previews — useful for watching agents mutate files.
     `J`/`K` scroll rows.
   - `T` / `i` — hide/show and maximize/restore the preview pane.
   - `e` edits in Helix; `y` yanks the path.
-- **dracula**: markdown and notebook previews render with the dracula theme
-  (`--theme=dracula`); markdown also opens via `rich --pager --theme dracula`
-  (block). Openers use yazi's `%s` shell formatting — `$@` was deprecated in
+- **ansi_dark**: markdown and notebook previews highlight code with rich's
+  `ansi_dark` theme, which uses only the terminal's ANSI colors. Under Rex's
+  Dayfox/Duskfox palettes it follows light/dark with no switching of its own.
+  Markdown also opens via `rich --pager --theme ansi_dark` (block). Openers use yazi's `%s` shell formatting — `$@` was deprecated in
   yazi 26 and stopped passing the file to `hx`.
-- UI theme is the upstream `tokyo-night` flavor (BennyOe/tokyo-night.yazi,
-  pinned at `8e6296f`, vendored in `files/flavors/tokyo-night.yazi` like the
-  plugins — declarative), selected via `[flavor] dark` in `theme.toml`, which
-  keeps only local overrides (row highlight, empty status separators).
+- UI theme follows the terminal's dark/light mode: `[flavor] dark = "duskfox"`,
+  `light = "dayfox"` in `theme.toml`, matching Zed's nvim-nightfox themes and
+  Rex. Both flavors (`files/flavors/{dayfox,duskfox}.yazi`) were generated
+  from the vendored `tokyo-night` flavor (BennyOe/tokyo-night.yazi, pinned at
+  `8e6296f`, still vendored but unused) by swapping each color for its
+  nightfox role, using the colors in Zed's nvim-nightfox extension. They
+  also carry the row highlight, cwd, symlink and git-sign colors, so
+  `theme.toml` keeps only the empty status separators. Neither ships a
+  `tmtheme.xml`, so code previews use yazi's default highlighting.
 - Official plugins vendored under `files/plugins/` (yazi-rs/plugins, pinned at
   `7200d7374462ba11c0fa5662115a96dd6ef8c9ab`, declarative like the preview
   plugins — never `ya pkg add`):
   - `git.yazi` — git status as linemode signs (`init.lua` runs
     `require("git"):setup { order = 1500 }`; `yazi.toml` registers the `*`
-    and `*/` fetchers). Signs colored dracula via `[git]` in `theme.toml`
+    and `*/` fetchers). Signs colored via `[git]` in each flavor
     (untracked pink, unstaged yellow, staged/added green, deleted red,
     updated orange, ignored comment-grey).
   - `vcs-files.yazi` (`g c`) — flat view of git-changed files. Shadows the
@@ -97,4 +103,4 @@ Needs the terminal to expose a graphics protocol — Ghostty does
 | `vscode-git-gutter.yazi` | ShikherVerma/yazi-plugins | `88bccaf7141362d8eec20df3531dd3caf06f8911` |
 
 > `rich-preview.yazi/main.lua` and `nbpreview.yazi/main.lua` are edited for the
-> dracula theme — re-apply the `--theme=dracula` edits when re-vendoring.
+> `ansi_dark` theme — re-apply the `--theme=ansi_dark` edits when re-vendoring.

@@ -1,27 +1,12 @@
-# TokyoNight Night, to match Ghostty / starship / fzf.
-# UI comes from the vendored `tokyo-night` flavor (BennyOe/tokyo-night.yazi,
-# pinned copy under files/flavors/); only local overrides live here.
+# Dayfox (light) / Duskfox (dark), matched to Zed's nvim-nightfox themes and
+# Rex. Yazi picks the flavor from the terminal's dark/light mode. Colors,
+# including the row highlight and git.yazi signs, live in the flavors under
+# files/flavors/; only mode-independent overrides belong here.
 [flavor]
-dark = "tokyo-night"
-
-[manager]
-# Row highlight + cwd emphasis + symlink target: absent from the flavor.
-hovered         = { fg = "#1a1b26", bg = "#7aa2f7" }
-preview_hovered = { fg = "#1a1b26", bg = "#7aa2f7" }
-cwd             = { fg = "#7aa2f7", bold = true }
-symlink_target  = { fg = "#7dcfff" }
+dark  = "duskfox"
+light = "dayfox"
 
 [status]
 # No powerline glyphs in this setup.
 sep_left  = { open = "", close = "" }
 sep_right = { open = "", close = "" }
-
-[git]
-# git.yazi linemode signs in dracula (flavor defaults otherwise stand).
-untracked = { fg = "#ff79c6" }
-unstaged  = { fg = "#f1fa8c" }
-staged    = { fg = "#50fa7b" }
-added     = { fg = "#50fa7b" }
-deleted   = { fg = "#ff5555" }
-updated   = { fg = "#ffb86c" }
-ignored   = { fg = "#6272a3" }

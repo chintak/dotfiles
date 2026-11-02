@@ -2,7 +2,7 @@
 # PDF previews need `poppler` (pdftoppm); chafa is the fallback for
 # terminals without a graphics protocol.
 # Markdown previews use the vendored rich-preview.yazi plugin (rich-cli,
-# dracula theme); notebooks use nbpreview.yazi; csv/tsv/json data files use
+# ansi_dark theme); notebooks use nbpreview.yazi; csv/tsv/json data files use
 # duckdb.yazi, cycled with mux.yazi (see the previewer block below).
 
 # Openers use the `%s` shell formatting (yazi >=26 deprecated `$n`/`$@` —
@@ -11,7 +11,7 @@
 [opener]
 edit     = [{ run = 'hx %s',   block = true }]
 text     = [{ run = 'hx %s',   block = true }]
-markdown = [{ run = 'rich --pager --theme dracula %s', block = true }]
+markdown = [{ run = 'rich --pager --theme ansi_dark %s', block = true }]
 pdf      = [{ run = 'open %s', orphan = true }]
 image    = [{ run = 'open %s', orphan = true }]
 
@@ -21,8 +21,8 @@ max_height = 2000
 
 # Preview stack — plugins vendored in plugins/, declarative (never `ya pkg add`):
 # - markdown → rich-preview.yazi, shelling out to `rich` (rich-cli). The plugin's
-#   main.lua passes `--theme=dracula` (upstream sanctions editing the args).
-# - notebooks → nbpreview.yazi, `--theme=dracula` (upstream default was ansi_dark).
+#   main.lua passes `--theme=ansi_dark` (upstream sanctions editing the args).
+# - notebooks → nbpreview.yazi, `--theme=ansi_dark` (the upstream default).
 # - csv/tsv/json → mux.yazi cycles duckdb → rich-preview → code on `M`. duckdb is
 #   wylie102's table/summary preview; mux resolves each name via require() to the
 #   plugin dir (so `rich-preview` → rich-preview.yazi); `code` is yazi's builtin

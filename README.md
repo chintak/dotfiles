@@ -47,9 +47,10 @@ Three rules hold the whole thing together:
    an immutable, versioned store and symlinks the target at that copy.
    Edit the repo → commit → `dot update`, and every machine re-links.
 
-3. **One theme.** [TokyoNight](https://github.com/tokyo-night/tokyo-night-vscode-theme) across Ghostty, Rex, and
-   Starship, so the terminal looks coherent. (helix, herdr, yazi, rich-cli, and tmux use Dracula;
-   Zed pairs **Nordfox - blurred** on dark with **Dayfox - opaque** on light.)
+3. **One theme.** [TokyoNight](https://github.com/tokyo-night/tokyo-night-vscode-theme) across Ghostty and
+   Starship. Rex, helix, yazi, and rich-cli match Zed's nightfox themes instead: Duskfox on dark,
+   Dayfox on light (helix is Duskfox only). herdr and tmux use Dracula; Zed pairs
+   **Nordfox - blurred** on dark with **Dayfox - opaque** on light.
 
 The goal is an environment that is **low-latency, glyph-safe, and
 identical on every client** — including a 43-column iPhone screen on a

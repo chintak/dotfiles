@@ -1,0 +1,40 @@
+# Duskfox — matched to Zed's nvim-nightfox "Duskfox" theme and Rex.
+# Reuses Helix's built-in `nightfox` theme (an adaptation of EdenEast's
+# nightfox.nvim) for every scope and swaps in the Duskfox palette. Values come
+# from Zed's nvim-nightfox extension; bg3 (cursor line) is Zed's active-line
+# overlay (#433c59 at 34%) flattened onto the background.
+inherits = "nightfox"
+
+[palette]
+black          = "#393552"
+red            = "#eb6f92"
+red-dim        = "#412d44"
+green          = "#a3be8c"
+green-dim      = "#363943"
+yellow         = "#f6c177"
+yellow-bright  = "#f9cb8c"
+blue           = "#569fba"
+blue-bright    = "#65b1cd"
+blue-dim       = "#2b344a"
+magenta        = "#c4a7e7"
+magenta-bright = "#ccb1ed"
+cyan           = "#9ccfd8"
+cyan-bright    = "#a6dae3"
+cyan-dim       = "#2b344a"
+white          = "#e0def4"
+orange         = "#ea9a97"
+orange-bright  = "#f0a4a2"
+pink           = "#eb98c3"
+pink-bright    = "#f0a6cc"
+comment        = "#817c9c"
+bg0            = "#191726"
+bg1            = "#232136"
+bg2            = "#2d2a45"
+bg3            = "#2e2a42"
+bg4            = "#4b4673"
+fg0            = "#eae8ff"
+fg1            = "#e0def4"
+fg2            = "#cdcbe0"
+fg3            = "#6e6a86"
+sel0           = "#433c59"
+sel1           = "#63577d"

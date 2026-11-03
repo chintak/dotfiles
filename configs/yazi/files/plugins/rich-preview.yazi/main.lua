@@ -10,7 +10,7 @@ function M:peek(job)
 			"--force-terminal",
 			"--panel=rounded",
 			"--guides",
-			"--theme=dracula",
+			"--theme=ansi_dark",
 			"--max-width",
 			tostring(job.area.w),
 			tostring(job.file.url.path),

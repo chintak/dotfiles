@@ -7,6 +7,14 @@ on `PATH`.
 `languages.toml` only pins what auto-detection gets wrong (Python, Lua).
 `$EDITOR=hx` is set in `zshrc`; `git config` uses `core.editor = hx`.
 
+## Theme
+
+`theme = "duskfox"` (`themes/duskfox.toml`): Helix's built-in `nightfox`
+theme with the Duskfox palette from Zed's nvim-nightfox extension, matching
+Zed and Rex. Helix 25.07.1 can't follow the terminal's light/dark mode (its
+`[theme] dark/light` table exists only on unreleased master), so Helix stays
+dark even when Rex is on Dayfox.
+
 ## Auto-save
 
 Every modified buffer is written ~1s after the last change and on focus loss,

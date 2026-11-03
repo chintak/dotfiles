@@ -1,0 +1,221 @@
+# Duskfox — matched to Zed's nvim-nightfox "Duskfox" theme.
+# Generated from tokyo-night.yazi (sxyazi, MIT) by swapping each color for
+# its Duskfox role; see configs/yazi/README.md.
+# vim:fileencoding=utf-8:foldmethod=marker
+
+# : Manager {{{
+
+[mgr]
+cwd = { fg = "#569fba", bold = true }
+hovered         = { fg = "#232136", bg = "#569fba" }
+preview_hovered = { fg = "#232136", bg = "#569fba" }
+symlink_target  = { fg = "#9ccfd8" }
+
+# Find
+find_keyword  = { fg = "#eb6f92", bold = true, italic = true, underline = true }
+find_position = { fg = "#c4a7e7", bg = "reset", bold = true, italic = true }
+
+# Marker
+marker_copied   = { fg = "#a3be8c", bg = "#a3be8c" }
+marker_cut      = { fg = "#f6c177", bg = "#eb6f92" }
+marker_marked   = { fg = "#569fba", bg = "#9ccfd8" }
+marker_selected = { fg = "#f6c177", bg = "#f6c177" }
+
+# Count
+count_copied   = { fg = "#232136", bg = "#a3be8c" }
+count_cut      = { fg = "#232136", bg = "#f6c177" }
+count_selected = { fg = "#232136", bg = "#569fba" }
+
+# Border
+border_symbol = "│"
+border_style  = { fg = "#4b4673" }
+
+# : }}}
+
+
+# : Tabs {{{
+
+[tabs]
+active   = { fg = "#433c59", bg = "#569fba", bold = true }
+inactive = { fg = "#569fba", bg = "#433c59" }
+
+# : }}}
+
+
+# : Mode {{{
+
+[mode]
+
+normal_main = { fg = "#433c59", bg = "#569fba", bold = true }
+normal_alt  = { fg = "#569fba", bg = "#433c59" }
+
+# Select mode
+select_main = { fg = "#433c59", bg = "#a3be8c", bold = true }
+select_alt  = { fg = "#569fba", bg = "#433c59" }
+
+# Unset mode
+unset_main = { fg = "#433c59", bg = "#c4a7e7", bold = true }
+unset_alt  = { fg = "#569fba", bg = "#433c59" }
+
+# : }}}
+
+
+# : Status bar {{{
+
+[status]
+overall = { fg = "#569fba" }
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }
+
+
+# Progress
+progress_label = { fg = "#433c59", bold = true }
+progress_normal = { fg = "#569fba", bg = "#433c59" }
+progress_error = { fg = "#eb6f92", bg = "#433c59" }
+
+# Permissions
+perm_sep   = { fg = "#569fba" }
+perm_type  = { fg = "#a3be8c" }
+perm_read  = { fg = "#f6c177" }
+perm_write = { fg = "#eb6f92" }
+perm_exec  = { fg = "#c4a7e7" }
+
+
+# : }}}
+
+# : Pick {{{
+
+[pick]
+border = { fg = "#569fba" }
+active = { fg = "#c4a7e7", bold = true }
+inactive = {}
+
+# : }}}
+
+
+# : Input {{{
+
+[input]
+border   = { fg = "#569fba" }
+title    = {}
+value    = {}
+selected = { reversed = true }
+
+# : }}}
+
+
+# : Completion {{{
+
+[cmp]
+border = { fg = "#569fba" }
+
+# : }}}
+
+
+# : Tasks {{{
+
+[tasks]
+border  = { fg = "#569fba" }
+title   = {}
+hovered = { fg = "#c4a7e7", underline = true }
+
+# : }}}
+
+
+# : Which {{{
+
+[which]
+mask            = { bg = "#4b4673" }
+cand            = { fg = "#a3be8c" }
+rest            = { fg = "#cdcbe0" }
+desc            = { fg = "#c4a7e7" }
+separator       = "  "
+separator_style = { fg = "#6e6a86" }
+
+# : }}}
+
+
+# : Help {{{
+
+[help]
+on      = { fg = "#a3be8c" }
+run     = { fg = "#c4a7e7" }
+hovered = { reversed = true, bold = true }
+footer  = { fg = "#232136", bg = "#cdcbe0" }
+
+# : }}}
+
+
+# : Spotter {{{
+
+[spot]
+border   = { fg = "#569fba" }
+title    = { fg = "#569fba" }
+tbl_col  = { fg = "#a3be8c" }
+tbl_cell = { fg = "#c4a7e7", bg = "#433c59" }
+
+# : }}}
+
+
+# : Notify {{{
+
+[notify]
+title_info  = { fg = "#a3be8c" }
+title_warn  = { fg = "#eb6f92" }
+title_error = { fg = "#f6c177" }
+
+# : }}}
+
+
+# : File-specific styles {{{
+
+[filetype]
+
+rules = [
+	# Images
+	{ mime = "image/*", fg = "#f6c177" },
+
+	# Media
+	{ mime = "video/*", fg = "#eb6f92" },
+	{ mime = "audio/*", fg = "#eb6f92" },
+
+	# Archives
+	{ mime = "application/zip",             fg = "#c4a7e7" },
+	{ mime = "application/x-tar",           fg = "#c4a7e7" },
+	{ mime = "application/x-bzip*",         fg = "#c4a7e7" },
+	{ mime = "application/x-bzip2",         fg = "#c4a7e7" },
+	{ mime = "application/x-7z-compressed", fg = "#c4a7e7" },
+	{ mime = "application/x-rar",           fg = "#c4a7e7" },
+	{ mime = "application/x-xz",            fg = "#c4a7e7" },
+
+	# Documents
+	{ mime = "application/doc",        fg = "#a3be8c" },
+	{ mime = "application/epub+zip",   fg = "#a3be8c" },
+	{ mime = "application/pdf",        fg = "#a3be8c" },
+	{ mime = "application/rtf",        fg = "#a3be8c" },
+	{ mime = "application/vnd.*",      fg = "#a3be8c" },
+
+  # Special files
+  { mime = "*", is = "orphan", fg = "#f083a2", bg = "#412d44" },
+  { mime = "application/*exec*", fg = "#eb6f92" },
+
+	# Fallback
+	{ url = "*", fg = "#e0def4" },
+	{ url = "*/", fg = "#569fba" },
+]
+
+# : }}}
+
+
+# : Git (git.yazi linemode signs) {{{
+
+[git]
+untracked = { fg = "#eb98c3" }
+unstaged  = { fg = "#f6c177" }
+staged    = { fg = "#a3be8c" }
+added     = { fg = "#a3be8c" }
+deleted   = { fg = "#eb6f92" }
+updated   = { fg = "#ea9a97" }
+ignored   = { fg = "#817c9c" }
+
+# : }}}

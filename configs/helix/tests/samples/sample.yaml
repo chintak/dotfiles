@@ -1,0 +1,37 @@
+# Parity sample for YAML.
+version: 2
+name: "parity-sample"
+enabled: true
+ratio: 0.75
+empty: null
+date: 2026-11-02
+
+defaults: &defaults
+  retries: 3
+  timeout: 30s
+  tags: [fast, "quoted", 'single']
+
+services:
+  web:
+    <<: *defaults
+    image: nginx:1.27
+    ports:
+      - "8080:80"
+      - 443
+    env:
+      DEBUG: false
+      PATH_PREFIX: /api
+  worker:
+    command: >
+      python -m worker
+      --verbose
+    script: |
+      echo "start"
+      exit 0
+
+custom: !tagged value
+list_of_maps:
+  - key: one
+    value: 1
+  - key: two
+    value: ~

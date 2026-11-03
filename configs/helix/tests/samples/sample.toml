@@ -1,0 +1,29 @@
+# Parity sample for TOML.
+title = "parity sample"
+version = 2
+ratio = 0.75
+enabled = true
+released = 2026-11-02T10:30:00Z
+local_date = 2026-11-02
+hex = 0xDEADBEEF
+big = 1_000_000
+
+[owner]
+name = "Chintak"
+"quoted key" = 'literal string'
+multiline = """
+first line
+second line"""
+
+[server.http]
+host = "127.0.0.1"
+ports = [8080, 8081, 8082]
+headers = { accept = "json", retries = 3 }
+
+[[plugin]]
+name = "fmt"
+enabled = false
+
+[[plugin]]
+name = "lint"
+args = ["--strict", "--quiet"]

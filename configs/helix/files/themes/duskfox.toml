@@ -5,6 +5,39 @@
 # overlay (#433c59 at 34%) flattened onto the background.
 inherits = "nightfox"
 
+# Syntax: nightfox's scope choices differ from Zed's. These overrides make
+# Rust render as it does in Zed, where Zed's Rust grammar
+# (crates/grammars/src/rust/highlights.scm) feeds the Duskfox theme's syntax
+# colors. Zed paints every keyword one magenta, types and enum variants
+# yellow, fields blue, and path segments and lifetimes as plain text.
+"keyword.control" = { fg = "magenta" }
+"keyword.control.conditional" = { fg = "magenta" }
+"keyword.control.repeat" = { fg = "magenta" }
+"keyword.control.import" = { fg = "magenta" }
+"keyword.control.return" = { fg = "magenta" }
+"keyword.control.exception" = { fg = "magenta" }
+"keyword.function" = { fg = "magenta" }
+"keyword.storage.modifier" = { fg = "magenta" }
+"keyword.storage.modifier.ref" = { fg = "fg2" }  # `&` in `&str`: an operator in Zed
+"keyword.special" = { fg = "magenta" }
+"keyword.operator" = { fg = "magenta" }          # `as`
+"keyword.directive" = { fg = "blue-bright" }
+"type.builtin" = { fg = "yellow" }
+"type.enum.variant" = { fg = "yellow" }
+"constructor" = { fg = "yellow" }
+"attribute" = { fg = "blue", modifiers = ["italic"] }
+"namespace" = { fg = "fg1" }
+"label" = { fg = "fg1" }                         # lifetimes
+"variable.parameter" = { fg = "cyan" }
+"variable.other.member" = { fg = "blue" }
+"function.builtin" = { fg = "blue-bright" }      # prelude calls like `drop`
+"constant.builtin.boolean" = { fg = "orange-bright" }
+"constant.character.escape" = { fg = "orange-bright" }
+"string.special" = { fg = "cyan-bright" }
+"comment.line.documentation" = { fg = "comment" }
+"comment.block.documentation" = { fg = "comment" }
+"punctuation.special" = { fg = "cyan-bright" }
+
 [palette]
 black          = "#393552"
 red            = "#eb6f92"

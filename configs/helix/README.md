@@ -15,6 +15,14 @@ Zed and Rex. Helix 25.07.1 can't follow the terminal's light/dark mode (its
 `[theme] dark/light` table exists only on unreleased master), so Helix stays
 dark even when Rex is on Dayfox.
 
+Syntax colors follow what Zed actually renders, not nightfox's scope
+choices: the theme overrides scopes so that Zed's Rust grammar plus Duskfox's
+syntax colors come out the same here. That means every keyword is one
+magenta, types and enum variants are yellow, fields are blue, and paths and
+lifetimes are plain text. One known gap: Helix captures `derive` as
+`special`, the scope `?` also uses, so `#[derive(` stays in the punctuation
+color where Zed draws it blue italic.
+
 ## Auto-save
 
 Every modified buffer is written ~1s after the last change and on focus loss,

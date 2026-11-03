@@ -1,0 +1,585 @@
+# Accepted Helix-vs-Zed differences for configs/helix/tests/parity.py.
+#
+# Each entry is a (language, Zed capture, Helix color) group the theme can't
+# fix: Helix uses one scope where Zed uses two, and the color that matches
+# more characters across languages wins. `count` is how many characters the
+# group covered when accepted. A group not listed here, or one that grows past
+# its count, fails the test. When a theme change shrinks a group, the test
+# prints a note: lower the count (or delete the entry) to lock in the gain.
+
+# python
+[[gap]]
+lang = "python"
+zed = "function.kwargs"
+helix = "#e0def4"
+count = 32  # frozen default_factory encoding key
+reason = "Helix captures keyword-argument names as plain `variable`."
+
+[[gap]]
+lang = "python"
+zed = "keyword.operator"
+helix = "#c4a7e7"
+count = 23  # in and not is or
+reason = "`keyword.operator` stays magenta for JS typeof/instanceof and Rust `as` (more chars)."
+
+[[gap]]
+lang = "python"
+zed = "variable.parameter"
+helix = "#e0def4"
+count = 22  # url timeout kwargs points
+reason = "Parameter declarations are plain: Helix colors parameter uses too, and plain wins overall."
+
+[[gap]]
+lang = "python"
+zed = "attribute.builtin"
+helix = "#65b1cd"
+count = 21  # @ property classmethod
+reason = "Helix captures decorators as `function`; recoloring would hit every function."
+
+[[gap]]
+lang = "python"
+zed = "type.builtin"
+helix = "#eb6f92"
+count = 10  # range
+reason = "Helix captures `range` as `function.builtin` (red for print/len/...)."
+
+[[gap]]
+lang = "python"
+zed = "type.class.call"
+helix = "#f6c177"
+count = 10  # RetryError
+reason = "Helix uses `constructor` for `Error(...)`; Rust/C++ constructors are yellow in Zed."
+
+[[gap]]
+lang = "python"
+zed = "function.decorator.call"
+helix = "#65b1cd"
+count = 9  # dataclass
+reason = "Helix captures decorators as `function`."
+
+[[gap]]
+lang = "python"
+zed = "type"
+helix = "#a3be8c"
+count = 7  # " Point
+reason = "Zed parses string annotations (\"Point\") as types; Helix keeps them strings."
+
+[[gap]]
+lang = "python"
+zed = "embedded"
+helix = "#a3be8c"
+count = 5  # x!r r . 2f
+reason = "f-string format specs: Helix keeps them string-colored."
+
+[[gap]]
+lang = "python"
+zed = "variable"
+helix = "#f6c177"
+count = 4  # list
+reason = "Helix marks builtin type names (`list`) as `type.builtin`."
+
+[[gap]]
+lang = "python"
+zed = "function.call"
+helix = "#eb6f92"
+count = 3  # cls
+reason = "`cls(...)`: Helix keeps `cls` as `variable.builtin`."
+
+[[gap]]
+lang = "python"
+zed = "function.decorator"
+helix = "#65b1cd"
+count = 1  # @
+reason = "Helix captures decorators as `function`."
+
+# markdown
+[[gap]]
+lang = "markdown"
+zed = "punctuation.markup"
+helix = "#a6dae3"
+count = 23  # > | -
+reason = "`>`/`|`/table rule share `punctuation.special` with code braces ({}), kept cyan."
+
+[[gap]]
+lang = "markdown"
+zed = "punctuation.embedded.markup"
+helix = "#cdcbe0"
+count = 12  # `
+reason = "Code-span backticks and fence info are generic punctuation/label in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "punctuation.embedded.markup"
+helix = "#e0def4"
+count = 10  # rust python
+reason = "Code-span backticks and fence info are generic punctuation/label in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "emphasis.strong.markup"
+helix = "#cdcbe0/b"
+count = 8  # * text bold
+reason = "Emphasis delimiters are `punctuation.bracket` in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "link_text.markup"
+helix = "#cdcbe0"
+count = 6  # [ Zed 1 alt
+reason = "Link/image brackets are `punctuation.bracket` in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "string"
+helix = "#e0def4"
+count = 5  # total
+reason = "Injected code: Helix's rust-format-args injection colors {total}."
+
+[[gap]]
+lang = "markdown"
+zed = "text.literal.markup"
+helix = "#cdcbe0"
+count = 4  # ` code two
+reason = "Code-span backticks are `punctuation.bracket` in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "link_uri.markup"
+helix = "#cdcbe0"
+count = 4  # ( dev png
+reason = "Link parentheses are `punctuation.bracket` in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "strikethrough.markup"
+helix = "#cdcbe0"
+count = 4  # ~ strikethrough
+reason = "Strikethrough tildes are punctuation in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "variable.parameter"
+helix = "#e0def4"
+count = 4  # name
+reason = "Injected code: parameter declarations are plain (see variable.parameter)."
+
+[[gap]]
+lang = "markdown"
+zed = "title.markup"
+helix = "#a6dae3"
+count = 3  # -
+reason = "Setext/thematic `-` is `punctuation.special` in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "emphasis.markup"
+helix = "#cdcbe0/i"
+count = 2  # * emphasis
+reason = "Emphasis delimiters are `punctuation.bracket` in Helix."
+
+[[gap]]
+lang = "markdown"
+zed = "string"
+helix = "#a6dae3"
+count = 2  # { total
+reason = "Injected code: Helix's rust-format-args injection colors {total}."
+
+[[gap]]
+lang = "markdown"
+zed = "(none)"
+helix = "#a6dae3"
+count = 1  # :
+reason = "Injected code: Helix colors `:` in Python annotations."
+
+[[gap]]
+lang = "markdown"
+zed = "link_text.markup"
+helix = "#a6dae3"
+count = 1  # !
+reason = "Link/image brackets are `punctuation.bracket` in Helix."
+
+# yaml
+[[gap]]
+lang = "yaml"
+zed = "string"
+helix = "#65b1cd"
+count = 15  # python - verbose
+reason = "Helix injects shell into block scalars; Zed keeps them strings."
+
+[[gap]]
+lang = "yaml"
+zed = "string"
+helix = "#e0def4"
+count = 8  # - m worker
+reason = "Helix injects shell into block scalars; Zed keeps them strings."
+
+[[gap]]
+lang = "yaml"
+zed = "string"
+helix = "#eb6f92"
+count = 8  # echo exit
+reason = "Helix injects shell into block scalars; Zed keeps them strings."
+
+[[gap]]
+lang = "yaml"
+zed = "string"
+helix = "#ea9a97"
+count = 1  # 0
+reason = "Helix injects shell into block scalars; Zed keeps them strings."
+
+# toml
+[[gap]]
+lang = "toml"
+zed = "property"
+helix = "#f6c177"
+count = 27  # owner server http plugin
+reason = "Helix captures table headers as `type`; Zed as `property`."
+
+# rust
+[[gap]]
+lang = "rust"
+zed = "variable.parameter"
+helix = "#e0def4"
+count = 14  # x name verbose id
+reason = "Helix colors parameter *uses* via locals; Zed only declarations. Plain wins overall."
+
+[[gap]]
+lang = "rust"
+zed = "keyword"
+helix = "#eb6f92"
+count = 12  # macro_rules!
+reason = "`macro_rules!` is `function.macro` in Helix."
+
+[[gap]]
+lang = "rust"
+zed = "attribute"
+helix = "#eb6f92"
+count = 11  # cfg test
+reason = "Attribute names are `function.macro` / `special` in Helix."
+
+[[gap]]
+lang = "rust"
+zed = "attribute"
+helix = "#cdcbe0"
+count = 6  # derive
+reason = "Attribute names are `function.macro` / `special` in Helix."
+
+[[gap]]
+lang = "rust"
+zed = "string"
+helix = "#a6dae3"
+count = 6  # { } t v
+reason = "Helix's rust-format-args injection colors {} placeholders and args."
+
+[[gap]]
+lang = "rust"
+zed = "function"
+helix = "#eb6f92"
+count = 4  # drop
+reason = "Prelude calls (`drop`) are `function.builtin`, red for Python/Go builtins."
+
+[[gap]]
+lang = "rust"
+zed = "punctuation.special"
+helix = "#cdcbe0"
+count = 3  # #
+reason = "Attribute `#` is plain punctuation in Helix."
+
+[[gap]]
+lang = "rust"
+zed = "string"
+helix = "#e0def4"
+count = 1  # v
+reason = "Helix's rust-format-args injection colors {} placeholders and args."
+
+# javascript
+[[gap]]
+lang = "javascript"
+zed = "keyword.import"
+helix = "#c4a7e7"
+count = 26  # import from export
+reason = "`keyword.control.import` is magenta for Python/Rust/Go imports (more chars)."
+
+[[gap]]
+lang = "javascript"
+zed = "variable.parameter"
+helix = "#e0def4"
+count = 26  # file start step name value n
+reason = "Parameter declarations are plain (see rust variable.parameter)."
+
+[[gap]]
+lang = "javascript"
+zed = "type.jsdoc"
+helix = "#817c9c"
+count = 21  # string Promise object
+reason = "Helix has no JSDoc injection; doc comments stay comment-colored."
+
+[[gap]]
+lang = "javascript"
+zed = "variable"
+helix = "#f6c177"
+count = 21  # Counter Boolean
+reason = "Helix colors capitalized/builtin identifiers as type or `variable.builtin`."
+
+[[gap]]
+lang = "javascript"
+zed = "keyword.jsdoc"
+helix = "#65b1cd"
+count = 14  # @ param returns
+reason = "Helix has no JSDoc injection."
+
+[[gap]]
+lang = "javascript"
+zed = "constructor"
+helix = "#65b1cd"
+count = 11  # constructor
+reason = "`constructor` method name is `function` in Helix."
+
+[[gap]]
+lang = "javascript"
+zed = "variable"
+helix = "#eb6f92"
+count = 7  # console
+reason = "Helix colors capitalized/builtin identifiers as type or `variable.builtin`."
+
+[[gap]]
+lang = "javascript"
+zed = "function"
+helix = "#f6c177"
+count = 6  # String
+reason = "`String(...)` is `constructor` in Helix."
+
+[[gap]]
+lang = "javascript"
+zed = "punctuation.delimiter"
+helix = "#e0def4"
+count = 5  # undefined default a b c
+reason = "`:` in case/object positions is plain in Helix."
+
+[[gap]]
+lang = "javascript"
+zed = "variable.jsdoc"
+helix = "#817c9c"
+count = 4  # file
+reason = "Helix has no JSDoc injection."
+
+[[gap]]
+lang = "javascript"
+zed = "string.regex"
+helix = "#cdcbe0"
+count = 2  # /
+reason = "Regex delimiters differ between Helix's and Zed's regex queries."
+
+[[gap]]
+lang = "javascript"
+zed = "operator.regex"
+helix = "#f0a4a2"
+count = 2  # ^ $
+reason = "Regex anchors differ between Helix's and Zed's regex queries."
+
+[[gap]]
+lang = "javascript"
+zed = "keyword.operator.regex"
+helix = "#f9cb8c"
+count = 1  # i
+reason = "Regex flags differ between Helix's and Zed's regex queries."
+
+# swift
+[[gap]]
+lang = "swift"
+zed = "function.call"
+helix = "#569fba"
+count = 33  # squareRoot data filter map enumerated
+reason = "Helix captures member calls as `variable.other.member`."
+
+[[gap]]
+lang = "swift"
+zed = "variable.parameter"
+helix = "#569fba"
+count = 29  # x y label origin norm items
+reason = "Zed's Swift query marks properties/parameters as parameters; Helix as members or plain."
+
+[[gap]]
+lang = "swift"
+zed = "type"
+helix = "#e0def4"
+count = 27  # data items values result
+reason = "Zed's Swift `navigation_expression` pattern tests @property (not captured), so every receiver becomes a type."
+
+[[gap]]
+lang = "swift"
+zed = "(none)"
+helix = "#569fba"
+count = 25  # shared isEmpty count
+reason = "Helix colors members/functions/nil that Zed leaves plain (Zed's `nil` pattern needs a newer grammar)."
+
+[[gap]]
+lang = "swift"
+zed = "variable.parameter"
+helix = "#e0def4"
+count = 22  # by factor from url _ values
+reason = "Zed's Swift query marks properties/parameters as parameters; Helix as members or plain."
+
+[[gap]]
+lang = "swift"
+zed = "keyword.import"
+helix = "#c4a7e7"
+count = 12  # import
+reason = "`keyword.control.import` is magenta for Python/Rust/Go imports."
+
+[[gap]]
+lang = "swift"
+zed = "(none)"
+helix = "#65b1cd"
+count = 8  # describe
+reason = "Helix colors members/functions/nil that Zed leaves plain (Zed's `nil` pattern needs a newer grammar)."
+
+[[gap]]
+lang = "swift"
+zed = "(none)"
+helix = "#f0a4a2"
+count = 6  # nil
+reason = "Helix colors members/functions/nil that Zed leaves plain (Zed's `nil` pattern needs a newer grammar)."
+
+[[gap]]
+lang = "swift"
+zed = "variable.builtin"
+helix = "#eb6f92"
+count = 4  # self
+reason = "`self` is red (Rust's Zed color) in Helix; Zed's Swift leaves it plain."
+
+[[gap]]
+lang = "swift"
+zed = "punctuation.bracket"
+helix = "#a6dae3"
+count = 4  # \ (
+reason = "Interpolation `\\(` is `punctuation.special` in Helix."
+
+[[gap]]
+lang = "swift"
+zed = "operator"
+helix = "#f6c177"
+count = 3  # String URL Int
+reason = "Optional `?`/type names in casts differ between the grammars."
+
+[[gap]]
+lang = "swift"
+zed = "keyword.operator"
+helix = "#c4a7e7"
+count = 2  # in
+reason = "Closure `in`: `keyword.operator` stays magenta."
+
+[[gap]]
+lang = "swift"
+zed = "operator"
+helix = "#c4a7e7"
+count = 1  # ?
+reason = "Optional `?`/type names in casts differ between the grammars."
+
+# go
+[[gap]]
+lang = "go"
+zed = "namespace"
+helix = "#e0def4"
+count = 13  # sample strings
+reason = "`namespace` is plain because Python modules and Rust paths are plain in Zed (more chars)."
+
+[[gap]]
+lang = "go"
+zed = "variable"
+helix = "#f0a4a2"
+count = 8  # MaxItems
+reason = "Helix colors Go constants as `constant`; Zed's Go query doesn't."
+
+# c
+[[gap]]
+lang = "c"
+zed = "constant"
+helix = "#f6c177"
+count = 12  # RED GREEN BLUE
+reason = "Enum constants are `type.enum.variant`, yellow for Rust variants."
+
+[[gap]]
+lang = "c"
+zed = "function.special"
+helix = "#65b1cd"
+count = 6  # SQUARE
+reason = "Function-like macro names are `function` in Helix."
+
+[[gap]]
+lang = "c"
+zed = "punctuation.bracket"
+helix = "#e0def4"
+count = 6  # ( x )
+reason = "Macro parameter lists are plain in Helix."
+
+[[gap]]
+lang = "c"
+zed = "operator"
+helix = "#f6c177"
+count = 4  # *
+reason = "Pointer `*` in declarators is `type` or plain in Helix."
+
+[[gap]]
+lang = "c"
+zed = "number"
+helix = "#e0def4"
+count = 2  # 64
+reason = "Macro bodies are plain in Helix."
+
+[[gap]]
+lang = "c"
+zed = "operator"
+helix = "#e0def4"
+count = 1  # *
+reason = "Pointer `*` in declarators is `type` or plain in Helix."
+
+# cpp
+[[gap]]
+lang = "cpp"
+zed = "namespace"
+helix = "#e0def4"
+count = 60  # geo std
+reason = "`namespace` is plain because Python modules and Rust paths are plain in Zed."
+
+[[gap]]
+lang = "cpp"
+zed = "function"
+helix = "#f6c177"
+count = 16  # Shape Circle
+reason = "Constructor names / `static_cast` are `constructor` / keyword in Helix."
+
+[[gap]]
+lang = "cpp"
+zed = "type"
+helix = "#e0def4"
+count = 12  # Kind
+reason = "Scoped enum type after `::` is a namespace in Helix."
+
+[[gap]]
+lang = "cpp"
+zed = "function"
+helix = "#c4a7e7"
+count = 11  # static_cast
+reason = "Constructor names / `static_cast` are `constructor` / keyword in Helix."
+
+[[gap]]
+lang = "cpp"
+zed = "variable"
+helix = "#f6c177"
+count = 10  # Small Large
+reason = "Enum class values are `type.enum.variant` (yellow) in Helix."
+
+[[gap]]
+lang = "cpp"
+zed = "operator"
+helix = "#f6c177"
+count = 6  # ~ string & auto char exception
+reason = "`~`, `&` and type keywords in declarators are `type` in Helix."
+
+[[gap]]
+lang = "cpp"
+zed = "(none)"
+helix = "#f6c177"
+count = 3  # int
+reason = "Primitive types inside template arguments are `type.builtin` in Helix."

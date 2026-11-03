@@ -11,7 +11,7 @@ uv run configs/helix/tests/parity.py --theme /tmp/x.toml   # try a theme edit
 ```
 
 Needs `uv` and `hx` on `PATH`. Dependencies are pinned in the script header.
-A full run takes about a minute. It exits non-zero on a regression.
+A full run takes about 30 seconds. It exits non-zero on a regression.
 
 ## How it works
 

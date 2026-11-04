@@ -16,12 +16,15 @@ Zed and Rex. Helix 25.07.1 can't follow the terminal's light/dark mode (its
 dark even when Rex is on Dayfox.
 
 Syntax colors follow what Zed actually renders, not nightfox's scope
-choices: the theme overrides scopes so that Zed's Rust grammar plus Duskfox's
-syntax colors come out the same here. That means every keyword is one
-magenta, types and enum variants are yellow, fields are blue, and paths and
-lifetimes are plain text. One known gap: Helix captures `derive` as
-`special`, the scope `?` also uses, so `#[derive(` stays in the punctuation
-color where Zed draws it blue italic.
+choices. `tests/parity.py` checks this for Python, Markdown, YAML, TOML, Rust,
+JavaScript, Swift, Go, C and C++ (see [tests/README.md](tests/README.md)):
+
+```bash
+uv run configs/helix/tests/parity.py        # all ten languages
+uv run configs/helix/tests/parity.py rust -v
+```
+
+Run it after any change to `themes/duskfox.toml`.
 
 ## Auto-save
 

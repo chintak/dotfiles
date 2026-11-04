@@ -6,10 +6,13 @@
 inherits = "nightfox"
 
 # Syntax: nightfox's scope choices differ from Zed's. These overrides make
-# Rust render as it does in Zed, where Zed's Rust grammar
-# (crates/grammars/src/rust/highlights.scm) feeds the Duskfox theme's syntax
-# colors. Zed paints every keyword one magenta, types and enum variants
-# yellow, fields blue, and path segments and lifetimes as plain text.
+# code render as it does in Zed, where each language's Zed grammar feeds the
+# Duskfox theme's syntax colors: one magenta for every keyword, yellow types
+# and enum variants, blue fields, plain module paths, lifetimes and
+# parameters. Where Helix uses one scope for things Zed colors differently,
+# the color matching more characters across Python, Markdown, YAML, TOML,
+# Rust, JavaScript, Swift, Go, C and C++ wins. tests/parity.py measures this
+# and tests/known-gaps.toml records what remains.
 "keyword.control" = { fg = "magenta" }
 "keyword.control.conditional" = { fg = "magenta" }
 "keyword.control.repeat" = { fg = "magenta" }
@@ -20,23 +23,34 @@ inherits = "nightfox"
 "keyword.storage.modifier" = { fg = "magenta" }
 "keyword.storage.modifier.ref" = { fg = "fg2" }  # `&` in `&str`: an operator in Zed
 "keyword.special" = { fg = "magenta" }
-"keyword.operator" = { fg = "magenta" }          # `as`
-"keyword.directive" = { fg = "blue-bright" }
+"keyword.operator" = { fg = "magenta" }          # as, typeof, instanceof, and/or/not
 "type.builtin" = { fg = "yellow" }
 "type.enum.variant" = { fg = "yellow" }
 "constructor" = { fg = "yellow" }
 "attribute" = { fg = "blue", modifiers = ["italic"] }
-"namespace" = { fg = "fg1" }
+"namespace" = { fg = "fg1" }                     # module paths: plain in Python/Rust
 "label" = { fg = "fg1" }                         # lifetimes
-"variable.parameter" = { fg = "cyan" }
+"variable.parameter" = { fg = "fg1" }
 "variable.other.member" = { fg = "blue" }
-"function.builtin" = { fg = "blue-bright" }      # prelude calls like `drop`
 "constant.builtin.boolean" = { fg = "orange-bright" }
 "constant.character.escape" = { fg = "orange-bright" }
 "string.special" = { fg = "cyan-bright" }
 "comment.line.documentation" = { fg = "comment" }
 "comment.block.documentation" = { fg = "comment" }
 "punctuation.special" = { fg = "cyan-bright" }
+
+# Markdown: Zed's markup colors.
+"markup.heading" = { fg = "blue-bright", modifiers = ["bold"] }
+"markup.bold" = { fg = "red", modifiers = ["bold"] }
+"markup.italic" = { fg = "red", modifiers = ["italic"] }
+"markup.strikethrough" = { fg = "cyan-bright", modifiers = ["crossed_out"] }
+"markup.raw.inline" = { fg = "cyan-bright" }
+"markup.link" = { fg = "blue-bright" }
+"markup.link.url" = { fg = "orange-bright", modifiers = ["italic"] }
+"markup.quote" = { fg = "fg1" }
+"markup.list" = { fg = "cyan-bright" }
+"markup.list.checked" = { fg = "fg1" }
+"markup.list.unchecked" = { fg = "fg1" }
 
 [palette]
 black          = "#393552"

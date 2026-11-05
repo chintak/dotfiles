@@ -7,6 +7,18 @@
 name = "rust"
 formatter = { command = "rustfmt" }
 
+# Workspace symbol search (space s). rust-analyzer defaults to types only
+# (OnlyTypes, so fn/const show up only when no type matches) and already
+# skips symbols inside std/dependencies (scope = workspace) -- though their
+# crate names still match, as `package` rows (filter with `%kind !package`).
+# Search all symbol kinds in the workspace crates, and drop `use` re-exports
+# so a symbol lists once, at its definition.
+# Keys: rust-analyzer crates/rust-analyzer/src/config.rs.
+[language-server.rust-analyzer.config.workspace.symbol.search]
+scope = "workspace"
+kind = "all_symbols"
+excludeImports = true
+
 [[language]]
 name = "python"
 language-servers = ["pyright", "ruff"]

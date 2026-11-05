@@ -57,4 +57,8 @@ never reaches hx inside a pane; it's still bound to word motion as a fallback
 for hx sessions outside herdr. Known shadowing inside herdr panes
 (`alt+d/u/i/n` go to herdr, not hx) is documented in `config.toml`.
 
+LSP docs on demand: `g q` (alias for the default `space k` hover) opens the
+docs for the symbol under the cursor; there is no hover-on-idle option.
+Signature help pops up on its own while typing arguments.
+
 Code browsing = `hx <worktree>` in a pane, or `yazi` → Enter.

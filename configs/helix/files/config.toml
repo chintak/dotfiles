@@ -103,8 +103,16 @@ p = ":run-shell-command gh markdown-preview '%{buffer_name}' >/dev/null 2>&1 &"
 # Swap the symbol pickers: space s is the muscle-memory key, so it gets the
 # project-wide picker (rust-analyzer workspace/symbol: all crates in the LSP
 # root, e.g. core/ here). Document (single-buffer) symbols move to space S.
+#
+# space s opens it pre-filled with the current selection (register `.`,
+# inserted with C-r . — book/src/pickers.md), so select an identifier and
+# hit space s to find it across the project. A query also makes the picker
+# load results on open: an empty one is never sent (picker/handlers.rs:135).
+# The macro sits on space s itself, so it opens the picker through a second
+# key, space A-s, which is also the plain (empty-prompt) picker.
 [keys.normal."space"]
-s = "workspace_symbol_picker"
+s = "@<space><A-s><C-r>."
+"A-s" = "workspace_symbol_picker"
 S = "symbol_picker"
 
 # LSP docs for the symbol under the cursor, Zed/IDE-style. Helix has no

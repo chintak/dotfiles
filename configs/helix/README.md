@@ -61,4 +61,29 @@ LSP docs on demand: `g q` (alias for the default `space k` hover) opens the
 docs for the symbol under the cursor; there is no hover-on-idle option.
 Signature help pops up on its own while typing arguments.
 
+Symbol search: `space s` = project-wide (workspace) picker pre-filled with the
+selection (`miw` first to grab the word under the cursor); `space A-s` = same
+picker, empty prompt; `space S` = current-file symbols. An empty prompt shows
+nothing (helix never sends the empty query). The text before any `%column`
+goes to rust-analyzer; `%column` terms filter its results in helix (fzf
+syntax). Tested on helix 25.07.1 + rust-analyzer 1.98.1:
+
+| Query | Finds |
+|---|---|
+| `area`, `circ`, `maxrad` | in-order subsequence of the name |
+| `shapes::area`, `shapes::` | items in module `shapes` (first segment: crate or top-level module, exact) |
+| `geom::MAX` | items at crate `geom`'s root |
+| `area %c Circle` / `area %c !Circle` | by container (impl type, enum, trait) |
+| `a %k function`, `a %k !package` | by kind; `!package` drops crate-name rows |
+| `a %p ^app` | by path prefix (bare `%p app` also matches `…/aarch64-apple-…`) |
+| `*HashMap` | include std/dependencies |
+| `::`, `::geom` | crates |
+
+Lowercase query letters match either case, uppercase only uppercase
+(`circle` finds `Circle`, `CIRCLE` doesn't). Spaces and fzf operators
+(`^ $ ' !`) only work after a `%column`. Paths follow definitions, not
+re-exports (`geom::shapes::Circle`, not `geom::Circle`), and can't go through
+types (`Circle::area` finds nothing; use `area %c Circle`). Struct fields
+aren't indexed; `__`-prefixed names need a `__` query.
+
 Code browsing = `hx <worktree>` in a pane, or `yazi` → Enter.

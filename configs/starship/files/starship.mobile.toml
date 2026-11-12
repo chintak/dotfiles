@@ -9,7 +9,7 @@
 add_newline = false
 command_timeout = 1000
 palette = 'tokyonight'
-format = "$directory$git_branch$git_status$git_state$python$nodejs$rust$status$cmd_duration$jobs$character"
+format = "$directory$git_branch${custom.worktree}$git_status$git_state$python$nodejs$rust$status$cmd_duration$jobs$character"
 
 [palettes.tokyonight]
 color_fg0    = '#c0caf5'
@@ -98,3 +98,12 @@ format = "[$symbol$number]($style) "
 success_symbol = '[❯](bold fg:color_green)'
 error_symbol = '[❯](bold fg:color_red)'
 vimcmd_symbol = '[❮](bold fg:color_green)'
+
+# Linked git worktree — see starship.toml for why paths are absolute.
+[custom.worktree]
+when = '[ "$(git rev-parse --path-format=absolute --git-dir)" != "$(git rev-parse --path-format=absolute --git-common-dir)" ]'
+command = 'basename "$(git rev-parse --show-toplevel)"'
+shell = ["sh"]
+require_repo = true
+style = "fg:color_yellow"
+format = "[wt:$output]($style) "

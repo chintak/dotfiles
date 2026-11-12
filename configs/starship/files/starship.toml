@@ -20,7 +20,7 @@ format = """
 [](fg:color_purple)\
 [ $directory ](fg:color_fg0 bg:color_purple)\
 [](fg:color_purple)\
-$git_branch$git_status$git_state$python$nodejs$rust\
+$git_branch${custom.worktree}$git_status$git_state$python$nodejs$rust\
 $line_break$status$cmd_duration$jobs\
 $character"""
 
@@ -63,7 +63,7 @@ format = "[ $state( $progress_current/$progress_total) ]($style)"
 [python]
 symbol = "py "
 style = "fg:color_blue"
-format = "[ $symbol$version]($style)"
+format = '[ $symbol$version( \($virtualenv\))]($style)'
 
 [nodejs]
 symbol = "js "
@@ -106,3 +106,14 @@ disabled = false
 success_symbol = '[❯](bold fg:color_green)'
 error_symbol = '[❯](bold fg:color_red)'
 vimcmd_symbol = '[❮](bold fg:color_green)'
+
+# Linked git worktree: show its directory name. Compare absolute paths —
+# from a subdirectory of the primary checkout, --git-common-dir is relative
+# while --git-dir is absolute, which would false-positive.
+[custom.worktree]
+when = '[ "$(git rev-parse --path-format=absolute --git-dir)" != "$(git rev-parse --path-format=absolute --git-common-dir)" ]'
+command = 'basename "$(git rev-parse --show-toplevel)"'
+shell = ["sh"]
+require_repo = true
+style = "fg:color_orange"
+format = "[ wt:$output]($style)"

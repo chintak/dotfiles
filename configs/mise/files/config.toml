@@ -1,0 +1,6 @@
+[settings]
+# On cd, walk up to the nearest uv.lock and activate that project's .venv
+# (VIRTUAL_ENV + .venv/bin on PATH); leaving the project undoes it. No
+# per-repo file needed. "source" only activates — it never creates or syncs
+# the venv; run `uv sync` yourself. Requires `mise activate zsh` (zshrc).
+python.uv_venv_auto = "source"

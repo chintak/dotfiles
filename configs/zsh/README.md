@@ -6,7 +6,7 @@ Single shell config for macOS and Linux. Notable choices:
   from `$SSH_CONNECTION`/`$SSH_TTY`, so one repo serves the Mac (powerline) and
   the phone (glyph-free) without duplication.
 - **Tool integrations are guarded** (`(( $+commands[x] ))`), so the same file is
-  valid on a box where zoxide/atuin/direnv/mise aren't installed.
+  valid on a box where zoxide/atuin/mise aren't installed.
 - **Plugin order matters**: zsh-autosuggestions, then zsh-syntax-highlighting
   **last**. Both are sourced through `_zsh_share` so the Linuxbrew path works.
 - **rich-cli defaults to dracula**: `RICH_THEME=dracula` is exported in the

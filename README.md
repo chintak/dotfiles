@@ -520,7 +520,8 @@ plain `cd` still works.
 
 **`direnv`** — loads a `.envrc` when you `cd` into a project and unloads
 it when you leave ([docs](https://direnv.net/)). Run `direnv allow` once
-per project to trust it. Great for per-project API keys and `PATH` edits.
+per project to trust it (the `direnv` config whitelists `~/git`, so repos
+there skip that step). Great for per-project API keys and `PATH` edits.
 
 **`mise`** — installs and switches language runtimes per project
 ([docs](https://mise.jdx.dev/)). Drop a `.mise.toml` pinning

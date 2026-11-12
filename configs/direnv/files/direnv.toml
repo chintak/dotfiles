@@ -1,0 +1,6 @@
+# Any .envrc under ~/git loads without `direnv allow`. Every repo here is
+# mine, so the allow prompt is friction, not protection. Caveat (man
+# direnv.toml): anyone who can write a file under these paths — including
+# a collaborator's commit you pull — runs code on `cd`.
+[whitelist]
+prefix = ["~/git"]

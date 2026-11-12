@@ -1,0 +1,5 @@
+version     = 1.0.0
+description = direnv — trust every .envrc under ~/git without `direnv allow`
+platform    = mac
+requires    = zsh
+file        = direnv.toml|~/.config/direnv/direnv.toml

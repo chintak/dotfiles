@@ -35,6 +35,7 @@ brew "difftastic"
 brew "git-absorb"
 
 # tools / runtimes
+brew "bash"   # direnv used to pull this in; listed so it isn't autoremoved
 brew "jq"
 brew "yq"
 brew "just"

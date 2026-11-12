@@ -19,9 +19,19 @@ scope = "workspace"
 kind = "all_symbols"
 excludeImports = true
 
+# Format on save = ruff autofix, then ruff format. A `formatter` takes
+# precedence over LSP formatting (docs.helix-editor.com/languages.html).
+# Helix runs it in the file's directory (helix-view/src/document.rs:833-835),
+# so ruff finds the nearest pyproject.toml/ruff.toml by walking up. That
+# project config decides which rules autofix; with none, ruff's defaults apply.
+# --exit-zero: lint findings that can't be fixed must not abort the save.
+# If the file has a syntax error, ruff format exits non-zero and Helix keeps
+# the buffer as it is.
 [[language]]
 name = "python"
 language-servers = ["pyright", "ruff"]
+auto-format = true
+formatter = { command = "sh", args = ["-c", "ruff check --fix --exit-zero --quiet - | ruff format --quiet -"] }
 
 [[language]]
 name = "lua"

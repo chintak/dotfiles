@@ -63,7 +63,7 @@ format = "[ $state( $progress_current/$progress_total) ]($style)"
 [python]
 symbol = "py "
 style = "fg:color_blue"
-format = "[ $symbol$version]($style)"
+format = '[ $symbol$version( \($virtualenv\))]($style)'
 
 [nodejs]
 symbol = "js "

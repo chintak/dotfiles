@@ -59,7 +59,7 @@ format = "[ $state ]($style)"
 [python]
 symbol = "py "
 style = "fg:color_yellow"
-format = "[$symbol$version ]($style)"
+format = '[$symbol$version( \($virtualenv\)) ]($style)'
 
 [nodejs]
 symbol = "js "

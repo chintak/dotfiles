@@ -114,6 +114,11 @@ p = ":run-shell-command gh markdown-preview '%{buffer_name}' >/dev/null 2>&1 &"
 s = "@<space><A-s><C-r>."
 "A-s" = "workspace_symbol_picker"
 S = "symbol_picker"
+# space l: format + write. Auto-save writes with auto_format hardcoded false
+# (auto_save.rs:90-96) and write_all only formats when both flags are on
+# (typed.rs:820), so ruff/prettier run only on an explicit :write. l is
+# unused in helix's default space mode (keymap/default.rs).
+l = ":write"
 
 # LSP docs for the symbol under the cursor, Zed/IDE-style. Helix has no
 # hover-on-idle option (book/src/editor.md lists only auto-completion and

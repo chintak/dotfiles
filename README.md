@@ -518,13 +518,11 @@ search; `atuin stats` for your most-used commands.
 it, so `z proj` jumps to the best-matching directory by frecency, and
 plain `cd` still works.
 
-**`direnv`** — loads a `.envrc` when you `cd` into a project and unloads
-it when you leave ([docs](https://direnv.net/)). Run `direnv allow` once
-per project to trust it. Great for per-project API keys and `PATH` edits.
-
 **`mise`** — installs and switches language runtimes per project
 ([docs](https://mise.jdx.dev/)). Drop a `.mise.toml` pinning
 `python = "3.12"` and it's active only in that directory.
+The `mise` config also sets `python.uv_venv_auto`, so any uv project's
+`.venv` activates on `cd` and deactivates when you leave, with no per-repo file.
 
 ### Search & navigation
 

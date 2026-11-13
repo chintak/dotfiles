@@ -1,4 +1,4 @@
-version     = 1.1.0
+version     = 1.2.0
 description = Python CLIs via uv (ruff, pytest, nvitop, huggingface_hub, rich-cli, nbpreview)
 file        = tools.txt|~/.config/dot/uv-tools.txt
-post_apply  = xargs -n1 uv tool install --quiet < ~/.config/dot/uv-tools.txt
+post_apply  = if command -v mise >/dev/null; then uv=(mise exec uv@latest -- uv); else uv=(uv); fi; xargs -n1 "${uv[@]}" tool install --quiet < ~/.config/dot/uv-tools.txt

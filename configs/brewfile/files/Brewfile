@@ -39,8 +39,7 @@ brew "bash"   # direnv used to pull this in; listed so it isn't autoremoved
 brew "jq"
 brew "yq"
 brew "just"
-brew "mise"
-brew "uv"
+brew "mise"   # also provides uv, go and rust (see the mise config)
 brew "watchexec"
 brew "hyperfine"
 brew "duckdb"

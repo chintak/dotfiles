@@ -61,6 +61,11 @@ LSP docs on demand: `g q` (alias for the default `space k` hover) opens the
 docs for the symbol under the cursor; there is no hover-on-idle option.
 Signature help pops up on its own while typing arguments.
 
+File picker: `space f` and global search show dotfiles
+(`[editor.file-picker] hidden = false`); `.gitignore`d paths stay hidden.
+Flip either at runtime with `:toggle file-picker.hidden` or
+`:toggle file-picker.git-ignore`.
+
 Symbol search: `space s` = current-file symbols; `space S` = project-wide
 (workspace) symbols. In the workspace picker an empty prompt shows
 nothing (helix never sends the empty query). The text before any `%column`

@@ -61,9 +61,8 @@ LSP docs on demand: `g q` (alias for the default `space k` hover) opens the
 docs for the symbol under the cursor; there is no hover-on-idle option.
 Signature help pops up on its own while typing arguments.
 
-Symbol search: `space s` = project-wide (workspace) picker pre-filled with the
-selection (`miw` first to grab the word under the cursor); `space A-s` = same
-picker, empty prompt; `space S` = current-file symbols. An empty prompt shows
+Symbol search: `space s` = current-file symbols; `space S` = project-wide
+(workspace) symbols. In the workspace picker an empty prompt shows
 nothing (helix never sends the empty query). The text before any `%column`
 goes to rust-analyzer; `%column` terms filter its results in helix (fzf
 syntax). Tested on helix 25.07.1 + rust-analyzer 1.98.1:

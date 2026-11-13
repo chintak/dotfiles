@@ -100,20 +100,11 @@ after-delay = { enable = true, timeout = 1000 }
 [keys.normal."space".m]
 p = ":run-shell-command gh markdown-preview '%{buffer_name}' >/dev/null 2>&1 &"
 
-# Swap the symbol pickers: space s is the muscle-memory key, so it gets the
-# project-wide picker (rust-analyzer workspace/symbol: all crates in the LSP
-# root, e.g. core/ here). Document (single-buffer) symbols move to space S.
-#
-# space s opens it pre-filled with the current selection (register `.`,
-# inserted with C-r . — book/src/pickers.md), so select an identifier and
-# hit space s to find it across the project. A query also makes the picker
-# load results on open: an empty one is never sent (picker/handlers.rs:135).
-# The macro sits on space s itself, so it opens the picker through a second
-# key, space A-s, which is also the plain (empty-prompt) picker.
+# Symbol pickers: space s = current-file symbols, space S = workspace
+# (project-wide) symbols.
 [keys.normal."space"]
-s = "@<space><A-s><C-r>."
-"A-s" = "workspace_symbol_picker"
-S = "symbol_picker"
+s = "symbol_picker"
+S = "workspace_symbol_picker"
 # space l: format + write. Auto-save writes with auto_format hardcoded false
 # (auto_save.rs:90-96) and write_all only formats when both flags are on
 # (typed.rs:820), so ruff/prettier run only on an explicit :write. l is

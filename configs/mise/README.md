@@ -1,6 +1,13 @@
 # mise
 
-Global mise settings (`~/.config/mise/config.toml`).
+Global mise config (`~/.config/mise/config.toml`).
+
+- **`[tools]`**: `uv = "latest"`, `go = "latest"`, `rust = "stable"` are the
+  default toolchains outside any project. A project's own `mise.toml` pins
+  exact versions and wins inside that project. Rust is installed through
+  rustup and reuses `~/.rustup` / `~/.cargo` (mise sets `RUSTUP_HOME`,
+  `CARGO_HOME`, `RUSTUP_TOOLCHAIN=stable`). Run `mise install` after apply;
+  `mise upgrade` moves `latest` tools forward.
 
 - **`python.uv_venv_auto = "source"`**: entering any directory under a
   `uv.lock` activates that project's `.venv` (sets `VIRTUAL_ENV`, prepends

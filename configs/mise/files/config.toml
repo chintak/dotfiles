@@ -1,3 +1,10 @@
+# Global toolchains: track the newest release. Projects pin exact versions
+# in their own mise.toml, which overrides these.
+[tools]
+uv = "latest"
+go = "latest"
+rust = "stable" # installed via rustup; reuses ~/.rustup and ~/.cargo
+
 [settings]
 # On cd, walk up to the nearest uv.lock and activate that project's .venv
 # (VIRTUAL_ENV + .venv/bin on PATH); leaving the project undoes it. No

@@ -1,5 +1,5 @@
-version     = 1.0.0
-description = mise — global settings; auto-activates a uv project's .venv on cd
+version     = 1.1.0
+description = mise — global uv/go/rust toolchains; auto-activates a uv project's .venv on cd
 platform    = mac
 requires    = zsh
 file        = config.toml|~/.config/mise/config.toml

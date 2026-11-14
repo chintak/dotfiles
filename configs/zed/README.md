@@ -1,7 +1,7 @@
 # zed
 
 Zed is the GUI editor on the Mac: Helix-style modal editing, the
-Duskfox theme pinned to dark (Dayfox kept as the unused light slot), and Zed's own AI turned off —
+Duskfox theme pinned to dark (Dayfox kept as the unused light slot), worktrees in `<repo>/.worktrees/`, and Zed's own AI turned off —
 agents run in opencode and herdr, not in Zed's panel. `settings.json` is
 *captured* from the UI and pruned (see *Why these settings*); `keymap.json` and
 `tasks.json` are hand-edited. Everything else in `~/.config/zed/` and
@@ -48,6 +48,7 @@ block with an editor — do not accept the output.
 |---------|-----|
 | `helix_mode: true` | Modal editing everywhere in Zed — selections and motions match hx, so the editor and the terminal editor agree. |
 | `cursor_shape: block` + `cursor_blink: false` | Helix's block cursor, non-blinking so the caret doesn't pull the eye in a pane an agent is also writing to. |
+| `git.worktree_directory` = `.worktrees` | Zed creates new git worktrees in `<repo>/.worktrees/`, the same place hand-made worktrees go (the `~/git` convention). The path is relative to the repo's working directory. Because it resolves inside the project, Zed adds no project-name component; the default `../worktrees` would put them in `~/git/worktrees/<repo>/` ([all-settings](https://zed.dev/docs/reference/all-settings)). Each repo needs `.worktrees/` in its `.gitignore`. |
 | `theme.mode` / `icon_theme.mode` = `dark`, `theme.dark` `Duskfox - blurred`, `theme.light` `Dayfox - opaque` | Fox-family themes: warm, low-contrast, and they don't fight Ghostty's TokyoNight. The suffix is Zed's naming for theme variants. 1.2.1 captured a UI change from `mode: system` with `Nordfox - blurred` to `mode: dark` with `Duskfox - blurred`, so Zed stays dark whatever the OS appearance, and `theme.light` is kept but unused. |
 | `format_on_save: modifications_if_available` | Formats on save only when the language server can format *changed* regions, so saving a large file doesn't reflow unrelated lines (keeps agent diffs reviewable). |
 | `autosave: on_focus_change` | Writes a buffer when the window loses focus rather than on every keystroke or on a timer — the least intrusive policy when an agent is also touching files. |
@@ -124,11 +125,14 @@ It ships one binding:
   a fake one would have to be a `workspace::SendKeystrokes` macro, and
   asynchronous actions don't chain reliably through it.
 
-`tasks.json` stays `[]`: no project tasks are defined. The tasks docs only
-show populated arrays, so "Zed accepts an empty one" is an assumption, not a
-proven format — acceptance is probed in the UI (`task: spawn`, see below). If
-Zed rewrites the file to a non-empty shape, drop it from the manifest and take
-a patch bump.
+`tasks.json` defines one global task, hooked to `create_worktree`: Zed runs
+it right after it creates a linked git worktree, from the CLI or the worktree
+picker, with `ZED_WORKTREE_ROOT` set to the new worktree
+([tasks#hooks](https://zed.dev/docs/tasks#hooks)). It runs `uv sync` there only
+when the worktree has a `pyproject.toml`; otherwise it prints a skip line and
+exits 0. It lives globally, not in each repo's `.zed/tasks.json`, because
+`git worktree add` checks out only committed files, so an uncommitted project
+file never reaches the worktree the hook runs for.
 
 ## What is deliberately not tracked
 

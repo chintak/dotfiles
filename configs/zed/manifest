@@ -1,5 +1,5 @@
-version     = 1.2.1
-description = Zed — GUI editor: Helix mode, Duskfox dark theme, 10 extensions pinned, Zed AI disabled
+version     = 1.3.0
+description = Zed — GUI editor: Helix mode, Duskfox dark theme, 10 extensions pinned, Zed AI disabled, worktrees in .worktrees with uv sync
 platform    = mac
 file        = settings.json|~/.config/zed/settings.json
 file        = keymap.json|~/.config/zed/keymap.json

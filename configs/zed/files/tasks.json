@@ -1,1 +1,12 @@
-[]
+// Global Zed tasks. See https://zed.dev/docs/tasks#hooks
+//
+// `create_worktree` hooks run right after Zed creates a linked git worktree
+// (CLI or worktree picker). $ZED_WORKTREE_ROOT is the new worktree.
+[
+  {
+    "label": "uv sync new worktree",
+    "command": "if [ -f pyproject.toml ]; then uv sync; else echo 'no pyproject.toml; skipping uv sync'; fi",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "hooks": ["create_worktree"],
+  },
+]

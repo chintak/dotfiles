@@ -122,6 +122,10 @@ l = ":write"
 # key.
 "." = "goto_next_buffer"
 "," = "goto_previous_buffer"
+# space x: close the current buffer (:buffer-close / :bc). x is unused in
+# helix's default space mode (keymap/default.rs). Non-forced: a buffer with
+# unsaved changes refuses to close (use :bc! to discard).
+x = ":buffer-close"
 
 # LSP docs for the symbol under the cursor, Zed/IDE-style. Helix has no
 # hover-on-idle option (book/src/editor.md lists only auto-completion and

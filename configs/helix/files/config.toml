@@ -25,7 +25,8 @@ scrolloff = 999
 soft-wrap = { enable = true, max-wrap = 25, max-indent-retain = 255, wrap-indicator = "" }
 
 # Show dotfiles in the file picker and global search (default hidden = true
-# skips them). .gitignore'd paths stay hidden via git-ignore = true; flip
+# skips them). .gitignore'd paths stay hidden via git-ignore = true (except
+# data/ and .worktrees/, un-ignored in ./ignore); flip
 # either at runtime with `:toggle file-picker.hidden` / `file-picker.git-ignore`.
 [editor.file-picker]
 hidden = false

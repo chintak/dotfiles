@@ -37,14 +37,14 @@
   },
   "autosave": "on_focus_change",
   "icon_theme": {
-    "mode": "system",
+    "mode": "dark",
     "light": "Material Icon Theme",
     "dark": "Material Icon Theme"
   },
   "theme": {
-    "mode": "system",
+    "mode": "dark",
     "light": "Dayfox - opaque",
-    "dark": "Nordfox - blurred"
+    "dark": "Duskfox - blurred"
   },
   "agent": {
     "thinking_display": "preview",

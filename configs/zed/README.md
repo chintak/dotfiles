@@ -1,7 +1,7 @@
 # zed
 
 Zed is the GUI editor on the Mac: Helix-style modal editing, the
-Nordfox/Dayfox theme pair (system light/dark), and Zed's own AI turned off —
+Duskfox theme pinned to dark (Dayfox kept as the unused light slot), and Zed's own AI turned off —
 agents run in opencode and herdr, not in Zed's panel. `settings.json` is
 *captured* from the UI and pruned (see *Why these settings*); `keymap.json` and
 `tasks.json` are hand-edited. Everything else in `~/.config/zed/` and
@@ -48,7 +48,7 @@ block with an editor — do not accept the output.
 |---------|-----|
 | `helix_mode: true` | Modal editing everywhere in Zed — selections and motions match hx, so the editor and the terminal editor agree. |
 | `cursor_shape: block` + `cursor_blink: false` | Helix's block cursor, non-blinking so the caret doesn't pull the eye in a pane an agent is also writing to. |
-| `theme.light` `Dayfox - opaque` / `theme.dark` `Nordfox - blurred` | System light/dark pair from the Fox family — warm, low-contrast themes that don't fight Ghostty's TokyoNight. The suffix is Zed's theme variant naming, so the pair follows the OS appearance automatically. |
+| `theme.mode` / `icon_theme.mode` = `dark`, `theme.dark` `Duskfox - blurred`, `theme.light` `Dayfox - opaque` | Fox-family themes: warm, low-contrast, and they don't fight Ghostty's TokyoNight. The suffix is Zed's naming for theme variants. 1.2.1 captured a UI change from `mode: system` with `Nordfox - blurred` to `mode: dark` with `Duskfox - blurred`, so Zed stays dark whatever the OS appearance, and `theme.light` is kept but unused. |
 | `format_on_save: modifications_if_available` | Formats on save only when the language server can format *changed* regions, so saving a large file doesn't reflow unrelated lines (keeps agent diffs reviewable). |
 | `autosave: on_focus_change` | Writes a buffer when the window loses focus rather than on every keystroke or on a timer — the least intrusive policy when an agent is also touching files. |
 | `focus_follows_mouse: { enabled: true }` | Clicking into a pane focuses it without a second click — matches herdr pane behaviour. |
@@ -152,7 +152,7 @@ daemon (`opencode service set env …`, see the root README).
 
 ## The reconcile loop
 
-- **2026-11-13 capture (1.2.1):** `diff` of `files/settings.json` against `~/.local/share/dot/store/zed/1.2.0/settings.json` showed `buffer_font_size` `13 → 15` plus theme drift (`mode: "dark"`, `dark: "Duskfox - blurred"`). Captured only the font size; the theme drift was left uncaptured in the store, and this task does not apply the config, quit, or restart Zed.
+- **2026-11-13 capture (1.2.1):** `diff` of `files/settings.json` against `~/.local/share/dot/store/zed/1.2.0/settings.json` showed `buffer_font_size` `13 → 15` plus `theme.mode`/`icon_theme.mode` `system → dark` and `theme.dark` `Nordfox - blurred → Duskfox - blurred`. Captured all of it, so the repo file now matches the store byte for byte; no keys needed pruning.
 - **2026-10-27 capture (1.2.0):** `dot diff zed` showed only `terminal.copy_on_select: true` in `~/.local/share/dot/store/zed/1.1.0/settings.json:2–4`; captured that three-line block in `files/settings.json:2–4`, preserving every other byte. This task does not apply the config, quit, or restart Zed.
 
 Zed's UI **writes its config files**, so unlike every other config here, the

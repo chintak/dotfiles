@@ -81,7 +81,7 @@ if (( $+commands[eza] )); then
   }
   alias la='ls -a'
   alias ll='ls -la'
-  alias lt='command eza --tree --level=2 --group-directories-first'
+  alias lt='command eza -lhT --level=3 --git --group-directories-first --time-style=long-iso'
 else
   alias ls='ls -G'
   alias la='ls -aG'

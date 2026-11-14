@@ -127,10 +127,28 @@ It ships one binding:
 
 `tasks.json` defines one global task, hooked to `create_worktree`: Zed runs
 it right after it creates a linked git worktree, from the CLI or the worktree
-picker, with `ZED_WORKTREE_ROOT` set to the new worktree
-([tasks#hooks](https://zed.dev/docs/tasks#hooks)). It runs `uv sync` there only
-when the worktree has a `pyproject.toml`; otherwise it prints a skip line and
-exits 0. It lives globally, not in each repo's `.zed/tasks.json`, because
+picker, with the new worktree as cwd
+([tasks#hooks](https://zed.dev/docs/tasks#hooks)). Zed creates worktrees on a
+detached HEAD and leaves branching to the branch picker
+([git](https://zed.dev/docs/git)); the task does it instead, in three steps,
+each of which reports and carries on if it fails:
+
+1. `git fetch --quiet origin`, so the branch starts from the latest remote
+   state. `fetch`, not `pull`: a detached worktree has no branch to merge into,
+   and `fetch` refreshes the ref `origin/HEAD` points to (and, under the default
+   `fetch.followRemoteHEAD=create`, creates `origin/HEAD` if it is missing —
+   `git help config`).
+2. `git switch --no-track -c wip/<worktree-name> origin/HEAD`, where
+   `<worktree-name>` is the folder Zed picked (`.worktrees/<name>/<repo>`).
+   `origin/HEAD` follows each repo's default branch (`main` or `master`).
+   `--no-track` stops `branch.autoSetupMerge=true` from making the branch track
+   the default branch, so the first `git push -u` sets its real upstream. If the
+   branch exists, the worktree stays detached. The ship skill renames `wip/*` to
+   `<initials>/<type>/<slug>` before pushing.
+3. `uv sync` only when the worktree has a `pyproject.toml`; otherwise a skip
+   line, exit 0.
+
+It lives globally, not in each repo's `.zed/tasks.json`, because
 `git worktree add` checks out only committed files, so an uncommitted project
 file never reaches the worktree the hook runs for.
 

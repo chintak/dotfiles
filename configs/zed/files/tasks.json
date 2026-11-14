@@ -1,11 +1,15 @@
 // Global Zed tasks. See https://zed.dev/docs/tasks#hooks
 //
 // `create_worktree` hooks run right after Zed creates a linked git worktree
-// (CLI or worktree picker). $ZED_WORKTREE_ROOT is the new worktree.
+// (CLI or worktree picker), with cwd = the new worktree. Zed leaves it on a
+// detached HEAD; this task fetches origin, branches `wip/<worktree-name>` off
+// the fresh origin/HEAD (no upstream, so the first `git push -u` sets it), then
+// runs `uv sync` when the repo has a pyproject.toml. Each step reports and
+// carries on if it fails.
 [
   {
-    "label": "uv sync new worktree",
-    "command": "if [ -f pyproject.toml ]; then uv sync; else echo 'no pyproject.toml; skipping uv sync'; fi",
+    "label": "set up new worktree",
+    "command": "git fetch --quiet origin || echo 'git fetch origin failed; using cached origin/HEAD'; b=\"wip/$(basename \"$(dirname \"$PWD\")\")\"; if git switch --quiet --no-track -c \"$b\" origin/HEAD; then echo \"on $b at $(git rev-parse --short HEAD)\"; else echo \"could not create $b; staying detached\"; fi; if [ -f pyproject.toml ]; then uv sync; else echo 'no pyproject.toml; skipping uv sync'; fi",
     "cwd": "$ZED_WORKTREE_ROOT",
     "hooks": ["create_worktree"],
   },

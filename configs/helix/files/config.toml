@@ -116,6 +116,12 @@ S = "workspace_symbol_picker"
 # (typed.rs:820), so ruff/prettier run only on an explicit :write. l is
 # unused in helix's default space mode (keymap/default.rs).
 l = ":write"
+# space . / space ,: next / previous buffer (aliases for the default goto-mode
+# `g n` / `g p`, i.e. :bn / :bp). . and , are unused in helix's default space
+# mode (keymap/default.rs) and sit under > / <, so the direction reads off the
+# key.
+"." = "goto_next_buffer"
+"," = "goto_previous_buffer"
 
 # LSP docs for the symbol under the cursor, Zed/IDE-style. Helix has no
 # hover-on-idle option (book/src/editor.md lists only auto-completion and

@@ -12,7 +12,7 @@
   "agent_ui_font_size": 18.0,
   "agent_ui_font_family": "Source Serif 4",
   "buffer_line_height": "comfortable",
-  "buffer_font_size": 13.0,
+  "buffer_font_size": 15.0,
   "buffer_font_family": "JetBrainsMono Nerd Font Mono",
   "agent_buffer_font_size": 15.0,
   "agent_buffer_font_family": "JetBrainsMono Nerd Font Mono",
@@ -37,14 +37,14 @@
   },
   "autosave": "on_focus_change",
   "icon_theme": {
-    "mode": "system",
+    "mode": "dark",
     "light": "Material Icon Theme",
     "dark": "Material Icon Theme"
   },
   "theme": {
-    "mode": "system",
+    "mode": "dark",
     "light": "Dayfox - opaque",
-    "dark": "Nordfox - blurred"
+    "dark": "Duskfox - blurred"
   },
   "agent": {
     "thinking_display": "preview",

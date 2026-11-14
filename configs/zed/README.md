@@ -1,7 +1,7 @@
 # zed
 
 Zed is the GUI editor on the Mac: Helix-style modal editing, the
-Nordfox/Dayfox theme pair (system light/dark), and Zed's own AI turned off —
+Duskfox theme pinned to dark (Dayfox kept as the unused light slot), and Zed's own AI turned off —
 agents run in opencode and herdr, not in Zed's panel. `settings.json` is
 *captured* from the UI and pruned (see *Why these settings*); `keymap.json` and
 `tasks.json` are hand-edited. Everything else in `~/.config/zed/` and
@@ -48,13 +48,13 @@ block with an editor — do not accept the output.
 |---------|-----|
 | `helix_mode: true` | Modal editing everywhere in Zed — selections and motions match hx, so the editor and the terminal editor agree. |
 | `cursor_shape: block` + `cursor_blink: false` | Helix's block cursor, non-blinking so the caret doesn't pull the eye in a pane an agent is also writing to. |
-| `theme.light` `Dayfox - opaque` / `theme.dark` `Nordfox - blurred` | System light/dark pair from the Fox family — warm, low-contrast themes that don't fight Ghostty's TokyoNight. The suffix is Zed's theme variant naming, so the pair follows the OS appearance automatically. |
+| `theme.mode` / `icon_theme.mode` = `dark`, `theme.dark` `Duskfox - blurred`, `theme.light` `Dayfox - opaque` | Fox-family themes: warm, low-contrast, and they don't fight Ghostty's TokyoNight. The suffix is Zed's naming for theme variants. 1.2.1 captured a UI change from `mode: system` with `Nordfox - blurred` to `mode: dark` with `Duskfox - blurred`, so Zed stays dark whatever the OS appearance, and `theme.light` is kept but unused. |
 | `format_on_save: modifications_if_available` | Formats on save only when the language server can format *changed* regions, so saving a large file doesn't reflow unrelated lines (keeps agent diffs reviewable). |
 | `autosave: on_focus_change` | Writes a buffer when the window loses focus rather than on every keystroke or on a timer — the least intrusive policy when an agent is also touching files. |
 | `focus_follows_mouse: { enabled: true }` | Clicking into a pane focuses it without a second click — matches herdr pane behaviour. |
 | `preferred_line_length: 100` + `soft_wrap: "editor_width"` | Per [all-settings](https://zed.dev/docs/reference/all-settings): `editor_width` wraps at lines that overflow the **editor width**, while the `100` is only the preference value Zed's UI wrote and caps nothing. `soft_wrap: "bounded"` is the option that wraps at the minimum of `editor_width` and `preferred_line_length` — i.e. what would enforce the 100-column cap. Also a genuine non-default choice: Zed's default `preferred_line_length` is `80`. Whether a 100-cap was intended is an open question, not a documented fact. |
 | `disable_ai: true` | Zed's own AI is off as a **standing, deliberate choice (confirmed by the owner 2026-10-23), not drift**: [AI Quick Start](https://zed.dev/docs/ai/configuration) states that "when AI is turned off, all AI features are disabled … the Threads Sidebar, Agent Panel, Edit Prediction, and Inline Assistant", and [all-settings](https://zed.dev/docs/reference/all-settings) defines the key as "whether to disable all AI features in Zed". Zed is the editor surface and agents run in opencode + herdr, so the Threads Sidebar, Agent Panel, Edit Prediction, and Inline Assistant are redundant. It makes the keys below **dormant** and the keymap binding inert. |
-| `buffer_font_family` / `agent_buffer_font_family` = `JetBrainsMono Nerd Font Mono`, `13.0` / `15.0` | The Nerd Font from the Brewfile cask; glyphs are PUA-only (see the root README), so the font must be explicit. 1.0.1 equalized both at `15` (agent buffers had been one point smaller); the 2026-10-23 UI capture then took the *editor* buffer to `13` and left the agent buffer at `15` — the agent value is dormant with the panel. |
+| `buffer_font_family` / `agent_buffer_font_family` = `JetBrainsMono Nerd Font Mono`, `15.0` / `15.0` | The Nerd Font from the Brewfile cask; glyphs are PUA-only (see the root README), so the font must be explicit. 1.0.1 equalized both at `15` (agent buffers had been one point smaller); the 2026-10-23 UI capture then took the *editor* buffer to `13` and left the agent buffer at `15` — the agent value is dormant with the panel. 1.2.1 captured the editor buffer back to `15` from the UI. |
 | `ui_font_family` / `ui_font_size` = `Source Serif 4`, `16.0` | Panel labels, tabs, and menus in a serif face, so chrome reads as a different layer from the monospace editor. Set in the Zed UI, captured back into the repo. |
 | `agent_ui_font_size: 18.0` | **Dormant** with the rest of the agent surface (`agent_ui_font_family` is also `Source Serif 4`): the panel never opens while `disable_ai` is `true`, so this is a retained value, not active chrome. Captured from the UI. |
 | `markdown_preview.code_font_family` = `JetBrainsMono Nerd Font Mono` | Fenced code in the markdown preview keeps the Nerd Font's glyph coverage instead of falling back to Zed's preview default. Captured from the UI. |
@@ -152,6 +152,7 @@ daemon (`opencode service set env …`, see the root README).
 
 ## The reconcile loop
 
+- **2026-11-13 capture (1.2.1):** `diff` of `files/settings.json` against `~/.local/share/dot/store/zed/1.2.0/settings.json` showed `buffer_font_size` `13 → 15` plus `theme.mode`/`icon_theme.mode` `system → dark` and `theme.dark` `Nordfox - blurred → Duskfox - blurred`. Captured all of it, so the repo file now matches the store byte for byte; no keys needed pruning.
 - **2026-10-27 capture (1.2.0):** `dot diff zed` showed only `terminal.copy_on_select: true` in `~/.local/share/dot/store/zed/1.1.0/settings.json:2–4`; captured that three-line block in `files/settings.json:2–4`, preserving every other byte. This task does not apply the config, quit, or restart Zed.
 
 Zed's UI **writes its config files**, so unlike every other config here, the

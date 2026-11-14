@@ -124,11 +124,14 @@ It ships one binding:
   a fake one would have to be a `workspace::SendKeystrokes` macro, and
   asynchronous actions don't chain reliably through it.
 
-`tasks.json` stays `[]`: no project tasks are defined. The tasks docs only
-show populated arrays, so "Zed accepts an empty one" is an assumption, not a
-proven format — acceptance is probed in the UI (`task: spawn`, see below). If
-Zed rewrites the file to a non-empty shape, drop it from the manifest and take
-a patch bump.
+`tasks.json` defines one global task, hooked to `create_worktree`: Zed runs
+it right after it creates a linked git worktree, from the CLI or the worktree
+picker, with `ZED_WORKTREE_ROOT` set to the new worktree
+([tasks#hooks](https://zed.dev/docs/tasks#hooks)). It runs `uv sync` there only
+when the worktree has a `pyproject.toml`; otherwise it prints a skip line and
+exits 0. It lives globally, not in each repo's `.zed/tasks.json`, because
+`git worktree add` checks out only committed files, so an uncommitted project
+file never reaches the worktree the hook runs for.
 
 ## What is deliberately not tracked
 

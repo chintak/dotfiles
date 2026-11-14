@@ -61,6 +61,9 @@ LSP docs on demand: `g q` (alias for the default `space k` hover) opens the
 docs for the symbol under the cursor; there is no hover-on-idle option.
 Signature help pops up on its own while typing arguments.
 
+Buffers: `space .` / `space ,` = next / previous buffer (aliases for the
+default `g n` / `g p`, i.e. `:bn` / `:bp`); `space b` opens the buffer picker.
+
 File picker: `space f` and global search show dotfiles
 (`[editor.file-picker] hidden = false`); `.gitignore`d paths stay hidden.
 Flip either at runtime with `:toggle file-picker.hidden` or

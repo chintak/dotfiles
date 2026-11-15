@@ -1,0 +1,59 @@
+# ~/.ignore — one global ignore list for ripgrep, fd (and so fzf) and the
+# helix file picker, independent of git. These tools read .ignore files in
+# every parent of the directory they search, so this file covers anything
+# under ~. A .ignore match outranks .gitignore, so a `!` line here brings back
+# a path that git ignores.
+# Uses .gitignore syntax. Prefix a line with ! to re-include.
+# VCS internals
+.git/
+.hg/
+.svn/
+
+# Dependencies / vendored code
+node_modules/
+bower_components/
+vendor/
+.bundle/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Build / dist output
+dist/
+build/
+out/
+target/
+*.o
+*.so
+*.dylib
+*.class
+
+# JS/web caches & minified noise
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+*.min.js
+*.map
+
+# Test / coverage artifacts
+coverage/
+.nyc_output/
+
+# Editor / OS cruft
+.DS_Store
+*.swp
+*~
+
+# Logs
+*.log
+
+# Re-included even when a repo's .gitignore hides them
+!.worktrees/
+!data/

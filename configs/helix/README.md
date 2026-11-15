@@ -67,8 +67,8 @@ default `g n` / `g p`, i.e. `:bn` / `:bp`); `space x` closes the current buffer 
 
 File picker: `space f` and global search show dotfiles
 (`[editor.file-picker] hidden = false`); `.gitignore`d paths stay hidden,
-except `data/` and `.worktrees/`, which the global `ignore` file
-(`~/.config/helix/ignore`) brings back with `!` rules.
+except `data/` and `.worktrees/`, which the shared `~/.ignore` (the `ignore` config,
+also read by rg and fd/fzf) brings back with `!` rules.
 Flip either at runtime with `:toggle file-picker.hidden` or
 `:toggle file-picker.git-ignore`.
 

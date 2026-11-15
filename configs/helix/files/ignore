@@ -1,8 +1,0 @@
-# Global ignore overrides for the file picker and global search
-# (~/.config/helix/ignore). Helix reads this file in every directory it walks
-# (helix-term/src/ui/mod.rs:223). It is a custom ignore file, which the ignore
-# crate ranks above every other ignore file (WalkBuilder::add_custom_ignore_filename),
-# so a `!` line brings back a path that git ignores.
-# .venv, __pycache__ and caches stay hidden; only these come back:
-!data/
-!.worktrees/

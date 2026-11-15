@@ -1,0 +1,3 @@
+version     = 1.0.0
+description = ~/.ignore — one global ignore list for rg, fd/fzf and the helix picker; re-includes .worktrees/ and data/
+file        = ignore|~/.ignore
